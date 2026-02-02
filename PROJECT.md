@@ -3,6 +3,7 @@
 ## Project Status: 🚧 In Development
 
 ## Overview
+
 RettStat is a Progressive Web Application (PWA) for Emergency Medical Services (EMS) organizations to manage shift plans, view statistics, and coordinate event services.
 
 ## Quick Start
@@ -28,21 +29,21 @@ bun run build
 
 ## Technology Stack
 
-| Category | Technology | Version |
-|----------|------------|---------|
-| Runtime | Bun | 1.3+ |
-| Framework | Next.js | 14+ |
-| UI Library | React | 19+ |
-| Styling | Tailwind CSS | 4+ |
-| Components | Radix UI | Latest |
-| State (Global) | Zustand | 5+ |
-| State (Server) | TanStack Query | 5+ |
-| Database | Supabase (PostgreSQL) | Latest |
-| Auth | Supabase Auth | Latest |
-| Offline Storage | Dexie.js (IndexedDB) | 4+ |
-| i18n | next-intl | 4+ |
-| Forms | React Hook Form + Zod | Latest |
-| Testing | Vitest, RTL, Playwright | Latest |
+| Category        | Technology              | Version |
+| --------------- | ----------------------- | ------- |
+| Runtime         | Bun                     | 1.3+    |
+| Framework       | Next.js                 | 14+     |
+| UI Library      | React                   | 19+     |
+| Styling         | Tailwind CSS            | 4+      |
+| Components      | Radix UI                | Latest  |
+| State (Global)  | Zustand                 | 5+      |
+| State (Server)  | TanStack Query          | 5+      |
+| Database        | Supabase (PostgreSQL)   | Latest  |
+| Auth            | Supabase Auth           | Latest  |
+| Offline Storage | Dexie.js (IndexedDB)    | 4+      |
+| i18n            | next-intl               | 4+      |
+| Forms           | React Hook Form + Zod   | Latest  |
+| Testing         | Vitest, RTL, Playwright | Latest  |
 
 ## Project Structure
 
@@ -81,14 +82,17 @@ rettstat/
 ## Features
 
 ### Implemented ✅
-- [ ] Project setup and configuration
+
+- [x] Project setup and configuration
+- [x] Phase 1: Project Foundation
+- [x] Phase 2: Design System & Core Architecture
 
 ### In Progress 🔄
-- [ ] Phase 1: Project Foundation
+
+- [ ] Phase 3: Authentication & Authorization
 
 ### Planned 📋
-- [ ] Phase 2: Design System & Core Architecture
-- [ ] Phase 3: Authentication & Authorization
+
 - [ ] Phase 4: Database Schema & API
 - [ ] Phase 5: Feature Implementation
   - [ ] Home Page
@@ -104,58 +108,66 @@ rettstat/
 ### Colors
 
 #### Primary
+
 - **Dark Red**: `#b70e0c` - Main brand color
 
 #### Accent Colors
-| Name | Hex | CSS Variable |
-|------|-----|--------------|
-| Cyan | `#00acc1` | `--accent-cyan` |
-| Blue | `#0065a0` | `--accent-blue` |
-| Purple | `#6f69a3` | `--accent-purple` |
-| Magenta | `#a66da7` | `--accent-magenta` |
-| Orange | `#f29400` | `--accent-orange` |
-| Yellow | `#ebbd00` | `--accent-yellow` |
-| Green | `#9ab86a` | `--accent-green` |
-| Teal | `#86c4b7` | `--accent-teal` |
+
+| Name      | Hex       | CSS Variable         |
+| --------- | --------- | -------------------- |
+| Cyan      | `#00acc1` | `--accent-cyan`      |
+| Blue      | `#0065a0` | `--accent-blue`      |
+| Purple    | `#6f69a3` | `--accent-purple`    |
+| Magenta   | `#a66da7` | `--accent-magenta`   |
+| Orange    | `#f29400` | `--accent-orange`    |
+| Yellow    | `#ebbd00` | `--accent-yellow`    |
+| Green     | `#9ab86a` | `--accent-green`     |
+| Teal      | `#86c4b7` | `--accent-teal`      |
 | Dark Teal | `#0d968e` | `--accent-dark-teal` |
-| Forest | `#2c9155` | `--accent-forest` |
+| Forest    | `#2c9155` | `--accent-forest`    |
 
 ### Theme
+
 - Light and Dark mode support
 - System preference detection
 - Manual toggle option
 
 ## User Roles
 
-| Role | Description | Permissions |
-|------|-------------|-------------|
-| Admin | Full system access | All permissions |
-| Manager | Team management | View all, manage team |
-| Member | Standard user | View own data, sign up |
+| Role    | Description        | Permissions            |
+| ------- | ------------------ | ---------------------- |
+| Admin   | Full system access | All permissions        |
+| Manager | Team management    | View all, manage team  |
+| Member  | Standard user      | View own data, sign up |
 
 ## Pages
 
 ### Home (`/`)
+
 - Quick overview dashboard
 - Next shift display
 - News/announcements feed
 
 ### Shift Plan (`/shifts`)
+
 - Calendar view of shifts
 - Shift details
 - Admin: Add/edit shifts
 
 ### Statistics (`/statistics`)
+
 - Personal shift statistics
 - Admin: Unit statistics
 - Charts and visualizations
 
 ### Events (`/events`)
+
 - Events list and calendar
 - Event details with positions
 - Admin: Create/manage events
 
 ### Admin (`/admin`)
+
 - User management
 - Qualifications management
 - Assignments management
@@ -163,11 +175,11 @@ rettstat/
 
 ## Database Schema
 
-*To be documented in Phase 4*
+_To be documented in Phase 4_
 
 ## API Endpoints
 
-*To be documented in Phase 4*
+_To be documented in Phase 4_
 
 ## Environment Variables
 
@@ -192,6 +204,7 @@ NEXT_PUBLIC_APP_URL=
 ## Changelog
 
 ### [Unreleased]
+
 - Initial project setup
 - Next.js 14+ with App Router
 - Tailwind CSS 4 configuration
@@ -199,4 +212,4 @@ NEXT_PUBLIC_APP_URL=
 
 ---
 
-*Last updated: 2026-02-01*
+_Last updated: 2026-02-01_
