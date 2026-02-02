@@ -31,6 +31,19 @@
     "settings": "Settings",
     "logout": "Logout"
   },
+  "navigation": {
+    "home": "Home",
+    "shiftplan": "Shift Plan",
+    "statistics": "Statistics",
+    "events": "Events",
+    "members": "Members",
+    "settings": "Settings"
+  },
+  "userDropdown": {
+    "settings": "Settings",
+    "adminPanel": "Admin Panel",
+    "logout": "Logout"
+  },
   "home": {
     "welcome": "Welcome to RettStat",
     "subtitle": "Your central hub for shift plans, statistics, and events.",

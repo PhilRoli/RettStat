@@ -31,6 +31,19 @@
     "settings": "Einstellungen",
     "logout": "Abmelden"
   },
+  "navigation": {
+    "home": "Startseite",
+    "shiftplan": "Dienstplan",
+    "statistics": "Statistiken",
+    "events": "Veranstaltungen",
+    "members": "Mitglieder",
+    "settings": "Einstellungen"
+  },
+  "userDropdown": {
+    "settings": "Einstellungen",
+    "adminPanel": "Admin-Panel",
+    "logout": "Abmelden"
+  },
   "home": {
     "welcome": "Willkommen bei RettStat",
     "subtitle": "Ihre zentrale Anlaufstelle für Dienstpläne, Statistiken und Veranstaltungen.",
