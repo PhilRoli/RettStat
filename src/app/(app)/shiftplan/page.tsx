@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserUnits, useShiftplanDates } from "@/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { ShiftplanDayView } from "@/components/features/shiftplan";
 export default function ShiftplanPage() {
   const t = useTranslations("shifts");
   const [selectedUnit, setSelectedUnit] = useState<string>("");
@@ -24,7 +24,6 @@ export default function ShiftplanPage() {
   const { data: units, isLoading: isLoadingUnits } = useUserUnits();
 
   // Initialize selectedUnit when units load
-  const [selectedUnit, setSelectedUnit] = useState<string>("");
   if (!selectedUnit && units && units.length > 0) {
     setSelectedUnit(units[0].id);
   }
@@ -175,6 +174,11 @@ export default function ShiftplanPage() {
                     <button
                       key={index}
                       disabled={!day || !hasShiftplan}
+                      onClick={() => {
+                        if (day && hasShiftplan) {
+                          setSelectedDate(new Date(selectedYear, selectedMonth, day));
+                        }
+                      }}
                       className={`aspect-square rounded-md p-2 text-sm transition-colors ${!day ? "invisible" : ""} ${
                         hasShiftplan
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -196,6 +200,13 @@ export default function ShiftplanPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Day View Dialog */}
+      <ShiftplanDayView
+        unitId={selectedUnit}
+        date={selectedDate}
+        onClose={() => setSelectedDate(null)}
+      />
     </div>
   );
 }

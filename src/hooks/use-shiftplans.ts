@@ -87,3 +87,24 @@ export function useShiftplanDates({ unitId, month, year }: UseShiftplansParams) 
     data: dates || [],
   };
 }
+
+/**
+ * Hook to get shiftplan for a specific date
+ */
+export function useShiftplanByDate({ unitId, date }: { unitId?: string; date: Date }) {
+  const { data: shiftplans, ...query } = useShiftplans({
+    unitId,
+    month: date.getMonth(),
+    year: date.getFullYear(),
+  });
+
+  const shiftplan = shiftplans?.find((sp) => {
+    const spDate = new Date(sp.start_time);
+    return spDate.getDate() === date.getDate();
+  });
+
+  return {
+    ...query,
+    data: shiftplan || null,
+  };
+}

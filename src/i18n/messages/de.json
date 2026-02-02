@@ -115,6 +115,11 @@
     "editMode": "Bearbeitungsmodus",
     "viewMode": "Ansichtsmodus",
     "saveChanges": "Änderungen speichern",
+    "shiftLead": "Dienstleitung",
+    "noDriver": "Kein Fahrer zugewiesen",
+    "noLead": "Keine Führung zugewiesen",
+    "noStudent": "Kein Azubi zugewiesen",
+    "viewShiftplan": "Dienstplan anzeigen",
     "month": {
       "january": "Jänner",
       "february": "Februar",

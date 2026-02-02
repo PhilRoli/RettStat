@@ -115,6 +115,11 @@
     "editMode": "Edit Mode",
     "viewMode": "View Mode",
     "saveChanges": "Save Changes",
+    "shiftLead": "Shift Lead",
+    "noDriver": "No driver assigned",
+    "noLead": "No lead assigned",
+    "noStudent": "No student assigned",
+    "viewShiftplan": "View Shift Plan",
     "month": {
       "january": "January",
       "february": "February",
