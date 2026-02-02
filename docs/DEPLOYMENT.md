@@ -8,7 +8,7 @@ Complete guide for deploying RettStat to production on a Hetzner VPS.
 2. Configure DNS for rettstat.at
 3. Run deployment script
 4. Configure environment variables
-5. Access https://rettstat.at
+5. Access <https://rettstat.at>
 
 ## Prerequisites
 
@@ -34,4 +34,4 @@ Complete guide for deploying RettStat to production on a Hetzner VPS.
 
 ## Deployment Steps
 
-See full guide at: https://github.com/your-repo/rettstat/blob/main/docs/DEPLOYMENT.md
+See full guide at: <https://github.com/philroli/rettstat/blob/main/docs/DEPLOYMENT.md>
