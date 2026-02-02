@@ -15,9 +15,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({
             request,
           });
@@ -32,5 +30,5 @@ export async function updateSession(request: NextRequest) {
   // Refresh session if expired
   await supabase.auth.getUser();
 
-  return supabaseResponse;
+  return { response: supabaseResponse, supabase };
 }
