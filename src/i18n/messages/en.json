@@ -461,6 +461,8 @@
       "uploadSuccessDescription": "Attachment has been uploaded",
       "uploadErrorTitle": "Error",
       "uploadErrorDescription": "Failed to upload attachment",
+      "fileTooLarge": "File size exceeds 10MB limit",
+      "invalidFileType": "File type not allowed. Please upload images, PDFs, or Office documents",
       "deleteAttachmentDialogTitle": "Delete Attachment",
       "deleteAttachmentDialogDescription": "Are you sure you want to delete this attachment?",
       "deleteAttachmentSuccessTitle": "Success",

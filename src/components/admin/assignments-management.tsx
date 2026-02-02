@@ -296,25 +296,48 @@ export function AssignmentsManagement() {
     try {
       const supabase = createClient();
 
-      // Delete existing permissions
-      await supabase
+      // Fetch existing permissions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingPerms } = await (supabase as any)
         .from("assignment_default_permissions")
-        .delete()
+        .select("id, permission_id")
         .eq("assignment_id", selectedAssignment.id);
 
+      const existingPermIds = new Set(
+        existingPerms?.map((p: { permission_id: string }) => p.permission_id) || []
+      );
+      const newPermIds = new Set(selectedPermissions);
+
+      // Calculate differences
+      const toDelete =
+        existingPerms?.filter((p: { permission_id: string }) => !newPermIds.has(p.permission_id)) ||
+        [];
+      const toAdd = selectedPermissions.filter((id) => !existingPermIds.has(id));
+
+      // Delete removed permissions
+      if (toDelete.length > 0) {
+        const deleteIds = toDelete.map((p: { id: string }) => p.id);
+        const { error: deleteError } = await supabase
+          .from("assignment_default_permissions")
+          .delete()
+          .in("id", deleteIds);
+
+        if (deleteError) throw deleteError;
+      }
+
       // Insert new permissions
-      if (selectedPermissions.length > 0) {
-        const newPerms = selectedPermissions.map((perm_id) => ({
+      if (toAdd.length > 0) {
+        const newPerms = toAdd.map((perm_id) => ({
           assignment_id: selectedAssignment.id,
           permission_id: perm_id,
         }));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error: insertError } = await (supabase as any)
           .from("assignment_default_permissions")
           .insert(newPerms);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
 
       toast({

@@ -165,15 +165,24 @@ export function UnitsManagement() {
       };
 
       if (selectedUnit) {
-        // Prevent circular references
-        if (formData.parentUnitId === selectedUnit.id) {
-          toast({
-            variant: "destructive",
-            title: t("circularRefErrorTitle"),
-            description: t("circularRefErrorDescription"),
-          });
-          setSaving(false);
-          return;
+        // Prevent circular references (check if parent is the unit itself or any descendant)
+        if (formData.parentUnitId) {
+          const isCircular = (parentId: string): boolean => {
+            if (parentId === selectedUnit.id) return true;
+            const parent = units.find((u) => u.id === parentId);
+            if (!parent || !parent.parent_unit_id) return false;
+            return isCircular(parent.parent_unit_id);
+          };
+
+          if (isCircular(formData.parentUnitId)) {
+            toast({
+              variant: "destructive",
+              title: t("circularRefErrorTitle"),
+              description: t("circularRefErrorDescription"),
+            });
+            setSaving(false);
+            return;
+          }
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

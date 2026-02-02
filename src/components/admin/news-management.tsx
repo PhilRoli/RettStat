@@ -248,14 +248,53 @@ export function NewsManagement() {
   const handleFileUpload = async () => {
     if (!uploadFile || !selectedNews) return;
 
+    // Security validation
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const ALLOWED_MIME_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/plain",
+      "text/csv",
+    ];
+
+    if (uploadFile.size > MAX_FILE_SIZE) {
+      toast({
+        variant: "destructive",
+        title: t("uploadErrorTitle"),
+        description: t("fileTooLarge"),
+      });
+      return;
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(uploadFile.type)) {
+      toast({
+        variant: "destructive",
+        title: t("uploadErrorTitle"),
+        description: t("invalidFileType"),
+      });
+      return;
+    }
+
     setUploading(true);
+    let uploadedFileName: string | null = null;
+
     try {
       const supabase = createClient();
 
-      const fileName = `${selectedNews.id}/${Date.now()}-${uploadFile.name}`;
+      // Sanitize filename: remove path traversal characters
+      const sanitizedName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      uploadedFileName = `${selectedNews.id}/${Date.now()}-${sanitizedName}`;
+
       const { error: uploadError } = await supabase.storage
         .from("news-attachments")
-        .upload(fileName, uploadFile);
+        .upload(uploadedFileName, uploadFile);
 
       if (uploadError) throw uploadError;
 
@@ -265,12 +304,16 @@ export function NewsManagement() {
         .insert({
           news_id: selectedNews.id,
           file_name: uploadFile.name,
-          file_path: fileName,
+          file_path: uploadedFileName,
           file_size: uploadFile.size,
           mime_type: uploadFile.type,
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        // Cleanup: delete uploaded file if database insert fails
+        await supabase.storage.from("news-attachments").remove([uploadedFileName]);
+        throw dbError;
+      }
 
       toast({
         title: t("uploadSuccessTitle"),

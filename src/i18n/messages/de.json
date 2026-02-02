@@ -461,6 +461,8 @@
       "uploadSuccessDescription": "Anhang wurde hochgeladen",
       "uploadErrorTitle": "Fehler",
       "uploadErrorDescription": "Anhang konnte nicht hochgeladen werden",
+      "fileTooLarge": "Dateigröße überschreitet das 10MB-Limit",
+      "invalidFileType": "Dateityp nicht erlaubt. Bitte laden Sie Bilder, PDFs oder Office-Dokumente hoch",
       "deleteAttachmentDialogTitle": "Anhang löschen",
       "deleteAttachmentDialogDescription": "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?",
       "deleteAttachmentSuccessTitle": "Erfolg",
