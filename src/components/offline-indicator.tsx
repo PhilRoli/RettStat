@@ -14,7 +14,7 @@ export function OfflineIndicator() {
   return (
     <div
       className={cn(
-        "fixed right-4 bottom-4 left-4 z-50 flex items-center justify-between rounded-lg border p-3 shadow-lg sm:right-4 sm:left-auto sm:w-auto sm:min-w-[300px]",
+        "fixed right-4 bottom-4 left-4 z-50 flex items-center justify-between rounded-lg border p-3 shadow-lg sm:right-4 sm:left-auto sm:w-auto sm:min-w-75",
         isOnline
           ? "border-accent-orange/50 bg-accent-orange/10"
           : "border-destructive/50 bg-destructive/10"

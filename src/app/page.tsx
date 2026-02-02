@@ -5,9 +5,9 @@ import { Calendar, BarChart3, Users, Clock } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background flex min-h-screen w-full flex-col">
       {/* Header */}
-      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
+      <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-md font-bold">
