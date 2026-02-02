@@ -34,6 +34,7 @@
   "navigation": {
     "home": "Home",
     "shiftplan": "Shift Plan",
+    "schedule": "My Schedule",
     "statistics": "Statistics",
     "events": "Events",
     "members": "Members",
@@ -672,6 +673,43 @@
       "published": "Published",
       "cancelled": "Cancelled",
       "completed": "Completed"
+    }
+  },
+  "schedule": {
+    "title": "My Schedule",
+    "calendar": "Calendar",
+    "upcoming": "Upcoming",
+    "absences": "Absences",
+    "hasShifts": "Has shifts",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noShifts": "No shifts",
+    "noShiftsOnDay": "No shifts on this day",
+    "selectDay": "Select a day",
+    "clickDayToSee": "Click on a day to see your shifts",
+    "next30Days": "Next 30 Days",
+    "noUpcomingShifts": "No upcoming shifts",
+    "noAbsences": "No absences requested",
+    "requestAbsence": "Request Absence",
+    "absenceCategory": "Category",
+    "selectCategory": "Select category",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Describe the reason for your absence...",
+    "cancel": "Cancel",
+    "submit": "Submit Request",
+    "submitting": "Submitting...",
+    "success": "Success",
+    "error": "Error",
+    "fillAllFields": "Please fill in all required fields",
+    "absenceRequestCreated": "Absence request has been submitted",
+    "absenceRequestFailed": "Failed to submit absence request",
+    "exportICal": "Export iCal",
+    "absenceStatus": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
     }
   },
   "devAccess": {

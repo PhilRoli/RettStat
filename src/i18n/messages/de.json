@@ -34,6 +34,7 @@
   "navigation": {
     "home": "Startseite",
     "shiftplan": "Dienstplan",
+    "schedule": "Mein Kalender",
     "statistics": "Statistiken",
     "events": "Veranstaltungen",
     "members": "Mitglieder",
@@ -672,6 +673,43 @@
       "published": "Veröffentlicht",
       "cancelled": "Abgesagt",
       "completed": "Abgeschlossen"
+    }
+  },
+  "schedule": {
+    "title": "Mein Kalender",
+    "calendar": "Kalender",
+    "upcoming": "Anstehend",
+    "absences": "Abwesenheiten",
+    "hasShifts": "Hat Dienste",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "noShifts": "Keine Dienste",
+    "noShiftsOnDay": "Keine Dienste an diesem Tag",
+    "selectDay": "Tag auswählen",
+    "clickDayToSee": "Klicken Sie auf einen Tag, um Ihre Dienste zu sehen",
+    "next30Days": "Nächste 30 Tage",
+    "noUpcomingShifts": "Keine anstehenden Dienste",
+    "noAbsences": "Keine Abwesenheiten beantragt",
+    "requestAbsence": "Abwesenheit beantragen",
+    "absenceCategory": "Kategorie",
+    "selectCategory": "Kategorie auswählen",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "reason": "Grund (optional)",
+    "reasonPlaceholder": "Beschreiben Sie den Grund Ihrer Abwesenheit...",
+    "cancel": "Abbrechen",
+    "submit": "Antrag einreichen",
+    "submitting": "Wird eingereicht...",
+    "success": "Erfolgreich",
+    "error": "Fehler",
+    "fillAllFields": "Bitte füllen Sie alle erforderlichen Felder aus",
+    "absenceRequestCreated": "Abwesenheitsantrag wurde eingereicht",
+    "absenceRequestFailed": "Abwesenheitsantrag konnte nicht eingereicht werden",
+    "exportICal": "iCal exportieren",
+    "absenceStatus": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt"
     }
   },
   "devAccess": {

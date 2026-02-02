@@ -28,3 +28,10 @@ export {
   useCreateRegistration,
   useDeleteRegistration,
 } from "./use-events";
+export {
+  useMyShifts,
+  useMyAbsences,
+  useAbsenceCategories,
+  useCreateAbsenceRequest,
+  downloadICal,
+} from "./use-my-schedule";

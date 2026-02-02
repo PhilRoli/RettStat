@@ -4,11 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { Home, Calendar, BarChart3, Users, CalendarDays, Settings } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  BarChart3,
+  Users,
+  CalendarDays,
+  Settings,
+  CalendarCheck,
+} from "lucide-react";
 
 const navigationItems = [
   { href: "/", icon: Home, label: "home" },
   { href: "/shiftplan", icon: Calendar, label: "shiftplan" },
+  { href: "/schedule", icon: CalendarCheck, label: "schedule" },
   { href: "/statistics", icon: BarChart3, label: "statistics" },
   { href: "/events", icon: CalendarDays, label: "events" },
   { href: "/members", icon: Users, label: "members" },
