@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { VehicleRecord, VehicleTypeRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,16 +34,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Search, Plus, Edit, Trash2 } from "lucide-react";
-import type { Database } from "@/types/database";
 
-type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
-type VehicleType = Database["public"]["Tables"]["vehicle_types"]["Row"];
-type Unit = Database["public"]["Tables"]["units"]["Row"];
-
-interface VehicleWithRelations extends Vehicle {
-  vehicle_types?: VehicleType;
-  primary_units?: Unit;
-  secondary_units?: Unit;
+interface VehicleWithRelations extends VehicleRecord {
+  expand?: {
+    vehicle_type?: VehicleTypeRecord;
+    unit?: UnitRecord;
+  };
 }
 
 export function VehiclesManagement() {
@@ -53,8 +50,8 @@ export function VehiclesManagement() {
   // Vehicles state
   const [vehicles, setVehicles] = useState<VehicleWithRelations[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<VehicleWithRelations[]>([]);
-  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleTypeRecord[]>([]);
+  const [units, setUnits] = useState<UnitRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -65,18 +62,17 @@ export function VehiclesManagement() {
   const [vehicleFormData, setVehicleFormData] = useState({
     callSign: "",
     vehicleTypeId: "",
-    primaryUnitId: "",
-    secondaryUnitId: "",
+    unitId: "",
+    status: "active" as VehicleRecord["status"],
+    registrationNumber: "",
   });
 
   // Vehicle Type dialog state
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState<VehicleType | null>(null);
+  const [selectedType, setSelectedType] = useState<VehicleTypeRecord | null>(null);
   const [typeFormData, setTypeFormData] = useState({
     name: "",
     description: "",
-    icon: "",
-    color: "#b70e0c",
   });
 
   useEffect(() => {
@@ -93,7 +89,7 @@ export function VehiclesManagement() {
         vehicles.filter(
           (vehicle) =>
             vehicle.call_sign.toLowerCase().includes(query) ||
-            vehicle.vehicle_types?.name.toLowerCase().includes(query)
+            vehicle.expand?.vehicle_type?.name.toLowerCase().includes(query)
         )
       );
     }
@@ -102,43 +98,27 @@ export function VehiclesManagement() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
 
       // Fetch vehicles with relations
-      const { data: vehiclesData, error: vehiclesError } = await supabase
-        .from("vehicles")
-        .select(
-          `
-          *,
-          vehicle_types (id, name, description, icon, color),
-          primary_units:units!vehicles_primary_unit_id_fkey (id, name),
-          secondary_units:units!vehicles_secondary_unit_id_fkey (id, name)
-        `
-        )
-        .order("call_sign");
-
-      if (vehiclesError) throw vehiclesError;
+      const vehiclesData = await pb.collection("vehicles").getFullList<VehicleWithRelations>({
+        sort: "call_sign",
+        expand: "vehicle_type,unit",
+      });
 
       // Fetch vehicle types
-      const { data: typesData, error: typesError } = await supabase
-        .from("vehicle_types")
-        .select("*")
-        .order("name");
-
-      if (typesError) throw typesError;
+      const typesData = await pb.collection("vehicle_types").getFullList<VehicleTypeRecord>({
+        sort: "name",
+      });
 
       // Fetch units
-      const { data: unitsData, error: unitsError } = await supabase
-        .from("units")
-        .select("*")
-        .order("name");
+      const unitsData = await pb.collection("units").getFullList<UnitRecord>({
+        sort: "name",
+      });
 
-      if (unitsError) throw unitsError;
-
-      setVehicles((vehiclesData as VehicleWithRelations[]) || []);
-      setFilteredVehicles((vehiclesData as VehicleWithRelations[]) || []);
-      setVehicleTypes(typesData || []);
-      setUnits(unitsData || []);
+      setVehicles(vehiclesData);
+      setFilteredVehicles(vehiclesData);
+      setVehicleTypes(typesData);
+      setUnits(unitsData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -157,8 +137,9 @@ export function VehiclesManagement() {
     setVehicleFormData({
       callSign: "",
       vehicleTypeId: "",
-      primaryUnitId: "",
-      secondaryUnitId: "",
+      unitId: "",
+      status: "active",
+      registrationNumber: "",
     });
     setVehicleDialogOpen(true);
   };
@@ -167,9 +148,10 @@ export function VehiclesManagement() {
     setSelectedVehicle(vehicle);
     setVehicleFormData({
       callSign: vehicle.call_sign,
-      vehicleTypeId: vehicle.vehicle_type_id,
-      primaryUnitId: vehicle.primary_unit_id,
-      secondaryUnitId: vehicle.secondary_unit_id || "",
+      vehicleTypeId: vehicle.vehicle_type,
+      unitId: vehicle.unit,
+      status: vehicle.status,
+      registrationNumber: vehicle.registration_number || "",
     });
     setVehicleDialogOpen(true);
   };
@@ -179,33 +161,23 @@ export function VehiclesManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       const vehicleData = {
         call_sign: vehicleFormData.callSign,
-        vehicle_type_id: vehicleFormData.vehicleTypeId,
-        primary_unit_id: vehicleFormData.primaryUnitId,
-        secondary_unit_id: vehicleFormData.secondaryUnitId || null,
+        vehicle_type: vehicleFormData.vehicleTypeId,
+        unit: vehicleFormData.unitId,
+        status: vehicleFormData.status,
+        registration_number: vehicleFormData.registrationNumber || undefined,
       };
 
       if (selectedVehicle) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("vehicles")
-          .update(vehicleData)
-          .eq("id", selectedVehicle.id);
-
-        if (error) throw error;
+        await pb.collection("vehicles").update(selectedVehicle.id, vehicleData);
 
         toast({
           title: t("vehicleUpdateSuccessTitle"),
           description: t("vehicleUpdateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("vehicles").insert([vehicleData]);
-
-        if (error) throw error;
+        await pb.collection("vehicles").create(vehicleData);
 
         toast({
           title: t("vehicleCreateSuccessTitle"),
@@ -231,10 +203,7 @@ export function VehiclesManagement() {
     if (!confirm(t("deleteVehicleConfirm"))) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("vehicles").delete().eq("id", vehicle.id);
-
-      if (error) throw error;
+      await pb.collection("vehicles").delete(vehicle.id);
 
       toast({
         title: t("vehicleDeleteSuccessTitle"),
@@ -258,19 +227,15 @@ export function VehiclesManagement() {
     setTypeFormData({
       name: "",
       description: "",
-      icon: "",
-      color: "#b70e0c",
     });
     setTypeDialogOpen(true);
   };
 
-  const handleEditType = (type: VehicleType) => {
+  const handleEditType = (type: VehicleTypeRecord) => {
     setSelectedType(type);
     setTypeFormData({
       name: type.name,
       description: type.description || "",
-      icon: type.icon || "",
-      color: type.color || "#b70e0c",
     });
     setTypeDialogOpen(true);
   };
@@ -280,33 +245,21 @@ export function VehiclesManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       const typeData = {
         name: typeFormData.name,
-        description: typeFormData.description || null,
-        icon: typeFormData.icon || null,
-        color: typeFormData.color,
+        description: typeFormData.description || undefined,
+        required_qualifications: [],
       };
 
       if (selectedType) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("vehicle_types")
-          .update(typeData)
-          .eq("id", selectedType.id);
-
-        if (error) throw error;
+        await pb.collection("vehicle_types").update(selectedType.id, typeData);
 
         toast({
           title: t("typeUpdateSuccessTitle"),
           description: t("typeUpdateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("vehicle_types").insert([typeData]);
-
-        if (error) throw error;
+        await pb.collection("vehicle_types").create(typeData);
 
         toast({
           title: t("typeCreateSuccessTitle"),
@@ -328,14 +281,11 @@ export function VehiclesManagement() {
     }
   };
 
-  const handleDeleteType = async (type: VehicleType) => {
+  const handleDeleteType = async (type: VehicleTypeRecord) => {
     if (!confirm(t("deleteTypeConfirm"))) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("vehicle_types").delete().eq("id", type.id);
-
-      if (error) throw error;
+      await pb.collection("vehicle_types").delete(type.id);
 
       toast({
         title: t("typeDeleteSuccessTitle"),
@@ -404,10 +354,8 @@ export function VehiclesManagement() {
                   <TableRow>
                     <TableHead>{t("callSignColumn")}</TableHead>
                     <TableHead>{t("typeColumn")}</TableHead>
-                    <TableHead className="hidden md:table-cell">{t("primaryUnitColumn")}</TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      {t("secondaryUnitColumn")}
-                    </TableHead>
+                    <TableHead className="hidden md:table-cell">{t("unitColumn")}</TableHead>
+                    <TableHead className="hidden lg:table-cell">{t("statusColumn")}</TableHead>
                     <TableHead className="text-right">{t("actionsColumn")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -422,23 +370,11 @@ export function VehiclesManagement() {
                     filteredVehicles.map((vehicle) => (
                       <TableRow key={vehicle.id}>
                         <TableCell className="font-medium">{vehicle.call_sign}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {vehicle.vehicle_types?.color && (
-                              <div
-                                className="h-4 w-4 rounded"
-                                style={{ backgroundColor: vehicle.vehicle_types.color }}
-                              />
-                            )}
-                            {vehicle.vehicle_types?.name || "-"}
-                          </div>
-                        </TableCell>
+                        <TableCell>{vehicle.expand?.vehicle_type?.name || "-"}</TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {vehicle.primary_units?.name || "-"}
+                          {vehicle.expand?.unit?.name || "-"}
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {vehicle.secondary_units?.name || "-"}
-                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">{vehicle.status}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button
@@ -485,15 +421,13 @@ export function VehiclesManagement() {
                   <TableRow>
                     <TableHead>{t("nameColumn")}</TableHead>
                     <TableHead className="hidden md:table-cell">{t("descriptionColumn")}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{t("iconColumn")}</TableHead>
-                    <TableHead>{t("colorColumn")}</TableHead>
                     <TableHead className="text-right">{t("actionsColumn")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {vehicleTypes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
+                      <TableCell colSpan={3} className="h-24 text-center">
                         {t("noTypes")}
                       </TableCell>
                     </TableRow>
@@ -503,18 +437,6 @@ export function VehiclesManagement() {
                         <TableCell className="font-medium">{type.name}</TableCell>
                         <TableCell className="hidden md:table-cell">
                           {type.description || "-"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">{type.icon || "-"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="h-6 w-6 rounded border"
-                              style={{ backgroundColor: type.color || "#b70e0c" }}
-                            />
-                            <span className="text-muted-foreground text-sm">
-                              {type.color || "#b70e0c"}
-                            </span>
-                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -589,14 +511,14 @@ export function VehiclesManagement() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="primaryUnit">{t("primaryUnitLabel")}</Label>
+                <Label htmlFor="unit">{t("unitLabel")}</Label>
                 <Select
-                  value={vehicleFormData.primaryUnitId}
+                  value={vehicleFormData.unitId}
                   onValueChange={(value) =>
-                    setVehicleFormData({ ...vehicleFormData, primaryUnitId: value })
+                    setVehicleFormData({ ...vehicleFormData, unitId: value })
                   }
                 >
-                  <SelectTrigger id="primaryUnit">
+                  <SelectTrigger id="unit">
                     <SelectValue placeholder={t("selectUnitPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -609,25 +531,32 @@ export function VehiclesManagement() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="secondaryUnit">{t("secondaryUnitLabel")}</Label>
+                <Label htmlFor="status">{t("statusLabel")}</Label>
                 <Select
-                  value={vehicleFormData.secondaryUnitId}
-                  onValueChange={(value) =>
-                    setVehicleFormData({ ...vehicleFormData, secondaryUnitId: value })
+                  value={vehicleFormData.status}
+                  onValueChange={(value: VehicleRecord["status"]) =>
+                    setVehicleFormData({ ...vehicleFormData, status: value })
                   }
                 >
-                  <SelectTrigger id="secondaryUnit">
-                    <SelectValue placeholder={t("selectUnitPlaceholder")} />
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder={t("selectStatusPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t("noSecondaryUnit")}</SelectItem>
-                    {units.map((unit) => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="active">{t("statusActive")}</SelectItem>
+                    <SelectItem value="maintenance">{t("statusMaintenance")}</SelectItem>
+                    <SelectItem value="inactive">{t("statusInactive")}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="registrationNumber">{t("registrationNumberLabel")}</Label>
+                <Input
+                  id="registrationNumber"
+                  value={vehicleFormData.registrationNumber}
+                  onChange={(e) =>
+                    setVehicleFormData({ ...vehicleFormData, registrationNumber: e.target.value })
+                  }
+                />
               </div>
             </div>
             <DialogFooter>
@@ -670,33 +599,6 @@ export function VehiclesManagement() {
                     setTypeFormData({ ...typeFormData, description: e.target.value })
                   }
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="typeIcon">{t("iconLabel")}</Label>
-                <Input
-                  id="typeIcon"
-                  value={typeFormData.icon}
-                  onChange={(e) => setTypeFormData({ ...typeFormData, icon: e.target.value })}
-                  placeholder="car, truck, ambulance"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="typeColor">{t("colorLabel")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="typeColor"
-                    type="color"
-                    value={typeFormData.color}
-                    onChange={(e) => setTypeFormData({ ...typeFormData, color: e.target.value })}
-                    className="h-10 w-20"
-                  />
-                  <Input
-                    type="text"
-                    value={typeFormData.color}
-                    onChange={(e) => setTypeFormData({ ...typeFormData, color: e.target.value })}
-                    placeholder="#b70e0c"
-                  />
-                </div>
               </div>
             </div>
             <DialogFooter>
