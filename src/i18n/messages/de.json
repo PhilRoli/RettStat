@@ -48,6 +48,38 @@
     "welcome": "Willkommen bei RettStat",
     "subtitle": "Ihre zentrale Anlaufstelle für Dienstpläne, Statistiken und Veranstaltungen.",
     "nextShift": "Nächste Schicht",
+    "quickLinks": {
+      "title": "Schnellzugriff"
+    },
+    "nextShifts": {
+      "title": "Kommende Schichten",
+      "noShifts": "Keine bevorstehenden Schichten",
+      "driver": "Fahrer",
+      "lead": "Führung",
+      "student": "Praktikant"
+    },
+    "news": {
+      "title": "Nachrichten & Ankündigungen",
+      "description": "Neueste Updates und Informationen",
+      "noNews": "Keine Nachrichten verfügbar",
+      "new": "Neu",
+      "attachments": "{count} Anhang",
+      "categories": {
+        "all": "Alle",
+        "general": "Allgemein",
+        "emergency": "Notfall",
+        "training": "Schulung",
+        "event": "Veranstaltung",
+        "maintenance": "Wartung",
+        "policy": "Richtlinie"
+      },
+      "priority": {
+        "low": "Niedrig",
+        "normal": "Normal",
+        "high": "Hoch",
+        "urgent": "Dringend"
+      }
+    },
     "thisMonth": "Diesen Monat",
     "upcomingEvents": "Kommende Veranstaltungen",
     "yearTotal": "Jahresgesamt",

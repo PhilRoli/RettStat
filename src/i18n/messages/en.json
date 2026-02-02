@@ -48,6 +48,38 @@
     "welcome": "Welcome to RettStat",
     "subtitle": "Your central hub for shift plans, statistics, and events.",
     "nextShift": "Next Shift",
+    "quickLinks": {
+      "title": "Quick Links"
+    },
+    "nextShifts": {
+      "title": "Upcoming Shifts",
+      "noShifts": "No upcoming shifts",
+      "driver": "Driver",
+      "lead": "Lead",
+      "student": "Student"
+    },
+    "news": {
+      "title": "News & Announcements",
+      "description": "Latest updates and information",
+      "noNews": "No news available",
+      "new": "New",
+      "attachments": "{count} attachment",
+      "categories": {
+        "all": "All",
+        "general": "General",
+        "emergency": "Emergency",
+        "training": "Training",
+        "event": "Event",
+        "maintenance": "Maintenance",
+        "policy": "Policy"
+      },
+      "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "Urgent"
+      }
+    },
     "thisMonth": "This Month",
     "upcomingEvents": "Upcoming Events",
     "yearTotal": "Year Total",
