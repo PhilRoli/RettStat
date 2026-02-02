@@ -9,34 +9,67 @@ export function useAuth() {
   const {
     user,
     session,
+    profile,
     isLoading,
     setUser,
     setSession,
+    setProfile,
     setLoading,
     signOut: signOutStore,
+    hasPermission,
   } = useAuthStore();
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      // Fetch user profile if session exists
+      if (session?.user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role, full_name")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+      }
+
       setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      // Fetch user profile if session exists
+      if (session?.user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role, full_name")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+      } else {
+        setProfile(null);
+      }
+
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, setSession, setUser, setLoading]);
+  }, [supabase, setSession, setUser, setProfile, setLoading]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
@@ -70,7 +103,7 @@ export function useAuth() {
     await supabase.auth.signOut();
     signOutStore();
     setLoading(false);
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   const resetPassword = async (email: string) => {
@@ -92,8 +125,10 @@ export function useAuth() {
   return {
     user,
     session,
+    profile,
     isLoading,
     isAuthenticated: !!user,
+    hasPermission,
     signIn,
     signUp,
     signOut,

@@ -1,8 +1,40 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+const publicPaths = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/verify-email",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
+
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const { response, supabase } = await updateSession(request);
+
+  const { pathname } = request.nextUrl;
+
+  // Check if the path is public
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+
+  // Get the current user
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Redirect to login if accessing protected route without session
+  if (!session && !isPublicPath && pathname !== "/") {
+    const redirectUrl = new URL("/auth/login", request.url);
+    redirectUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Redirect to home if accessing auth pages while logged in
+  if (session && isPublicPath) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
