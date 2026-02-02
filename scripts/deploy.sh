@@ -100,11 +100,11 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 REALTIME_ENC_KEY=$REALTIME_ENC
 REALTIME_SECRET_KEY_BASE=$REALTIME_SECRET
 
-# SMTP (Resend) - CONFIGURE THIS
-SMTP_HOST=smtp.resend.com
+# SMTP (Lettermint) - CONFIGURE THIS
+SMTP_HOST=smtp.lettermint.co
 SMTP_PORT=587
-SMTP_USER=resend
-SMTP_PASS=YOUR_RESEND_API_KEY
+SMTP_USER=lettermint
+SMTP_PASS=YOUR_LETTERMINT_API_KEY
 SMTP_FROM_EMAIL=noreply@$DOMAIN
 
 # Basic Auth
@@ -116,7 +116,7 @@ EOF
   echo ""
   echo "⚠️  IMPORTANT: Edit .env.production and configure:"
   echo "   - GITHUB_USERNAME and GITHUB_TOKEN"
-  echo "   - SMTP_PASS (Resend API key)"
+  echo "   - SMTP_PASS (Lettermint API key)"
   echo "   - TRAEFIK_AUTH and STUDIO_AUTH (change default passwords)"
   echo "   - Generate proper SUPABASE_ANON_KEY and SUPABASE_SERVICE_KEY"
   echo ""

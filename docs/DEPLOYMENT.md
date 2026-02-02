@@ -14,7 +14,7 @@ Complete guide for deploying RettStat to production on a Hetzner VPS.
 
 - Hetzner Cloud account
 - GitHub account
-- Resend account for emails
+- Lettermint account for emails
 - Domain: rettstat.at
 
 ## Server Requirements
