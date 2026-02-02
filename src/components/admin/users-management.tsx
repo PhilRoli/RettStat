@@ -330,7 +330,7 @@ export function UsersManagement() {
 
       {/* Edit User Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("editDialogTitle")}</DialogTitle>
             <DialogDescription>{t("editDialogDescription")}</DialogDescription>
@@ -400,7 +400,7 @@ export function UsersManagement() {
 
       {/* Permissions Dialog (Placeholder) */}
       <Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("permissionsDialogTitle")}</DialogTitle>
             <DialogDescription>{t("permissionsDialogDescription")}</DialogDescription>
@@ -416,7 +416,7 @@ export function UsersManagement() {
 
       {/* Qualifications Dialog (Placeholder) */}
       <Dialog open={qualificationsDialogOpen} onOpenChange={setQualificationsDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("qualificationsDialogTitle")}</DialogTitle>
             <DialogDescription>{t("qualificationsDialogDescription")}</DialogDescription>
@@ -432,7 +432,7 @@ export function UsersManagement() {
 
       {/* Assignments Dialog (Placeholder) */}
       <Dialog open={assignmentsDialogOpen} onOpenChange={setAssignmentsDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("assignmentsDialogTitle")}</DialogTitle>
             <DialogDescription>{t("assignmentsDialogDescription")}</DialogDescription>

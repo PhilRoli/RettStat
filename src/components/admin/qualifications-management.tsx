@@ -463,7 +463,7 @@ export function QualificationsManagement() {
 
       {/* Qualification Dialog */}
       <Dialog open={qualDialogOpen} onOpenChange={setQualDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedQual ? t("editQualificationTitle") : t("createQualificationTitle")}
@@ -560,7 +560,7 @@ export function QualificationsManagement() {
 
       {/* Category Dialog */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {selectedCat ? t("editCategoryTitle") : t("createCategoryTitle")}
@@ -612,7 +612,7 @@ export function QualificationsManagement() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
             <DialogDescription>{t("deleteDialogDescription")}</DialogDescription>

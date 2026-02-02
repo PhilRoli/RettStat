@@ -423,7 +423,7 @@ export function NewsManagement() {
               <TableHead>{t("targetUnitsColumn")}</TableHead>
               <TableHead>{t("publishedColumn")}</TableHead>
               <TableHead>{t("createdColumn")}</TableHead>
-              <TableHead className="w-[100px]">{t("actionsColumn")}</TableHead>
+              <TableHead className="w-25">{t("actionsColumn")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

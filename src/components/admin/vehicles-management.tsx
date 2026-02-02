@@ -547,7 +547,7 @@ export function VehiclesManagement() {
 
       {/* Vehicle Add/Edit Dialog */}
       <Dialog open={vehicleDialogOpen} onOpenChange={setVehicleDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {selectedVehicle ? t("editVehicleTitle") : t("addVehicleTitle")}
@@ -644,7 +644,7 @@ export function VehiclesManagement() {
 
       {/* Vehicle Type Add/Edit Dialog */}
       <Dialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{selectedType ? t("editTypeTitle") : t("addTypeTitle")}</DialogTitle>
             <DialogDescription>{t("typeDialogDescription")}</DialogDescription>

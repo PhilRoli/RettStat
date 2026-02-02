@@ -341,7 +341,7 @@ export function AbsencesManagement() {
                   <TableHead>{t("nameColumn")}</TableHead>
                   <TableHead>{t("categoryColumn")}</TableHead>
                   <TableHead>{t("descriptionColumn")}</TableHead>
-                  <TableHead className="w-[100px]">{t("actionsColumn")}</TableHead>
+                  <TableHead className="w-25">{t("actionsColumn")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,7 +400,7 @@ export function AbsencesManagement() {
                   <TableHead>{t("nameColumn")}</TableHead>
                   <TableHead>{t("descriptionColumn")}</TableHead>
                   <TableHead>{t("iconColumn")}</TableHead>
-                  <TableHead className="w-[100px]">{t("actionsColumn")}</TableHead>
+                  <TableHead className="w-25">{t("actionsColumn")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

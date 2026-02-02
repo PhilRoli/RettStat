@@ -609,7 +609,7 @@ export function AssignmentsManagement() {
 
       {/* Assignment Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {selectedAssignment ? t("editAssignmentTitle") : t("createAssignmentTitle")}
@@ -702,7 +702,7 @@ export function AssignmentsManagement() {
 
       {/* Category Dialog */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {selectedCat ? t("editCategoryTitle") : t("createCategoryTitle")}
@@ -754,7 +754,7 @@ export function AssignmentsManagement() {
 
       {/* Permissions Dialog */}
       <Dialog open={permDialogOpen} onOpenChange={setPermDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("editPermissionsTitle")}</DialogTitle>
             <DialogDescription>
@@ -795,7 +795,7 @@ export function AssignmentsManagement() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
             <DialogDescription>{t("deleteDialogDescription")}</DialogDescription>

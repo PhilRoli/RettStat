@@ -337,7 +337,7 @@ export function UnitsManagement() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{selectedUnit ? t("editUnitTitle") : t("addUnitTitle")}</DialogTitle>
             <DialogDescription>{t("unitDialogDescription")}</DialogDescription>
