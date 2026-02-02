@@ -20,6 +20,7 @@ export default function ShiftplanPage() {
   const [selectedUnit, setSelectedUnit] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { data: units, isLoading: isLoadingUnits } = useUserUnits();
 
