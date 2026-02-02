@@ -55,3 +55,5 @@ next-env.d.ts
 # Supabase
 supabase/.branches
 supabase/.temp
+pb_data/
+pocketbase/pb_data/
