@@ -35,3 +35,8 @@ export {
   useCreateAbsenceRequest,
   downloadICal,
 } from "./use-my-schedule";
+export {
+  useNotificationPermission,
+  useServiceWorker,
+  usePushSubscription,
+} from "./use-notifications";

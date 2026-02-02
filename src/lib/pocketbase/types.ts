@@ -295,6 +295,16 @@ export interface EventGroupRecord extends BaseRecord {
   members?: string[]; // relation to profiles
 }
 
+// Push Subscription
+export interface PushSubscriptionRecord extends BaseRecord {
+  user: string; // relation to users
+  endpoint: string;
+  p256dh: string; // public key
+  auth: string; // auth secret
+  user_agent?: string;
+  is_active: boolean;
+}
+
 // Collection type map for type-safe queries
 export interface CollectionRecords {
   users: UserRecord;
@@ -326,6 +336,7 @@ export interface CollectionRecords {
   event_positions: EventPositionRecord;
   event_registrations: EventRegistrationRecord;
   event_groups: EventGroupRecord;
+  push_subscriptions: PushSubscriptionRecord;
 }
 
 // Helper type for getting record type by collection name

@@ -606,7 +606,8 @@
       "title": "Notification Preferences",
       "description": "Configure how you want to receive notifications",
       "emailTitle": "Email Notifications",
-      "pushTitle": "Push Notifications",
+      "pushTitle": "Push Notification Types",
+      "pushPreferencesDescription": "Choose which types of push notifications you want to receive",
       "shifts": "Shifts",
       "shiftsDescription": "Notifications about shift assignments and changes",
       "events": "Events",
@@ -722,5 +723,22 @@
     "goToProduction": "Go to Production",
     "logout": "Logout",
     "environment": "Development Environment"
+  },
+  "notifications": {
+    "enableTitle": "Enable Notifications",
+    "enableDescription": "Get notified about shifts, events, and important updates",
+    "enable": "Enable",
+    "enabling": "Enabling...",
+    "notNow": "Not Now",
+    "dismiss": "Dismiss",
+    "disable": "Disable",
+    "loading": "Loading...",
+    "pushNotifications": "Push Notifications",
+    "enabledDescription": "You will receive notifications on this device",
+    "disabledDescription": "Enable to receive notifications on this device",
+    "notSupported": "Not Supported",
+    "notSupportedDescription": "Push notifications are not supported on this device",
+    "blocked": "Blocked",
+    "blockedDescription": "Allow notifications in your browser settings to enable"
   }
 }

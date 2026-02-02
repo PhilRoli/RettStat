@@ -606,7 +606,8 @@
       "title": "Benachrichtigungseinstellungen",
       "description": "Konfigurieren Sie, wie Sie Benachrichtigungen erhalten möchten",
       "emailTitle": "E-Mail-Benachrichtigungen",
-      "pushTitle": "Push-Benachrichtigungen",
+      "pushTitle": "Push-Benachrichtigungstypen",
+      "pushPreferencesDescription": "Wählen Sie, welche Arten von Push-Benachrichtigungen Sie erhalten möchten",
       "shifts": "Schichten",
       "shiftsDescription": "Benachrichtigungen über Schichtzuweisungen und Änderungen",
       "events": "Veranstaltungen",
@@ -722,5 +723,22 @@
     "goToProduction": "Zur Produktionsumgebung",
     "logout": "Abmelden",
     "environment": "Entwicklungsumgebung"
+  },
+  "notifications": {
+    "enableTitle": "Benachrichtigungen aktivieren",
+    "enableDescription": "Erhalten Sie Benachrichtigungen über Schichten, Events und wichtige Updates",
+    "enable": "Aktivieren",
+    "enabling": "Aktiviere...",
+    "notNow": "Nicht jetzt",
+    "dismiss": "Schließen",
+    "disable": "Deaktivieren",
+    "loading": "Lädt...",
+    "pushNotifications": "Push-Benachrichtigungen",
+    "enabledDescription": "Sie erhalten Benachrichtigungen auf diesem Gerät",
+    "disabledDescription": "Aktivieren, um Benachrichtigungen auf diesem Gerät zu erhalten",
+    "notSupported": "Nicht unterstützt",
+    "notSupportedDescription": "Push-Benachrichtigungen werden auf diesem Gerät nicht unterstützt",
+    "blocked": "Blockiert",
+    "blockedDescription": "Erlauben Sie Benachrichtigungen in Ihren Browsereinstellungen"
   }
 }
