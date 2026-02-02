@@ -248,6 +248,17 @@ export function useShifts() {
 3. Ask the user for clarification
 4. Enter plan mode for complex features
 
+## Pre-Commit Checklist
+
+**ALWAYS run these commands before committing:**
+
+```bash
+bun run lint        # Fix ESLint warnings
+bun run type-check  # Catch TypeScript errors
+```
+
+Both checks are also run by lint-staged on commit, but running them manually first saves time.
+
 ## Sub-Agent Instructions
 
 When delegating work to sub-agents (task tool), always include:
