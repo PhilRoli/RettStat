@@ -210,7 +210,12 @@ echo "✓ Systemd service created"
 echo ""
 echo "Step 10: Starting Services"
 echo "--------------------------"
-# Environment variables are already loaded from step 6.5
+# Docker Compose needs .env file (not .env.production)
+# Create symlink or copy for docker compose to use
+if [ ! -f ".env" ]; then
+  echo "Creating .env symlink to .env.production"
+  ln -s .env.production .env
+fi
 echo "✓ Using environment variables from .env.production"
 docker compose up -d
 

@@ -1,5 +1,31 @@
 # Deployment Troubleshooting Guide
 
+## Docker Compose Not Reading Environment Variables
+
+**Problem:**
+Docker Compose shows it's using placeholder values like `YOUR_GITHUB_USERNAME` instead of your actual values.
+
+**Cause:**
+Docker Compose looks for `.env` file by default, not `.env.production`.
+
+**Solution:**
+
+Create a symlink from `.env` to `.env.production`:
+
+```bash
+cd /opt/rettstat
+ln -s .env.production .env
+docker compose up -d
+```
+
+Or use the `--env-file` flag:
+
+```bash
+docker compose --env-file .env.production up -d
+```
+
+The deploy script now automatically creates this symlink.
+
 ## "Variable is not set" Warnings
 
 **Problem:**
