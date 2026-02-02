@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/layout";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,5 +31,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      {children}
+      <Toaster />
+    </AppShell>
+  );
 }

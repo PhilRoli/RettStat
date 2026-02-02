@@ -177,5 +177,66 @@
     "hours": "{count, plural, =1 {# Stunde} other {# Stunden}}",
     "shifts": "{count, plural, =1 {# Schicht} other {# Schichten}}",
     "days": "{count, plural, =1 {# Tag} other {# Tage}}"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "description": "Verwalten Sie Ihre Kontoeinstellungen und Präferenzen",
+    "tabs": {
+      "profile": "Profil",
+      "notifications": "Benachrichtigungen",
+      "appearance": "Erscheinungsbild"
+    },
+    "profile": {
+      "title": "Profileinstellungen",
+      "description": "Aktualisieren Sie Ihre persönlichen Informationen",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "serviceId": "Dienst-ID",
+      "uploadAvatar": "Avatar hochladen",
+      "avatarHint": "Max. 2MB, JPG oder PNG",
+      "emailHint": "Sie erhalten eine Bestätigungs-E-Mail, wenn Sie Ihre E-Mail-Adresse ändern",
+      "serviceIdHint": "Ihre Dienst-ID kann nicht geändert werden",
+      "saveButton": "Änderungen speichern",
+      "successTitle": "Erfolg",
+      "successDescription": "Ihr Profil wurde aktualisiert",
+      "errorTitle": "Fehler",
+      "errorDescription": "Profil konnte nicht aktualisiert werden",
+      "emailUpdateTitle": "E-Mail-Aktualisierung",
+      "emailUpdateDescription": "Bitte überprüfen Sie Ihre neue E-Mail-Adresse für einen Bestätigungslink",
+      "avatarSuccessTitle": "Avatar aktualisiert",
+      "avatarSuccessDescription": "Ihr Avatar wurde erfolgreich aktualisiert",
+      "avatarErrorTitle": "Upload fehlgeschlagen",
+      "avatarErrorDescription": "Avatar konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut."
+    },
+    "notifications": {
+      "title": "Benachrichtigungseinstellungen",
+      "description": "Konfigurieren Sie, wie Sie Benachrichtigungen erhalten möchten",
+      "emailTitle": "E-Mail-Benachrichtigungen",
+      "pushTitle": "Push-Benachrichtigungen",
+      "shifts": "Schichten",
+      "shiftsDescription": "Benachrichtigungen über Schichtzuweisungen und Änderungen",
+      "events": "Veranstaltungen",
+      "eventsDescription": "Updates zu Veranstaltungen, denen Sie zugewiesen sind",
+      "news": "Neuigkeiten",
+      "newsDescription": "Wichtige Ankündigungen und Neuigkeiten",
+      "saveButton": "Einstellungen speichern",
+      "successTitle": "Erfolg",
+      "successDescription": "Benachrichtigungseinstellungen aktualisiert",
+      "errorTitle": "Fehler",
+      "errorDescription": "Einstellungen konnten nicht aktualisiert werden"
+    },
+    "appearance": {
+      "title": "Erscheinungsbild",
+      "description": "Passen Sie das Aussehen der Anwendung an",
+      "theme": "Design",
+      "themeDescription": "Wählen Sie Ihr bevorzugtes Farbschema",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System",
+      "language": "Sprache",
+      "languageDescription": "Wählen Sie Ihre bevorzugte Sprache"
+    }
   }
 }

@@ -177,5 +177,66 @@
     "hours": "{count, plural, =1 {# hour} other {# hours}}",
     "shifts": "{count, plural, =1 {# shift} other {# shifts}}",
     "days": "{count, plural, =1 {# day} other {# days}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your account settings and preferences",
+    "tabs": {
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "appearance": "Appearance"
+    },
+    "profile": {
+      "title": "Profile Settings",
+      "description": "Update your personal information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "serviceId": "Service ID",
+      "uploadAvatar": "Upload Avatar",
+      "avatarHint": "Max 2MB, JPG or PNG",
+      "emailHint": "You will receive a confirmation email if you change your email address",
+      "serviceIdHint": "Your service ID cannot be changed",
+      "saveButton": "Save Changes",
+      "successTitle": "Success",
+      "successDescription": "Your profile has been updated",
+      "errorTitle": "Error",
+      "errorDescription": "Failed to update profile",
+      "emailUpdateTitle": "Email Update",
+      "emailUpdateDescription": "Please check your new email address for a confirmation link",
+      "avatarSuccessTitle": "Avatar Updated",
+      "avatarSuccessDescription": "Your avatar has been updated successfully",
+      "avatarErrorTitle": "Upload Failed",
+      "avatarErrorDescription": "Failed to upload avatar. Please try again."
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "description": "Configure how you want to receive notifications",
+      "emailTitle": "Email Notifications",
+      "pushTitle": "Push Notifications",
+      "shifts": "Shifts",
+      "shiftsDescription": "Notifications about shift assignments and changes",
+      "events": "Events",
+      "eventsDescription": "Updates about events you're assigned to",
+      "news": "News",
+      "newsDescription": "Important announcements and news",
+      "saveButton": "Save Preferences",
+      "successTitle": "Success",
+      "successDescription": "Notification preferences updated",
+      "errorTitle": "Error",
+      "errorDescription": "Failed to update preferences"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize the look and feel of the application",
+      "theme": "Theme",
+      "themeDescription": "Select your preferred color scheme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "language": "Language",
+      "languageDescription": "Choose your preferred language"
+    }
   }
 }

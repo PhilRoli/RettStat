@@ -121,6 +121,20 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (profileData) {
+      setProfile(profileData);
+    }
+  };
+
   return {
     user,
     session,
@@ -132,5 +146,6 @@ export function useAuth() {
     signOut,
     resetPassword,
     updatePassword,
+    refreshProfile,
   };
 }
