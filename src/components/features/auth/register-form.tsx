@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function RegisterForm() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,12 +25,12 @@ export function RegisterForm() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("passwordsDoNotMatch"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("passwordTooShort"));
       return;
     }
 
@@ -41,7 +43,7 @@ export function RegisterForm() {
 
       router.push("/auth/verify-email");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign up");
+      setError(err instanceof Error ? err.message : t("signUpFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -50,8 +52,8 @@ export function RegisterForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Create Account</CardTitle>
-        <CardDescription>Sign up for a new RettStat account</CardDescription>
+        <CardTitle>{t("createAccount")}</CardTitle>
+        <CardDescription>{t("signUpDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -60,11 +62,11 @@ export function RegisterForm() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{t("fullName")}</Label>
             <Input
               id="fullName"
               type="text"
-              placeholder="John Doe"
+              placeholder={t("fullNamePlaceholder")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -73,11 +75,11 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -86,11 +88,11 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder={t("passwordMinLength")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -100,7 +102,7 @@ export function RegisterForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -112,13 +114,13 @@ export function RegisterForm() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Sign Up"}
+            {isLoading ? t("creatingAccount") : t("signUp")}
           </Button>
 
           <div className="text-muted-foreground text-center text-sm">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <a href="/auth/login" className="text-primary hover:underline">
-              Sign in
+              {t("signIn")}
             </a>
           </div>
         </form>

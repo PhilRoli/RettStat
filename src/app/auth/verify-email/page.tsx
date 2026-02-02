@@ -1,12 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Verify Email",
 };
 
-export default function VerifyEmailPage() {
+export default async function VerifyEmailPage() {
+  const t = await getTranslations("auth");
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -16,17 +18,14 @@ export default function VerifyEmailPage() {
               <Mail className="text-primary h-8 w-8" />
             </div>
           </div>
-          <CardTitle className="text-center">Check your email</CardTitle>
-          <CardDescription className="text-center">
-            We&apos;ve sent you a verification link. Please check your email to complete
-            registration.
-          </CardDescription>
+          <CardTitle className="text-center">{t("checkYourEmail")}</CardTitle>
+          <CardDescription className="text-center">{t("verificationSent")}</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-muted-foreground text-sm">
-            Didn&apos;t receive the email? Check your spam folder or{" "}
+            {t("didntReceiveEmail")}{" "}
             <a href="/auth/register" className="text-primary hover:underline">
-              try again
+              {t("tryAgain")}
             </a>
             .
           </p>
