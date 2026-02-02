@@ -13,3 +13,4 @@ export {
 export { useCreateTour, useUpdateTour, useDeleteTour } from "./use-tour-mutations";
 export { useVehicles, useVehicles as useUnitVehicles } from "./use-vehicles";
 export { useUnitMembers } from "./use-unit-members";
+export { useStatistics } from "./use-statistics";

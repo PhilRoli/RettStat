@@ -630,6 +630,20 @@
       "languageDescription": "Choose your preferred language"
     }
   },
+  "statistics": {
+    "title": "Statistics",
+    "shift": "shift",
+    "shifts": "shifts",
+    "less": "Less",
+    "more": "More",
+    "totalShifts": "Total {year}",
+    "thisMonth": "This Month",
+    "averagePerMonth": "Avg / Month",
+    "activityOverview": "Activity Overview",
+    "shiftsByVehicleType": "Shifts by Vehicle Type",
+    "noVehicleData": "No vehicle data available",
+    "errorLoading": "Failed to load statistics"
+  },
   "devAccess": {
     "title": "Development Access Required",
     "description": "You don't have permission to access the development environment.",
