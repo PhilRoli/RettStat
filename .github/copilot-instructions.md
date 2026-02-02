@@ -96,6 +96,14 @@ src/
 - Sync queue when connection restored
 - Show offline indicator in UI
 
+### Shell Commands
+
+- **NEVER use pipes (`|`) or `||` fallbacks that hide errors**
+- Pipes can mask error messages from the first command
+- `|| echo "..."` fallbacks suppress actual error output
+- Always run commands directly to see real error messages
+- Example: Use `git status` NOT `git status || echo "failed"`
+
 ### Testing Requirements
 
 - Unit tests for utilities and hooks
