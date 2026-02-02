@@ -94,9 +94,31 @@ rettstat/
   - [x] Protected routes with middleware
   - [x] Session management and persistence
 
+- [x] Phase 3.5: Bug Fixes & Improvements
+  - [x] i18n enforcement (all strings translated)
+  - [x] Middleware → Proxy migration (Next.js 15+)
+  - [x] Next.js config fixes (allowedDevOrigins)
+  - [x] Layout and responsive fixes
+  - [x] Theme toggle synchronization
+  - [x] TypeScript deprecations removed
+  - [x] Tailwind canonical classes
+  - [x] Code quality guidelines
+- [x] Phase 4: Database Schema & API
+  - [x] PostgreSQL schema design (12 tables)
+  - [x] Row Level Security (RLS) policies
+  - [x] Database functions and triggers
+  - [x] TypeScript types generation
+  - [x] Migration files created
+
 ### In Progress 🔄
 
-- [ ] Phase 4: Database Schema & API (NEXT)
+- [ ] Phase 4: Complete Supabase Setup (migrations need to be applied)
+  - [x] Schema designed and migrations created
+  - [ ] Supabase local instance configured
+  - [ ] Migrations applied and tested
+  - [ ] Real-time subscriptions implemented
+  - [ ] Seed data created for testing
+- [ ] Phase 5: Feature Implementation (NEXT)
 
 ### Planned 📋
 
@@ -182,7 +204,64 @@ rettstat/
 
 ## Database Schema
 
-_To be documented in Phase 4_
+### Tables (12)
+
+1. **profiles** - User profiles extending auth.users
+   - Personal information, role (admin/manager/member), contact details
+2. **qualifications** - Types of qualifications (certifications, licenses)
+   - Name, description, renewal requirements
+3. **user_qualifications** - User qualifications with expiration tracking
+   - Obtained date, expiration date, certificate number
+4. **assignments** - Assignments (stations, vehicles, teams)
+   - Name, type (station/vehicle/team/other), description
+5. **user_assignments** - User assignment history
+   - Assigned date, end date, primary assignment flag
+6. **shift_types** - Shift type templates
+   - Name, default times, duration, color coding
+7. **shifts** - Individual shift records
+   - User, type, assignment, times, status (scheduled/confirmed/completed/cancelled/no_show)
+8. **events** - Event management
+   - Name, type (emergency/training/community/competition/other), location, times, status
+9. **event_positions** - Positions within events
+   - Name, required qualifications, quantity needed/filled
+10. **event_registrations** - User event registrations
+    - Position, status (registered/confirmed/attended/cancelled/no_show)
+11. **news** - Announcements and news
+    - Title, content, category, priority, publishing dates
+12. **monthly_statistics** - Pre-computed statistics cache
+    - User, year, month, total shifts/hours/events
+
+### Row Level Security (RLS)
+
+- All tables have RLS enabled
+- Role-based policies (admin, manager, member)
+- Users can view all data, edit their own data
+- Admins/managers can manage shifts, events, qualifications
+- Helper functions: `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
+
+### Database Functions
+
+- `auto_create_profile()` - Trigger to create profile on user signup
+- `auto_update_event_position_counts()` - Trigger to update position fills
+- `calculate_monthly_stats()` - Trigger to update statistics on shift changes
+- `get_user_statistics(user_id, start_date, end_date)` - Query user stats
+- `get_unit_statistics(start_date, end_date)` - Query organization-wide stats
+- `check_expiring_qualifications(days_ahead)` - Find qualifications expiring soon
+
+### Migrations
+
+Migrations are located in `supabase/migrations/`:
+
+- `20260202_initial_schema.sql` - Complete database schema
+- `20260202_rls_policies.sql` - Row Level Security policies
+- `20260202_functions_triggers.sql` - Functions and triggers
+
+**Note:** Migrations need to be applied using the Supabase CLI:
+
+```bash
+supabase start      # Start local Supabase instance
+supabase db reset   # Apply all migrations
+```
 
 ## API Endpoints
 
