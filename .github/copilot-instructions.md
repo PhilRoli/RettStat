@@ -193,7 +193,21 @@ export function useShifts() {
 - ❌ Using npm/yarn/pnpm/npx instead of bun/bunx (CRITICAL - applies to all agents)
 - ❌ Committing directly to main/develop (use git flow commands!)
 - ❌ Manually committing during git flow merge - let git flow handle it
-- ❌ Hardcoding strings instead of using i18n
+- ❌ Hardcoding user-facing strings instead of using i18n (next-intl)
+  - ALWAYS use `useTranslations()` or `getTranslations()` for any text shown to users
+  - Add new keys to both `src/i18n/messages/en.json` and `src/i18n/messages/de.json`
+  - Only system/debug messages and code identifiers should be hardcoded
+- ❌ Using non-canonical Tailwind classes
+  - Use `supports-backdrop-filter:` NOT `supports-[backdrop-filter]:`
+  - Use `data-disabled:` NOT `data-[disabled]:`
+  - Use `min-w-32` NOT `min-w-[8rem]`
+  - Use `sm:min-w-75` NOT `sm:min-w-[300px]`
+  - Prefer named sizes over arbitrary values when available
+- ❌ Using deprecated TypeScript/React APIs
+  - Use `React.ComponentRef<T>` NOT `React.ElementRef<T>`
+- ❌ Creating unnecessary code or unused variables
+  - Remove unused imports, functions, and variables
+  - Keep code minimal and focused
 - ❌ Ignoring TypeScript errors
 - ❌ Not handling loading/error states
 - ❌ Not updating PROJECT.md after changes
