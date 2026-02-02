@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ChevronLeft, ChevronRight, Edit, Eye } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit, Eye, Plus } from "lucide-react";
 import { useUserUnits, useShiftplanDates, useHasPermission } from "@/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShiftplanDayView } from "@/components/features/shiftplan";
+import { ShiftplanDayView, ShiftplanDialog } from "@/components/features/shiftplan";
 export default function ShiftplanPage() {
   const t = useTranslations("shifts");
   const [selectedUnit, setSelectedUnit] = useState<string>("");
@@ -22,6 +22,8 @@ export default function ShiftplanPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createDialogDate, setCreateDialogDate] = useState<Date | undefined>();
 
   const { data: units, isLoading: isLoadingUnits } = useUserUnits();
   const { hasPermission: canEdit } = useHasPermission("edit_shiftplans", selectedUnit);
@@ -194,19 +196,30 @@ export default function ShiftplanPage() {
                   return (
                     <button
                       key={index}
-                      disabled={!day || !hasShiftplan}
+                      disabled={!day}
                       onClick={() => {
-                        if (day && hasShiftplan) {
-                          setSelectedDate(new Date(selectedYear, selectedMonth, day));
+                        if (day) {
+                          if (hasShiftplan) {
+                            setSelectedDate(new Date(selectedYear, selectedMonth, day));
+                          } else if (isEditMode && canEdit) {
+                            // Open create dialog for empty date in edit mode
+                            setCreateDialogDate(new Date(selectedYear, selectedMonth, day));
+                            setCreateDialogOpen(true);
+                          }
                         }
                       }}
                       className={`aspect-square rounded-md p-2 text-sm transition-colors ${!day ? "invisible" : ""} ${
                         hasShiftplan
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "text-muted-foreground"
-                      } ${!hasShiftplan && day ? "cursor-not-allowed" : ""} `}
+                          : isEditMode && canEdit
+                            ? "border-muted-foreground/30 hover:border-primary hover:bg-accent border-2 border-dashed"
+                            : "text-muted-foreground cursor-not-allowed"
+                      }`}
                     >
                       {day}
+                      {!hasShiftplan && isEditMode && canEdit && day && (
+                        <Plus className="mx-auto mt-1 h-3 w-3 opacity-50" />
+                      )}
                     </button>
                   );
                 })}
@@ -228,6 +241,17 @@ export default function ShiftplanPage() {
         date={selectedDate}
         onClose={() => setSelectedDate(null)}
         isEditMode={isEditMode && canEdit}
+      />
+
+      {/* Create Shiftplan Dialog */}
+      <ShiftplanDialog
+        open={createDialogOpen}
+        onClose={() => {
+          setCreateDialogOpen(false);
+          setCreateDialogDate(undefined);
+        }}
+        unitId={selectedUnit}
+        selectedDate={createDialogDate}
       />
     </div>
   );
