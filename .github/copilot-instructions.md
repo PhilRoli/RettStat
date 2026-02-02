@@ -43,6 +43,23 @@ RettStat is an EMS (Emergency Medical Services) shift management PWA built with 
 4. Never manually commit to develop - the merge commit is created by git flow
 5. If `git flow feature finish` fails, DO NOT commit manually to develop
 
+**Git Flow with Non-Interactive Editor:**
+
+To avoid interactive editor prompts during git flow finish:
+
+```bash
+export GIT_EDITOR=true
+git flow feature finish <name>
+```
+
+This automatically accepts the default merge message and completes the merge without opening an editor.
+
+If the merge is in progress but interrupted:
+
+1. Check status: `git status`
+2. If "All conflicts fixed but you are still merging": `git commit --no-edit`
+3. Then delete the feature branch: `git branch -d feature/<name>`
+
 ### Code Style
 
 - TypeScript strict mode - no `any` types without justification
