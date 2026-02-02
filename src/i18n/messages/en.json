@@ -37,6 +37,7 @@
     "schedule": "My Schedule",
     "statistics": "Statistics",
     "events": "Events",
+    "reports": "Reports",
     "members": "Members",
     "settings": "Settings"
   },
@@ -748,5 +749,34 @@
     "syncComplete": "Sync complete",
     "syncError": "Sync failed",
     "cachedData": "Showing cached data"
+  },
+  "reports": {
+    "title": "Reports & Export",
+    "description": "Export your shift data and statistics",
+    "filters": "Date Range",
+    "filtersDescription": "Select the time period for your export",
+    "year": "Year",
+    "month": "Month",
+    "allMonths": "All Months",
+    "shiftsFound": "{count} shifts found",
+    "exportShifts": "Export Shifts",
+    "exportShiftsDescription": "Download all your shifts as a CSV file",
+    "exportStats": "Export Statistics",
+    "exportStatsDescription": "Download summary statistics as a CSV file",
+    "downloadCSV": "Download CSV",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
   }
 }

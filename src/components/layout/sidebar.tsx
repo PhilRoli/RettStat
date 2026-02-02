@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Settings,
   CalendarCheck,
+  FileText,
 } from "lucide-react";
 
 const navigationItems = [
@@ -20,6 +21,7 @@ const navigationItems = [
   { href: "/schedule", icon: CalendarCheck, label: "schedule" },
   { href: "/statistics", icon: BarChart3, label: "statistics" },
   { href: "/events", icon: CalendarDays, label: "events" },
+  { href: "/reports", icon: FileText, label: "reports" },
   { href: "/members", icon: Users, label: "members" },
   { href: "/settings", icon: Settings, label: "settings" },
 ];

@@ -37,6 +37,7 @@
     "schedule": "Mein Kalender",
     "statistics": "Statistiken",
     "events": "Veranstaltungen",
+    "reports": "Berichte",
     "members": "Mitglieder",
     "settings": "Einstellungen"
   },
@@ -748,5 +749,34 @@
     "syncComplete": "Synchronisierung abgeschlossen",
     "syncError": "Synchronisierung fehlgeschlagen",
     "cachedData": "Zeige zwischengespeicherte Daten"
+  },
+  "reports": {
+    "title": "Berichte & Export",
+    "description": "Exportieren Sie Ihre Schichtdaten und Statistiken",
+    "filters": "Zeitraum",
+    "filtersDescription": "Wählen Sie den Zeitraum für Ihren Export",
+    "year": "Jahr",
+    "month": "Monat",
+    "allMonths": "Alle Monate",
+    "shiftsFound": "{count} Schichten gefunden",
+    "exportShifts": "Schichten exportieren",
+    "exportShiftsDescription": "Laden Sie alle Ihre Schichten als CSV-Datei herunter",
+    "exportStats": "Statistiken exportieren",
+    "exportStatsDescription": "Laden Sie zusammenfassende Statistiken als CSV-Datei herunter",
+    "downloadCSV": "CSV herunterladen",
+    "months": {
+      "january": "Januar",
+      "february": "Februar",
+      "march": "März",
+      "april": "April",
+      "may": "Mai",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "August",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "Dezember"
+    }
   }
 }
