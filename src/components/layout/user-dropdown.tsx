@@ -22,11 +22,14 @@ export function UserDropdown() {
 
   if (!profile) return null;
 
-  const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email;
+  const fullName =
+    `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email || "";
   const initials =
     profile.first_name && profile.last_name
       ? `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase()
-      : profile.email[0].toUpperCase();
+      : profile.email
+        ? profile.email[0].toUpperCase()
+        : "?";
 
   return (
     <DropdownMenu>

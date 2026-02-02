@@ -27,6 +27,21 @@ export interface ProfileRecord extends BaseRecord {
   avatar?: string; // file field
   service_id?: string;
   is_active: boolean;
+  // Expanded fields from user relation
+  email?: string; // From expanded user
+  avatar_url?: string; // Computed/legacy field
+  notification_preferences?: {
+    email: {
+      shifts: boolean;
+      events: boolean;
+      news: boolean;
+    };
+    push: {
+      shifts: boolean;
+      events: boolean;
+      news: boolean;
+    };
+  };
 }
 
 // Unit
