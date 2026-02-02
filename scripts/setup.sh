@@ -104,9 +104,11 @@ prompt DOMAIN "Domain name" "rettstat.at"
 prompt ACME_EMAIL "Email for SSL certificates" "admin@${DOMAIN}"
 
 echo ""
-echo "GITHUB CONFIGURATION (for container registry)"
+echo "GITHUB CONFIGURATION (for container registry & repository access)"
+echo "  Create a Personal Access Token at: https://github.com/settings/tokens"
+echo "  Required scopes: read:packages, repo (for private repos)"
 prompt GITHUB_USERNAME "GitHub username" ""
-prompt_password GITHUB_TOKEN "GitHub token (ghp_...)"
+prompt_password GITHUB_TOKEN "GitHub Personal Access Token (ghp_...)"
 
 echo ""
 echo "DEV ENVIRONMENT"
@@ -190,7 +192,12 @@ print_success "Installation directory created: $INSTALL_DIR"
 # Clone repository if not exists
 print_step "Step 5: Cloning repository"
 if [ ! -d "repo" ]; then
-    git clone "$REPO_URL" repo
+    # Configure git to use the token for this repo
+    git clone "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/PhilRoli/rettstat.git" repo
+    # Remove credentials from git remote for security
+    cd repo
+    git remote set-url origin "$REPO_URL"
+    cd ..
     print_success "Repository cloned"
 else
     cd repo && git pull && cd ..
