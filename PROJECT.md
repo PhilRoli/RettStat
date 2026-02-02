@@ -3,6 +3,7 @@
 ## Project Status: 🚧 In Development
 
 ## Overview
+
 RettStat is a Progressive Web Application (PWA) for Emergency Medical Services (EMS) organizations to manage shift plans, view statistics, and coordinate event services.
 
 ## Quick Start
@@ -28,21 +29,21 @@ bun run build
 
 ## Technology Stack
 
-| Category | Technology | Version |
-|----------|------------|---------|
-| Runtime | Bun | 1.3+ |
-| Framework | Next.js | 14+ |
-| UI Library | React | 19+ |
-| Styling | Tailwind CSS | 4+ |
-| Components | Radix UI | Latest |
-| State (Global) | Zustand | 5+ |
-| State (Server) | TanStack Query | 5+ |
-| Database | Supabase (PostgreSQL) | Latest |
-| Auth | Supabase Auth | Latest |
-| Offline Storage | Dexie.js (IndexedDB) | 4+ |
-| i18n | next-intl | 4+ |
-| Forms | React Hook Form + Zod | Latest |
-| Testing | Vitest, RTL, Playwright | Latest |
+| Category        | Technology              | Version |
+| --------------- | ----------------------- | ------- |
+| Runtime         | Bun                     | 1.3+    |
+| Framework       | Next.js                 | 14+     |
+| UI Library      | React                   | 19+     |
+| Styling         | Tailwind CSS            | 4+      |
+| Components      | Radix UI                | Latest  |
+| State (Global)  | Zustand                 | 5+      |
+| State (Server)  | TanStack Query          | 5+      |
+| Database        | Supabase (PostgreSQL)   | Latest  |
+| Auth            | Supabase Auth           | Latest  |
+| Offline Storage | Dexie.js (IndexedDB)    | 4+      |
+| i18n            | next-intl               | 4+      |
+| Forms           | React Hook Form + Zod   | Latest  |
+| Testing         | Vitest, RTL, Playwright | Latest  |
 
 ## Project Structure
 
@@ -81,15 +82,57 @@ rettstat/
 ## Features
 
 ### Implemented ✅
-- [ ] Project setup and configuration
+
+- [x] Project setup and configuration
+- [x] Phase 1: Project Foundation
+- [x] Phase 2: Design System & Core Architecture
+- [x] Phase 3: Authentication & Authorization
+  - [x] Supabase Auth integration
+  - [x] Login, Register, Verify Email pages
+  - [x] Role-based access control (Admin, Manager, Member)
+  - [x] Granular permissions system
+  - [x] Protected routes with middleware
+  - [x] Session management and persistence
+
+- [x] Phase 3.5: Bug Fixes & Improvements
+  - [x] i18n enforcement (all strings translated)
+  - [x] Middleware → Proxy migration (Next.js 15+)
+  - [x] Next.js config fixes (allowedDevOrigins)
+  - [x] Layout and responsive fixes
+  - [x] Theme toggle synchronization
+  - [x] TypeScript deprecations removed
+  - [x] Tailwind canonical classes
+  - [x] Code quality guidelines
+
+- [x] Phase 4: Database Schema v1 (DEPRECATED)
+  - [x] Initial 12-table schema design
+  - [x] Replaced by v2 schema in Phase 4.5
+
+- [x] Phase 4.5: Database Schema v2 (Complete Redesign)
+  - [x] 24-table schema design
+  - [x] Core tables: profiles (simplified), units (hierarchical)
+  - [x] Category tables: 6 new category tables for master data
+  - [x] Entity tables: assignments, qualifications, vehicles, absences, event_groups
+  - [x] User relationships: qualifications (no expiration), assignments (with units, no end date), absences (new)
+  - [x] Shiftplans: New structure with shiftplans + tours (replaces shifts)
+  - [x] Events: Enhanced with categories, groups, admin_events
+  - [x] Row Level Security policies for all tables
+  - [x] Database functions and triggers (validation, statistics, auto-updates)
+  - [x] Complete TypeScript types (1,021 lines)
+  - [x] Comprehensive documentation
 
 ### In Progress 🔄
-- [ ] Phase 1: Project Foundation
+
+- [ ] Phase 4.5: Supabase Deployment & Testing
+  - [x] Schema designed and migrations created
+  - [ ] Supabase local instance configured
+  - [ ] Migrations applied and tested
+  - [ ] Real-time subscriptions tested
+  - [ ] Seed data created for testing
 
 ### Planned 📋
-- [ ] Phase 2: Design System & Core Architecture
-- [ ] Phase 3: Authentication & Authorization
-- [ ] Phase 4: Database Schema & API
+
+- [ ] Phase 5: Feature Implementation (NEXT)
 - [ ] Phase 5: Feature Implementation
   - [ ] Home Page
   - [ ] Shift Plan Page
@@ -104,70 +147,252 @@ rettstat/
 ### Colors
 
 #### Primary
+
 - **Dark Red**: `#b70e0c` - Main brand color
 
 #### Accent Colors
-| Name | Hex | CSS Variable |
-|------|-----|--------------|
-| Cyan | `#00acc1` | `--accent-cyan` |
-| Blue | `#0065a0` | `--accent-blue` |
-| Purple | `#6f69a3` | `--accent-purple` |
-| Magenta | `#a66da7` | `--accent-magenta` |
-| Orange | `#f29400` | `--accent-orange` |
-| Yellow | `#ebbd00` | `--accent-yellow` |
-| Green | `#9ab86a` | `--accent-green` |
-| Teal | `#86c4b7` | `--accent-teal` |
+
+| Name      | Hex       | CSS Variable         |
+| --------- | --------- | -------------------- |
+| Cyan      | `#00acc1` | `--accent-cyan`      |
+| Blue      | `#0065a0` | `--accent-blue`      |
+| Purple    | `#6f69a3` | `--accent-purple`    |
+| Magenta   | `#a66da7` | `--accent-magenta`   |
+| Orange    | `#f29400` | `--accent-orange`    |
+| Yellow    | `#ebbd00` | `--accent-yellow`    |
+| Green     | `#9ab86a` | `--accent-green`     |
+| Teal      | `#86c4b7` | `--accent-teal`      |
 | Dark Teal | `#0d968e` | `--accent-dark-teal` |
-| Forest | `#2c9155` | `--accent-forest` |
+| Forest    | `#2c9155` | `--accent-forest`    |
 
 ### Theme
+
 - Light and Dark mode support
 - System preference detection
 - Manual toggle option
 
 ## User Roles
 
-| Role | Description | Permissions |
-|------|-------------|-------------|
-| Admin | Full system access | All permissions |
-| Manager | Team management | View all, manage team |
-| Member | Standard user | View own data, sign up |
+| Role    | Description        | Permissions            |
+| ------- | ------------------ | ---------------------- |
+| Admin   | Full system access | All permissions        |
+| Manager | Team management    | View all, manage team  |
+| Member  | Standard user      | View own data, sign up |
 
 ## Pages
 
 ### Home (`/`)
+
 - Quick overview dashboard
 - Next shift display
 - News/announcements feed
 
 ### Shift Plan (`/shifts`)
+
 - Calendar view of shifts
 - Shift details
 - Admin: Add/edit shifts
 
 ### Statistics (`/statistics`)
+
 - Personal shift statistics
 - Admin: Unit statistics
 - Charts and visualizations
 
 ### Events (`/events`)
+
 - Events list and calendar
 - Event details with positions
 - Admin: Create/manage events
 
 ### Admin (`/admin`)
+
 - User management
 - Qualifications management
 - Assignments management
 - System settings
 
-## Database Schema
+## Database Schema (Version 3)
 
-*To be documented in Phase 4*
+**Last Updated:** 2026-02-02  
+**Total Tables:** 33  
+**Major Change:** Role-based authentication replaced with granular permission system
+
+### Core Tables
+
+1. **profiles** - User profiles extending auth.users
+   - Fields: first_name, last_name, email, service_id, avatar_url, phone, notification_preferences (JSONB), is_active
+   - **REMOVED:** role column (replaced by permission system)
+   - **ADDED:** notification_preferences for email/push notifications (shifts, events, news)
+
+2. **units** - Organizational hierarchy
+   - Self-referential structure for organizational units (station → district → region)
+
+### Permission System Tables (NEW)
+
+3. **permissions** - Master data of available permissions
+   - 14 permissions: view_shiftplans, edit_shiftplans, view_statistics, view_events, create_events, manage_events, view_members, manage_members, manage_qualifications, manage_assignments, manage_vehicles, manage_units, manage_news, system_admin
+
+4. **user_permissions** - Per-unit permission grants
+   - Supports unit inheritance (permission granted to parent applies to children)
+   - Global permissions when unit_id is NULL
+
+5. **assignment_default_permissions** - Default permissions granted by assignments
+   - Admin-configurable: which assignments grant which permissions
+
+### Category Tables (Master Data)
+
+6. **assignment_categories** - Categories for assignments
+7. **qualification_categories** - Categories for qualifications
+8. **vehicle_types** - Types of vehicles
+   - **ADDED:** color field for visual identification in calendars/statistics
+9. **absence_categories** - Categories for absences
+10. **tour_types** - Types of tours
+11. **event_categories** - Event categories with custom ordering
+
+### Entity Tables
+
+12. **assignments** - Assignments (stations, vehicles, teams)
+    - Added: category_id, icon
+
+13. **qualifications** - Qualifications/certifications
+    - Added: category_id, level, icon
+
+14. **vehicles** - Individual vehicles
+    - Fields: vehicle_type, call_sign, primary_unit, secondary_unit
+
+15. **absences** - Types of absences
+
+16. **event_groups** - Event position groups
+    - Supports admin groups and break groups
+
+### User Relationship Tables
+
+17. **user_qualifications** - User qualifications
+    - No end date tracking
+
+18. **user_assignments** - User assignments
+    - Added: unit_id (required)
+    - No end date (ongoing assignments)
+
+19. **user_absences** - User absence instances
+    - Linked to assignments with date validation
+    - Must fall within assignment period
+
+### Shiftplan Tables (Redesigned)
+
+20. **shiftplans** - Shift containers
+    - Container for full shift (unit, lead, times)
+    - Typically contains 11-14 tours
+
+21. **tours** - Individual tours within shiftplans
+    - Fields: vehicle, tour_type, name, times
+    - Crew: driver_id, lead_id, student_id (all user references)
+
+### Event Tables
+
+22. **events** - Events
+    - Added: category_id, start_time, end_time
+    - **ADDED:** allow_self_assign, allow_self_assign_after_break, restrict_to_admins (control event registration modes)
+
+23. **event_positions** - Positions within events
+    - Added: icon, minimum_qualification_ids (array), is_group_lead, group_id
+    - Supports multiple qualification requirements
+
+24. **event_registrations** - User event registrations
+    - **ADDED:** temp_user_id (for temporary placeholders), assigned_at
+    - Constraint: either user_id OR temp_user_id (mutually exclusive)
+
+25. **event_switch_requests** (NEW) - Position swap requests between users
+    - Track requests to switch positions between users
+    - Status: pending, approved, rejected, cancelled
+
+26. **event_dashboard_sessions** (NEW) - Dashboard sessions for TV displays
+    - QR code verification system
+    - 6-character codes for secure dashboard access
+
+27. **admin_events** - Admin notes about events
+    - Track incidents, issues, observations during events
+
+28. **temp_users** (NEW) - Temporary user placeholders
+    - Reusable across events
+    - Can be replaced with real users later
+
+### News & Statistics
+
+29. **news** - Announcements and news
+    - **ADDED:** target_unit_ids (array) - target specific units or null for all
+
+30. **news_attachments** (NEW) - File attachments for news
+    - Stored in Supabase Storage
+
+31. **news_read_status** (NEW) - Track which users have read which news
+    - Unique: (news_id, user_id)
+
+32. **quick_links** (NEW) - Admin-configurable quick links
+    - Home page quick access links (phone numbers, URLs)
+    - Admin can reorder and enable/disable
+
+33. **monthly_statistics** - Pre-computed statistics
+    - To be updated for new shiftplan structure
+
+### Row Level Security (RLS)
+
+- All tables have RLS enabled
+- **Permission-based policies (v3):**
+  - **system_admin**: Full access to all tables
+  - **Per-unit permissions**: view_shiftplans, edit_shiftplans, view_statistics, manage_events, etc.
+  - **Permission inheritance**: Permissions granted to parent units apply to child units
+  - **Assignment-based**: Assignments can grant default permissions (configurable)
+
+### Permission System Helper Functions
+
+- `has_permission(user_id, permission_name, unit_id)` - Check if user has permission in unit (with inheritance)
+- `get_user_permissions(user_id, unit_id)` - Get all permissions for user in unit
+- `get_unit_hierarchy(unit_id)` - Get all parent units for inheritance
+- **Helper functions:** `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
+
+### Database Functions & Triggers
+
+**Triggers:**
+
+- `auto_create_profile()` - Create profile on user signup
+- `validate_absence_dates()` - Ensure absence dates within assignment period
+- `update_event_position_counts()` - Auto-update position filled counts
+- `trigger_update_monthly_stats()` - Recalculate stats on tour changes
+- `update_updated_at_column()` - Auto-update updated_at timestamps
+
+**Query Functions:**
+
+- `get_user_statistics(user_id, start_date, end_date)` - User statistics for date range
+- `get_unit_statistics(start_date, end_date)` - Organization-wide statistics
+- `check_expiring_qualifications(days_ahead)` - List qualifications by obtained date
+
+### Migrations
+
+**Current Migrations (v2):**
+
+- `20260202_v2_complete_schema.sql` - All 24 tables with constraints and indexes
+- `20260202_v2_rls_policies.sql` - Row Level Security policies
+- `20260202_v2_functions_triggers.sql` - Functions and triggers
+
+**Apply migrations using Supabase CLI:**
+
+```bash
+supabase start      # Start local Supabase instance
+supabase db reset   # Apply all migrations
+```
+
+### Key Design Decisions
+
+1. **No End Dates**: User qualifications and assignments don't expire (ongoing)
+2. **Shiftplan Structure**: Shiftplans contain multiple tours; each tour has vehicle and crew
+3. **Absences**: Linked to assignments, dates validated within assignment period
+4. **Events**: Category → Group → Position hierarchy with custom ordering
+5. **Icon Support**: Most entities support icon field for visual identification
+6. **Arrays**: Event positions support multiple required qualifications (UUID[])
 
 ## API Endpoints
-
-*To be documented in Phase 4*
 
 ## Environment Variables
 
@@ -192,6 +417,7 @@ NEXT_PUBLIC_APP_URL=
 ## Changelog
 
 ### [Unreleased]
+
 - Initial project setup
 - Next.js 14+ with App Router
 - Tailwind CSS 4 configuration
@@ -199,4 +425,4 @@ NEXT_PUBLIC_APP_URL=
 
 ---
 
-*Last updated: 2026-02-01*
+_Last updated: 2026-02-01_
