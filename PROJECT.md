@@ -9,7 +9,7 @@ RettStat is a Progressive Web Application (PWA) for Emergency Medical Services (
 ## Quick Start
 
 ```bash
-# Prerequisites: Bun installed (https://bun.sh)
+# Prerequisites: Bun installed (https://bun.sh) and Docker
 
 # Install dependencies
 bun install
@@ -17,11 +17,11 @@ bun install
 # Start development server
 bun dev
 
-# Start Supabase (requires Docker)
+# Start PocketBase (requires Docker)
 cd docker && docker compose up -d
 
 # Run tests
-bun test
+bun run test
 
 # Build for production
 bun run build
@@ -38,8 +38,7 @@ bun run build
 | Components      | Radix UI                | Latest  |
 | State (Global)  | Zustand                 | 5+      |
 | State (Server)  | TanStack Query          | 5+      |
-| Database        | Supabase (PostgreSQL)   | Latest  |
-| Auth            | Supabase Auth           | Latest  |
+| Backend         | PocketBase              | 0.26+   |
 | Offline Storage | Dexie.js (IndexedDB)    | 4+      |
 | i18n            | next-intl               | 4+      |
 | Forms           | React Hook Form + Zod   | Latest  |
@@ -53,8 +52,10 @@ rettstat/
 │   ├── copilot-instructions.md   # AI assistant guidelines
 │   └── workflows/                 # CI/CD pipelines
 ├── docker/
-│   ├── docker-compose.yml        # Local Supabase
+│   ├── docker-compose.yml        # Local PocketBase
 │   └── docker-compose.prod.yml   # Production config
+├── pocketbase/
+│   └── pb_migrations/            # PocketBase migrations
 ├── public/                        # Static assets, PWA manifest
 ├── src/
 │   ├── app/                       # Next.js App Router
@@ -67,14 +68,11 @@ rettstat/
 │   │   ├── ui/                   # Base UI components
 │   │   └── features/             # Feature components
 │   ├── hooks/                    # Custom React hooks
-│   ├── lib/                      # Utilities, clients
-│   ├── services/                 # Business logic
+│   ├── lib/
+│   │   ├── pocketbase/          # PocketBase client & types
+│   │   └── db.ts                # Dexie offline storage
 │   ├── stores/                   # Zustand stores
-│   ├── types/                    # TypeScript definitions
 │   └── i18n/                     # Translations
-├── supabase/
-│   ├── migrations/               # Database migrations
-│   └── functions/                # Edge functions
 ├── PROJECT.md                    # This file
 └── package.json
 ```
@@ -87,60 +85,35 @@ rettstat/
 - [x] Phase 1: Project Foundation
 - [x] Phase 2: Design System & Core Architecture
 - [x] Phase 3: Authentication & Authorization
-  - [x] Supabase Auth integration
+  - [x] PocketBase Auth integration
   - [x] Login, Register, Verify Email pages
-  - [x] Role-based access control (Admin, Manager, Member)
   - [x] Granular permissions system
   - [x] Protected routes with middleware
-  - [x] Session management and persistence
 
-- [x] Phase 3.5: Bug Fixes & Improvements
-  - [x] i18n enforcement (all strings translated)
-  - [x] Middleware → Proxy migration (Next.js 15+)
-  - [x] Next.js config fixes (allowedDevOrigins)
-  - [x] Layout and responsive fixes
-  - [x] Theme toggle synchronization
-  - [x] TypeScript deprecations removed
-  - [x] Tailwind canonical classes
-  - [x] Code quality guidelines
+- [x] Phase 4: Database Schema
+  - [x] 24 PocketBase collections
+  - [x] Core: profiles, units (hierarchical)
+  - [x] Categories: assignments, qualifications, vehicles, absences, events
+  - [x] Shiftplans with tours
+  - [x] Events with positions, registrations, groups
+  - [x] Permissions system (user_permissions, assignment_default_permissions)
 
-- [x] Phase 4: Database Schema v1 (DEPRECATED)
-  - [x] Initial 12-table schema design
-  - [x] Replaced by v2 schema in Phase 4.5
-
-- [x] Phase 4.5: Database Schema v2 (Complete Redesign)
-  - [x] 24-table schema design
-  - [x] Core tables: profiles (simplified), units (hierarchical)
-  - [x] Category tables: 6 new category tables for master data
-  - [x] Entity tables: assignments, qualifications, vehicles, absences, event_groups
-  - [x] User relationships: qualifications (no expiration), assignments (with units, no end date), absences (new)
-  - [x] Shiftplans: New structure with shiftplans + tours (replaces shifts)
-  - [x] Events: Enhanced with categories, groups, admin_events
-  - [x] Row Level Security policies for all tables
-  - [x] Database functions and triggers (validation, statistics, auto-updates)
-  - [x] Complete TypeScript types (1,021 lines)
-  - [x] Comprehensive documentation
+- [x] Phase 5: Feature Implementation
+  - [x] Home Page with news feed, next shifts
+  - [x] Shift Plan Page with calendar view
+  - [x] Admin Pages (units, users, vehicles, qualifications, absences, assignments, news)
+  - [x] Settings (profile, notifications)
 
 ### In Progress 🔄
 
-- [ ] Phase 4.5: Supabase Deployment & Testing
-  - [x] Schema designed and migrations created
-  - [ ] Supabase local instance configured
-  - [ ] Migrations applied and tested
-  - [ ] Real-time subscriptions tested
-  - [ ] Seed data created for testing
+- [ ] Statistics Page
+- [ ] Events Page
 
 ### Planned 📋
 
-- [ ] Phase 5: Feature Implementation (NEXT)
-- [ ] Phase 5: Feature Implementation
-  - [ ] Home Page
-  - [ ] Shift Plan Page
-  - [ ] Statistics Page
-  - [ ] Events Page
-  - [ ] Admin Pages
 - [ ] Phase 6: Testing & QA
-- [ ] Phase 7: Deployment
+- [ ] Phase 7: PWA Features (offline, push notifications)
+- [ ] Phase 8: Production Deployment
 
 ## Design System
 
@@ -171,258 +144,120 @@ rettstat/
 - System preference detection
 - Manual toggle option
 
-## User Roles
+## PocketBase Collections
 
-| Role    | Description        | Permissions            |
-| ------- | ------------------ | ---------------------- |
-| Admin   | Full system access | All permissions        |
-| Manager | Team management    | View all, manage team  |
-| Member  | Standard user      | View own data, sign up |
+**Total Collections:** 24
 
-## Pages
+### Core
 
-### Home (`/`)
+1. **profiles** - User profiles (extends PocketBase users)
+2. **units** - Organizational hierarchy (self-referential)
 
-- Quick overview dashboard
-- Next shift display
-- News/announcements feed
+### Permissions
 
-### Shift Plan (`/shifts`)
-
-- Calendar view of shifts
-- Shift details
-- Admin: Add/edit shifts
-
-### Statistics (`/statistics`)
-
-- Personal shift statistics
-- Admin: Unit statistics
-- Charts and visualizations
-
-### Events (`/events`)
-
-- Events list and calendar
-- Event details with positions
-- Admin: Create/manage events
-
-### Admin (`/admin`)
-
-- User management
-- Qualifications management
-- Assignments management
-- System settings
-
-## Database Schema (Version 3)
-
-**Last Updated:** 2026-02-02  
-**Total Tables:** 33  
-**Major Change:** Role-based authentication replaced with granular permission system
-
-### Core Tables
-
-1. **profiles** - User profiles extending auth.users
-   - Fields: first_name, last_name, email, service_id, avatar_url, phone, notification_preferences (JSONB), is_active
-   - **REMOVED:** role column (replaced by permission system)
-   - **ADDED:** notification_preferences for email/push notifications (shifts, events, news)
-
-2. **units** - Organizational hierarchy
-   - Self-referential structure for organizational units (station → district → region)
-
-### Permission System Tables (NEW)
-
-3. **permissions** - Master data of available permissions
-   - 14 permissions: view_shiftplans, edit_shiftplans, view_statistics, view_events, create_events, manage_events, view_members, manage_members, manage_qualifications, manage_assignments, manage_vehicles, manage_units, manage_news, system_admin
-
+3. **permissions** - Available permission definitions
 4. **user_permissions** - Per-unit permission grants
-   - Supports unit inheritance (permission granted to parent applies to children)
-   - Global permissions when unit_id is NULL
+5. **assignment_default_permissions** - Default permissions by assignment
 
-5. **assignment_default_permissions** - Default permissions granted by assignments
-   - Admin-configurable: which assignments grant which permissions
+### Categories (Master Data)
 
-### Category Tables (Master Data)
+6. **assignment_categories**
+7. **qualification_categories**
+8. **vehicle_types** (with color)
+9. **absence_categories**
+10. **tour_types**
+11. **event_categories**
 
-6. **assignment_categories** - Categories for assignments
-7. **qualification_categories** - Categories for qualifications
-8. **vehicle_types** - Types of vehicles
-   - **ADDED:** color field for visual identification in calendars/statistics
-9. **absence_categories** - Categories for absences
-10. **tour_types** - Types of tours
-11. **event_categories** - Event categories with custom ordering
+### Entities
 
-### Entity Tables
+12. **assignments** - Roles/positions
+13. **qualifications** - Certifications
+14. **vehicles** - Fleet management
+15. **absences** - Absence definitions
 
-12. **assignments** - Assignments (stations, vehicles, teams)
-    - Added: category_id, icon
+### User Relations
 
-13. **qualifications** - Qualifications/certifications
-    - Added: category_id, level, icon
+16. **user_qualifications**
+17. **user_assignments**
+18. **user_absences**
 
-14. **vehicles** - Individual vehicles
-    - Fields: vehicle_type, call_sign, primary_unit, secondary_unit
+### Shiftplans
 
-15. **absences** - Types of absences
+19. **shiftplans** - Shift containers
+20. **tours** - Individual tours within shiftplans
 
-16. **event_groups** - Event position groups
-    - Supports admin groups and break groups
+### Events
 
-### User Relationship Tables
+21. **events**
+22. **event_groups**
+23. **event_positions**
+24. **event_registrations**
 
-17. **user_qualifications** - User qualifications
-    - No end date tracking
+### Other
 
-18. **user_assignments** - User assignments
-    - Added: unit_id (required)
-    - No end date (ongoing assignments)
-
-19. **user_absences** - User absence instances
-    - Linked to assignments with date validation
-    - Must fall within assignment period
-
-### Shiftplan Tables (Redesigned)
-
-20. **shiftplans** - Shift containers
-    - Container for full shift (unit, lead, times)
-    - Typically contains 11-14 tours
-
-21. **tours** - Individual tours within shiftplans
-    - Fields: vehicle, tour_type, name, times
-    - Crew: driver_id, lead_id, student_id (all user references)
-
-### Event Tables
-
-22. **events** - Events
-    - Added: category_id, start_time, end_time
-    - **ADDED:** allow_self_assign, allow_self_assign_after_break, restrict_to_admins (control event registration modes)
-
-23. **event_positions** - Positions within events
-    - Added: icon, minimum_qualification_ids (array), is_group_lead, group_id
-    - Supports multiple qualification requirements
-
-24. **event_registrations** - User event registrations
-    - **ADDED:** temp_user_id (for temporary placeholders), assigned_at
-    - Constraint: either user_id OR temp_user_id (mutually exclusive)
-
-25. **event_switch_requests** (NEW) - Position swap requests between users
-    - Track requests to switch positions between users
-    - Status: pending, approved, rejected, cancelled
-
-26. **event_dashboard_sessions** (NEW) - Dashboard sessions for TV displays
-    - QR code verification system
-    - 6-character codes for secure dashboard access
-
-27. **admin_events** - Admin notes about events
-    - Track incidents, issues, observations during events
-
-28. **temp_users** (NEW) - Temporary user placeholders
-    - Reusable across events
-    - Can be replaced with real users later
-
-### News & Statistics
-
-29. **news** - Announcements and news
-    - **ADDED:** target_unit_ids (array) - target specific units or null for all
-
-30. **news_attachments** (NEW) - File attachments for news
-    - Stored in Supabase Storage
-
-31. **news_read_status** (NEW) - Track which users have read which news
-    - Unique: (news_id, user_id)
-
-32. **quick_links** (NEW) - Admin-configurable quick links
-    - Home page quick access links (phone numbers, URLs)
-    - Admin can reorder and enable/disable
-
-33. **monthly_statistics** - Pre-computed statistics
-    - To be updated for new shiftplan structure
-
-### Row Level Security (RLS)
-
-- All tables have RLS enabled
-- **Permission-based policies (v3):**
-  - **system_admin**: Full access to all tables
-  - **Per-unit permissions**: view_shiftplans, edit_shiftplans, view_statistics, manage_events, etc.
-  - **Permission inheritance**: Permissions granted to parent units apply to child units
-  - **Assignment-based**: Assignments can grant default permissions (configurable)
-
-### Permission System Helper Functions
-
-- `has_permission(user_id, permission_name, unit_id)` - Check if user has permission in unit (with inheritance)
-- `get_user_permissions(user_id, unit_id)` - Get all permissions for user in unit
-- `get_unit_hierarchy(unit_id)` - Get all parent units for inheritance
-- **Helper functions:** `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
-
-### Database Functions & Triggers
-
-**Triggers:**
-
-- `auto_create_profile()` - Create profile on user signup
-- `validate_absence_dates()` - Ensure absence dates within assignment period
-- `update_event_position_counts()` - Auto-update position filled counts
-- `trigger_update_monthly_stats()` - Recalculate stats on tour changes
-- `update_updated_at_column()` - Auto-update updated_at timestamps
-
-**Query Functions:**
-
-- `get_user_statistics(user_id, start_date, end_date)` - User statistics for date range
-- `get_unit_statistics(start_date, end_date)` - Organization-wide statistics
-- `check_expiring_qualifications(days_ahead)` - List qualifications by obtained date
-
-### Migrations
-
-**Current Migrations (v2):**
-
-- `20260202_v2_complete_schema.sql` - All 24 tables with constraints and indexes
-- `20260202_v2_rls_policies.sql` - Row Level Security policies
-- `20260202_v2_functions_triggers.sql` - Functions and triggers
-
-**Apply migrations using Supabase CLI:**
-
-```bash
-supabase start      # Start local Supabase instance
-supabase db reset   # Apply all migrations
-```
-
-### Key Design Decisions
-
-1. **No End Dates**: User qualifications and assignments don't expire (ongoing)
-2. **Shiftplan Structure**: Shiftplans contain multiple tours; each tour has vehicle and crew
-3. **Absences**: Linked to assignments, dates validated within assignment period
-4. **Events**: Category → Group → Position hierarchy with custom ordering
-5. **Icon Support**: Most entities support icon field for visual identification
-6. **Arrays**: Event positions support multiple required qualifications (UUID[])
-
-## API Endpoints
+25. **news** - Announcements
+26. **quick_links** - Home page quick links
 
 ## Environment Variables
 
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+# PocketBase
+NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
 
 # App
-NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ## Development Guidelines
 
 1. **Git Flow**: Always work on feature branches from `develop`
-2. **Package Manager**: Use `bun` exclusively
-3. **Code Review**: All changes require agent review before merge
+2. **Package Manager**: Use `bun` and `bunx` exclusively (NEVER npm/yarn/pnpm)
+3. **Pre-commit**: Run `bun run lint && bun run type-check && bun run test`
 4. **Testing**: Write tests for new features
 5. **Documentation**: Update PROJECT.md with changes
 
+## Deployment
+
+### Production Stack
+
+- **Traefik**: Reverse proxy with Let's Encrypt SSL
+- **Next.js App**: Container from GitHub Container Registry
+- **PocketBase**: Backend (API + SQLite + Storage)
+- **Watchtower**: Automatic container updates
+
+```bash
+# Deploy with docker-compose
+cd docker
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Required Environment Variables
+
+```env
+DOMAIN=your-domain.com
+ACME_EMAIL=admin@your-domain.com
+GITHUB_USERNAME=your-username
+GITHUB_TOKEN=ghcr-token
+TRAEFIK_AUTH=user:password-hash
+```
+
 ## Changelog
 
-### [Unreleased]
+### [0.2.0] - PocketBase Migration
 
-- Initial project setup
+- Migrated from Supabase to PocketBase
+- Simplified deployment (single container for backend)
+- All 24 collections defined with types
+- Native PocketBase authentication
+- Realtime subscriptions support
+- File storage via PocketBase
+
+### [0.1.0] - Initial Setup
+
 - Next.js 14+ with App Router
 - Tailwind CSS 4 configuration
 - Core dependencies installed
 
 ---
 
-_Last updated: 2026-02-01_
+_Last updated: 2026-06-15_

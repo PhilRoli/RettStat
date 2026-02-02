@@ -2,63 +2,62 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { pb, login, logout, onAuthChange } from "@/lib/pocketbase";
 import { useAuthStore } from "@/stores/auth-store";
+import type { UserRecord, ProfileRecord } from "@/lib/pocketbase/types";
 
 export function useAuth() {
   const {
     user,
-    session,
     profile,
     isLoading,
     setUser,
-    setSession,
     setProfile,
     setLoading,
     signOut: signOutStore,
   } = useAuthStore();
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Get initial auth state
+    const currentUser = pb.authStore.model as UserRecord | null;
+    setUser(currentUser);
 
-      // Fetch user profile if session exists
-      if (session?.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+    // Fetch user profile if authenticated
+    const loadProfile = async () => {
+      if (currentUser?.id) {
+        try {
+          const profileData = await pb
+            .collection("profiles")
+            .getFirstListItem<ProfileRecord>(`user="${currentUser.id}"`);
 
-        if (profileData) {
           setProfile(profileData);
+        } catch (error) {
+          console.error("Failed to load profile:", error);
+          setProfile(null);
         }
       }
-
       setLoading(false);
-    });
+    };
+
+    loadProfile();
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthChange(async (token, model) => {
+      const authUser = model as UserRecord | null;
+      setUser(authUser);
 
-      // Fetch user profile if session exists
-      if (session?.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+      // Fetch user profile if authenticated
+      if (authUser?.id) {
+        try {
+          const profileData = await pb
+            .collection("profiles")
+            .getFirstListItem<ProfileRecord>(`user="${authUser.id}"`);
 
-        if (profileData) {
           setProfile(profileData);
+        } catch (error) {
+          console.error("Failed to load profile:", error);
+          setProfile(null);
         }
       } else {
         setProfile(null);
@@ -67,80 +66,79 @@ export function useAuth() {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase, setSession, setUser, setProfile, setLoading]);
+    return () => unsubscribe();
+  }, [setUser, setProfile, setLoading]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
+    try {
+      const authData = await login(email, password);
+      setUser(authData.record);
 
-    if (error) throw error;
-    return data;
+      // Fetch profile
+      const profileData = await pb
+        .collection("profiles")
+        .getFirstListItem<ProfileRecord>(`user="${authData.record.id}"`);
+
+      setProfile(profileData);
+      return authData;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata?: { firstName?: string; lastName?: string }
+  ) => {
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata,
-      },
-    });
-    setLoading(false);
-
-    if (error) throw error;
-    return data;
+    try {
+      const { signup } = await import("@/lib/pocketbase");
+      const user = await signup(email, password, password, metadata);
+      return user;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signOut = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
+    logout();
     signOutStore();
     setLoading(false);
     router.push("/auth/login");
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-
-    if (error) throw error;
+    const { requestPasswordReset } = await import("@/lib/pocketbase");
+    await requestPasswordReset(email);
   };
 
   const updatePassword = async (newPassword: string) => {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    if (error) throw error;
+    if (!user?.id) throw new Error("Not authenticated");
+    await pb.collection("users").update(user.id, { password: newPassword });
   };
 
   const refreshProfile = async () => {
     if (!user?.id) return;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+    try {
+      const profileData = await pb
+        .collection("profiles")
+        .getFirstListItem<ProfileRecord>(`user="${user.id}"`);
 
-    if (profileData) {
       setProfile(profileData);
+    } catch (error) {
+      console.error("Failed to refresh profile:", error);
     }
   };
 
   return {
     user,
-    session,
     profile,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && pb.authStore.isValid,
     signIn,
     signUp,
     signOut,

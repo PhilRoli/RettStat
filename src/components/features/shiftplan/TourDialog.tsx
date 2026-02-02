@@ -23,16 +23,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateTour, useUpdateTour, useUnitVehicles, useUnitMembers } from "@/hooks";
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/types/database";
-
-type Tour = Database["public"]["Tables"]["tours"]["Row"];
+import type { TourRecord } from "@/lib/pocketbase/types";
 
 interface TourDialogProps {
   open: boolean;
   onClose: () => void;
   shiftplanId: string;
   unitId: string;
-  tour?: Tour;
+  tour?: TourRecord;
   defaultStartTime?: string;
   defaultEndTime?: string;
 }
@@ -49,16 +47,16 @@ export function TourDialog({
   const t = useTranslations("shifts");
   const { toast } = useToast();
   const [name, setName] = useState(tour?.name || "");
-  const [vehicleId, setVehicleId] = useState(tour?.vehicle_id || "");
+  const [vehicleId, setVehicleId] = useState(tour?.vehicle || "");
   const [startTime, setStartTime] = useState(
     tour?.start_time ? new Date(tour.start_time).toISOString().slice(0, 16) : defaultStartTime || ""
   );
   const [endTime, setEndTime] = useState(
     tour?.end_time ? new Date(tour.end_time).toISOString().slice(0, 16) : defaultEndTime || ""
   );
-  const [driverId, setDriverId] = useState(tour?.driver_id || "");
-  const [leadId, setLeadId] = useState(tour?.lead_id || "");
-  const [studentId, setStudentId] = useState(tour?.student_id || "");
+  const [driverId, setDriverId] = useState(tour?.driver || "");
+  const [leadId, setLeadId] = useState(tour?.lead || "");
+  const [studentId, setStudentId] = useState(tour?.student || "");
   const [notes, setNotes] = useState(tour?.notes || "");
 
   const { data: vehicles, isLoading: isLoadingVehicles } = useUnitVehicles(unitId);
@@ -80,20 +78,20 @@ export function TourDialog({
     }
 
     const tourData = {
-      shiftplan_id: shiftplanId,
-      name: name || null,
-      vehicle_id: vehicleId || null,
+      shiftplan: shiftplanId,
+      name: name || undefined,
+      vehicle: vehicleId || undefined,
       start_time: new Date(startTime).toISOString(),
       end_time: new Date(endTime).toISOString(),
-      driver_id: driverId || null,
-      lead_id: leadId || null,
-      student_id: studentId || null,
-      notes: notes || null,
+      driver: driverId || undefined,
+      lead: leadId || undefined,
+      student: studentId || undefined,
+      notes: notes || undefined,
     };
 
     try {
       if (tour) {
-        await updateTourMutation.mutateAsync({ id: tour.id, ...tourData });
+        await updateTourMutation.mutateAsync({ id: tour.id, data: tourData });
         toast({ description: t("tourUpdated") });
       } else {
         await createTourMutation.mutateAsync(tourData);

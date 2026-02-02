@@ -37,11 +37,17 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
+      // Parse full name into first and last name
+      const nameParts = fullName.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
       await signUp(email, password, {
-        full_name: fullName,
+        firstName,
+        lastName,
       });
 
-      router.push("/auth/verify-email");
+      router.push("/auth/login?registered=true");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("signUpFailed"));
     } finally {
