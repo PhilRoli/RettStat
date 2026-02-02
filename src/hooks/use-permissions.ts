@@ -76,9 +76,10 @@ export function usePermissions(unitId?: string): UsePermissionsReturn {
 
   useEffect(() => {
     loadPermissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, unitId]);
 
-  const hasPermission = (permission: Permission, checkUnitId?: string): boolean => {
+  const hasPermission = (permission: Permission): boolean => {
     // If checking a different unit than initially loaded, need to verify via RPC
     // For now, just check against loaded permissions
     // TODO: Implement dynamic unit checking if needed

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Download } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import type { Database } from "@/types/database";
 
 type NewsCategory = "general" | "emergency" | "training" | "event" | "maintenance" | "policy";
@@ -39,6 +39,7 @@ export function NewsFeed() {
     if (user) {
       loadNews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedCategory]);
 
   const loadNews = async () => {

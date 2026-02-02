@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Shield, LogOut, User } from "lucide-react";
+import { Settings, Shield, LogOut } from "lucide-react";
 import Link from "next/link";
 
 export function UserDropdown() {

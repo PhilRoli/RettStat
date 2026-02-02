@@ -50,10 +50,12 @@ export function UnitsManagement() {
 
   useEffect(() => {
     fetchUnits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     buildUnitTree();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [units]);
 
   const fetchUnits = async () => {
@@ -116,22 +118,6 @@ export function UnitsManagement() {
     setLevels(roots, 0);
 
     setUnitTree(roots);
-  };
-
-  const flattenTree = (nodes: UnitTreeNode[]): UnitTreeNode[] => {
-    const result: UnitTreeNode[] = [];
-
-    const traverse = (items: UnitTreeNode[]) => {
-      items.forEach((item) => {
-        result.push(item);
-        if (item.children && item.children.length > 0) {
-          traverse(item.children);
-        }
-      });
-    };
-
-    traverse(nodes);
-    return result;
   };
 
   const handleAdd = () => {

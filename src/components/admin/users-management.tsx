@@ -58,6 +58,7 @@ export function UsersManagement() {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -202,12 +203,6 @@ export function UsersManagement() {
       .map((uu) => (uu.units as unknown as { name: string })?.name || "")
       .filter(Boolean)
       .join(", ");
-  };
-
-  const getInitials = (user: UserWithUnits) => {
-    const first = user.first_name?.[0] || "";
-    const last = user.last_name?.[0] || "";
-    return first + last || user.email[0].toUpperCase();
   };
 
   if (loading) {

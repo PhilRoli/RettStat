@@ -34,6 +34,7 @@ export function NextShifts() {
     if (user) {
       loadNextShifts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadNextShifts = async () => {
