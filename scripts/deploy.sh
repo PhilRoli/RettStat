@@ -126,6 +126,44 @@ else
 fi
 
 echo ""
+echo "Step 6.5: Validating Environment Variables"
+echo "------------------------------------------"
+# Load environment variables
+set -a
+source .env.production
+set +a
+
+# Check required variables
+REQUIRED_VARS=(
+  "DOMAIN"
+  "POSTGRES_PASSWORD"
+  "JWT_SECRET"
+  "SUPABASE_ANON_KEY"
+  "SUPABASE_SERVICE_KEY"
+  "GITHUB_USERNAME"
+  "GITHUB_TOKEN"
+)
+
+MISSING_VARS=()
+for var in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!var}" ]; then
+    MISSING_VARS+=("$var")
+  fi
+done
+
+if [ ${#MISSING_VARS[@]} -gt 0 ]; then
+  echo "❌ Error: The following required environment variables are not set:"
+  for var in "${MISSING_VARS[@]}"; do
+    echo "   - $var"
+  done
+  echo ""
+  echo "Please edit .env.production and set all required variables."
+  exit 1
+fi
+
+echo "✓ All required environment variables are set"
+
+echo ""
 echo "Step 7: Cloning Repository"
 echo "--------------------------"
 if [ ! -d "repo" ]; then
@@ -156,6 +194,7 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$INSTALL_DIR
+EnvironmentFile=$INSTALL_DIR/.env.production
 ExecStart=/usr/bin/docker compose up -d
 ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
@@ -171,6 +210,8 @@ echo "✓ Systemd service created"
 echo ""
 echo "Step 10: Starting Services"
 echo "--------------------------"
+# Environment variables are already loaded from step 6.5
+echo "✓ Using environment variables from .env.production"
 docker compose up -d
 
 echo ""
