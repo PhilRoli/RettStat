@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -25,6 +26,7 @@ import { de, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
 import { Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TourDialog } from "./TourDialog";
 
 interface ShiftplanDayViewProps {
   unitId: string;
@@ -43,6 +45,7 @@ export function ShiftplanDayView({
   const locale = useLocale();
   const dateLocale = locale === "de" ? de : enUS;
   const { toast } = useToast();
+  const [tourDialogOpen, setTourDialogOpen] = useState(false);
 
   const { data: shiftplan, isLoading } = useShiftplanByDate({
     unitId,
@@ -244,12 +247,7 @@ export function ShiftplanDayView({
 
             {/* Add Tour Button */}
             {isEditMode && (
-              <Button
-                onClick={() => {
-                  /* TODO: Implement add tour dialog */
-                }}
-                className="w-full"
-              >
+              <Button onClick={() => setTourDialogOpen(true)} className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 {t("addTour")}
               </Button>
@@ -257,6 +255,19 @@ export function ShiftplanDayView({
           </div>
         )}
       </DialogContent>
+
+      {/* Tour Dialog */}
+      {shiftplan && (
+        <TourDialog
+          key={tourDialogOpen ? "open" : "closed"}
+          open={tourDialogOpen}
+          onClose={() => setTourDialogOpen(false)}
+          shiftplanId={shiftplan.id}
+          unitId={unitId}
+          defaultStartTime={shiftplan.start_time}
+          defaultEndTime={shiftplan.end_time}
+        />
+      )}
     </Dialog>
   );
 }
