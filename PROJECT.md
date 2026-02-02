@@ -86,10 +86,17 @@ rettstat/
 - [x] Project setup and configuration
 - [x] Phase 1: Project Foundation
 - [x] Phase 2: Design System & Core Architecture
+- [x] Phase 3: Authentication & Authorization
+  - [x] Supabase Auth integration
+  - [x] Login, Register, Verify Email pages
+  - [x] Role-based access control (Admin, Manager, Member)
+  - [x] Granular permissions system
+  - [x] Protected routes with middleware
+  - [x] Session management and persistence
 
 ### In Progress 🔄
 
-- [ ] Phase 3: Authentication & Authorization
+- [ ] Phase 4: Database Schema & API (NEXT)
 
 ### Planned 📋
 
