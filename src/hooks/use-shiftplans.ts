@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 
@@ -24,14 +25,16 @@ interface UseShiftplansParams {
 
 /**
  * Hook to fetch shiftplans for a specific unit and month
+ * Includes realtime subscriptions for live updates
  */
 export function useShiftplans({ unitId, month, year }: UseShiftplansParams) {
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
   const startDate = new Date(year, month, 1);
   const endDate = new Date(year, month + 1, 0, 23, 59, 59);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["shiftplans", unitId, month, year],
     queryFn: async () => {
       if (!unitId) {
@@ -68,6 +71,48 @@ export function useShiftplans({ unitId, month, year }: UseShiftplansParams) {
     },
     enabled: !!unitId,
   });
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    if (!unitId) return;
+
+    const channel = supabase
+      .channel(`shiftplans-${unitId}-${month}-${year}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "shiftplans",
+          filter: `unit_id=eq.${unitId}`,
+        },
+        () => {
+          // Invalidate queries when shiftplans change
+          queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
+          queryClient.invalidateQueries({ queryKey: ["shiftplan-dates", unitId, month, year] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tours",
+        },
+        () => {
+          // Invalidate queries when tours change
+          queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
+          queryClient.invalidateQueries({ queryKey: ["shiftplan"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [unitId, month, year, queryClient, supabase]);
+
+  return query;
 }
 
 /**
