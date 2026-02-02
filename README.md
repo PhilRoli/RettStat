@@ -56,6 +56,31 @@ PocketBase Admin UI: [http://localhost:8090/\_/](http://localhost:8090/_/)
 
 ## Production Deployment
 
+### 🚀 One-Command Setup
+
+The easiest way to deploy RettStat is using the automated setup script:
+
+```bash
+# Clone repository
+git clone https://github.com/PhilRoli/rettstat.git
+cd rettstat
+
+# Run setup script
+./scripts/setup.sh
+```
+
+The script will:
+
+1. ✅ Check system requirements (Ubuntu/Debian)
+2. ✅ Install Docker if needed
+3. ✅ Configure firewall (SSH, HTTP, HTTPS)
+4. ✅ Prompt for configuration (domain, GitHub, SMTP, dev environment)
+5. ✅ Generate secure passwords
+6. ✅ Create systemd service
+7. ✅ Setup cron jobs (backups, database sync)
+8. ✅ Start all services
+9. ✅ Display URLs and DNS records
+
 ### Server Requirements
 
 **Recommended**: Hetzner CX31 (4 vCPU, 8GB RAM) - €8.50/month  
@@ -64,131 +89,89 @@ PocketBase Admin UI: [http://localhost:8090/\_/](http://localhost:8090/_/)
 
 ### Prerequisites
 
-1. VPS with Docker installed
+1. Fresh Ubuntu/Debian VPS
 2. Domain name (e.g., `rettstat.at`)
-3. GitHub account for container registry
+3. GitHub account with Personal Access Token (for container registry)
 4. SMTP service (optional, for email notifications)
 
-### Step 1: DNS Configuration
+### DNS Configuration
 
-Configure your domain's DNS records:
+Before running the setup, configure these DNS records:
 
-| Type | Host | Value              |
-| ---- | ---- | ------------------ |
-| A    | @    | `<your-server-ip>` |
-| A    | api  | `<your-server-ip>` |
-| A    | www  | `<your-server-ip>` |
+**Production Only:**
+| Type | Host | Value |
+| ---- | ------- | ------------------ |
+| A | @ | `<your-server-ip>` |
+| A | api | `<your-server-ip>` |
+| A | www | `<your-server-ip>` |
+| A | traefik | `<your-server-ip>` |
 
-### Step 2: Server Setup
+**With Dev Environment:**
+| Type | Host | Value |
+| ---- | ------- | ------------------ |
+| A | @ | `<your-server-ip>` |
+| A | api | `<your-server-ip>` |
+| A | www | `<your-server-ip>` |
+| A | traefik | `<your-server-ip>` |
+| A | dev | `<your-server-ip>` |
+| A | api-dev | `<your-server-ip>` |
 
-```bash
-# SSH into your server
-ssh root@your-server-ip
+### What Gets Deployed
 
-# Update system
-apt update && apt upgrade -y
+**Production Environment:**
 
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-rm get-docker.sh
+- `https://rettstat.at` - Main application
+- `https://api.rettstat.at` - PocketBase API
+- `https://api.rettstat.at/_/` - PocketBase Admin UI
+- `https://traefik.rettstat.at` - Traefik Dashboard
 
-# Install dependencies
-apt install -y git apache2-utils
+**Development Environment (Optional):**
 
-# Create installation directory
-mkdir -p /opt/rettstat
-cd /opt/rettstat
-```
+- `https://dev.rettstat.at` - Dev application (uses `develop` branch)
+- `https://api-dev.rettstat.at` - Dev PocketBase API
+- Hourly database sync from production
+- Access controlled via `profiles.dev_access` field
 
-### Step 3: Clone Repository
+### Post-Setup Steps
 
-```bash
-cd /opt/rettstat
-git clone https://github.com/YOUR_USERNAME/rettstat.git repo
-```
+After the setup script completes:
 
-### Step 4: Configure Environment
+1. **Wait for SSL certificates** (2-5 minutes)
+2. **Access PocketBase Admin UI**: `https://api.your-domain.com/_/`
+3. **Create your admin account** (first user becomes admin)
+4. **Test the application**: `https://your-domain.com`
 
-```bash
-cd /opt/rettstat
+### Granting Dev Access (if dev environment enabled)
 
-# Create .env file
-cat > .env <<EOF
-# Domain Configuration
-DOMAIN=rettstat.at
-ACME_EMAIL=admin@rettstat.at
+To allow users to access the development environment:
 
-# GitHub Container Registry
-GITHUB_USERNAME=your-github-username
-GITHUB_TOKEN=ghp_your_github_token_here
+1. Access **production** PocketBase admin: `https://api.your-domain.com/_/`
+2. Navigate to **Collections** → **profiles**
+3. Find the user's profile record
+4. Set `dev_access` field to `true`
+5. User can now access `https://dev.your-domain.com`
 
-# Basic Auth for Traefik Dashboard
-# Generate with: htpasswd -nb admin yourpassword
-TRAEFIK_AUTH=admin:\$\$apr1\$\$xyz123
-EOF
-
-# Secure the file
-chmod 600 .env
-```
-
-**Generate TRAEFIK_AUTH:**
-
-```bash
-htpasswd -nb admin your_password
-```
-
-### Step 5: Copy Docker Compose
-
-```bash
-cp repo/docker/docker-compose.prod.yml ./docker-compose.yml
-```
-
-### Step 6: Start Services
-
-```bash
-docker compose up -d
-```
-
-### Step 7: Verify Deployment
-
-Check that all services are running:
-
-```bash
-docker compose ps
-```
-
-You should see:
-
-- `rettstat-traefik` (running)
-- `rettstat-app` (running)
-- `rettstat-pocketbase` (running)
-- `rettstat-watchtower` (running)
-
-### Step 8: Access Your Application
-
-- **App**: `https://your-domain.com`
-- **API**: `https://api.your-domain.com`
-- **Traefik Dashboard**: `https://traefik.your-domain.com` (uses TRAEFIK_AUTH)
-
-### Step 9: Configure PocketBase
-
-1. Access PocketBase admin: `https://api.your-domain.com/_/`
-2. Create your admin account
-3. Import collections (if not auto-created)
-4. Create your first users
+The dev environment syncs hourly from production, so dev_access changes are automatically propagated.
 
 ---
 
 ## Backup & Restore
 
-### Backup PocketBase Database
+Backups are automated via cron jobs (set up by setup.sh).
+
+### Automated Backups
+
+- **Daily backups** at 2:00 AM (keeps last 30 days)
+- Stored in `/opt/rettstat/backups/`
+- Format: `pb_data_YYYYMMDD_HHMMSS.tar.gz`
+
+### Manual Backup
 
 ```bash
-# Manual backup
-docker exec rettstat-pocketbase cp -r /pb/pb_data /pb/pb_backups/backup_$(date +%Y%m%d_%H%M%S)
+# Run backup script
+/opt/rettstat/scripts/backup.sh
 
-# Or use docker volume backup
+# Or directly with docker
 docker run --rm \
   -v rettstat-prod_pb-data:/source:ro \
   -v /opt/rettstat/backups:/backup \
@@ -198,30 +181,42 @@ docker run --rm \
 ### Restore from Backup
 
 ```bash
-# Stop services
+# Stop PocketBase
 cd /opt/rettstat
-docker compose down
+docker compose stop pocketbase
 
-# Restore from tar.gz
+# Restore from backup
 docker run --rm \
   -v rettstat-prod_pb-data:/target \
   -v /opt/rettstat/backups:/backup \
-  alpine sh -c "cd /target && tar xzf /backup/pb_data_YYYYMMDD_HHMMSS.tar.gz"
+  alpine sh -c "rm -rf /target/* && tar xzf /backup/pb_data_YYYYMMDD_HHMMSS.tar.gz -C /target"
 
-# Restart services
-docker compose up -d
+# Restart PocketBase
+docker compose start pocketbase
 ```
 
-### Automated Backups
+---
 
-Create a cron job for daily backups:
+## Useful Commands
 
 ```bash
-# Edit crontab
-crontab -e
+# View logs
+cd /opt/rettstat && docker compose logs -f
 
-# Add this line for daily backups at 2 AM
-0 2 * * * docker run --rm -v rettstat-prod_pb-data:/source:ro -v /opt/rettstat/backups:/backup alpine tar czf /backup/pb_data_\$(date +\%Y\%m\%d_\%H\%M\%S).tar.gz -C /source . && find /opt/rettstat/backups -name "pb_data_*.tar.gz" -mtime +7 -delete
+# Restart services
+sudo systemctl restart rettstat
+
+# Check service status
+docker compose ps
+
+# Update to latest version (main branch)
+cd /opt/rettstat && docker compose pull && docker compose up -d
+
+# Access PocketBase container
+docker exec -it rettstat-pocketbase sh
+
+# Manual database sync (dev environment)
+/opt/rettstat/scripts/sync-db.sh
 ```
 
 ---
