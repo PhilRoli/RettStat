@@ -3,6 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 
+type Vehicle = {
+  id: string;
+  call_sign: string;
+  vehicle_type: {
+    id: string;
+    name: string;
+    color: string;
+  } | null;
+};
+
 export function useUnitVehicles(unitId?: string) {
   const supabase = createClient();
 
@@ -24,7 +34,7 @@ export function useUnitVehicles(unitId?: string) {
         .order("call_sign");
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Vehicle[];
     },
     enabled: !!unitId,
   });

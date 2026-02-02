@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateTour, useUpdateTour, useUnitVehicles, useUnitMembers } from "@/hooks";
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/types/database";
 
 type Tour = Database["public"]["Tables"]["tours"]["Row"];
 
@@ -111,7 +111,7 @@ export function TourDialog({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-125">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{tour ? t("editShift") : t("addTour")}</DialogTitle>

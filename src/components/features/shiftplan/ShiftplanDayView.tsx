@@ -63,9 +63,13 @@ export function ShiftplanDayView({
     return format(new Date(dateString), "PPP", { locale: dateLocale });
   };
 
-  const getPersonName = (person: { first_name: string; last_name: string } | null | undefined) => {
+  const getPersonName = (
+    person: { first_name: string | null; last_name: string | null } | null | undefined
+  ) => {
     if (!person) return null;
-    return `${person.first_name} ${person.last_name}`;
+    const first = person.first_name || "";
+    const last = person.last_name || "";
+    return `${first} ${last}`.trim() || null;
   };
 
   const handleDeleteShiftplan = async () => {

@@ -3,6 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 
+type Profile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
+
+type Assignment = {
+  profile: Profile | null;
+};
+
 export function useUnitMembers(unitId?: string) {
   const supabase = createClient();
 
@@ -29,7 +39,7 @@ export function useUnitMembers(unitId?: string) {
       if (error) throw error;
 
       // Filter out null profiles and flatten the structure
-      return (data || [])
+      return ((data || []) as Assignment[])
         .filter((assignment) => assignment.profile)
         .map((assignment) => assignment.profile!);
     },

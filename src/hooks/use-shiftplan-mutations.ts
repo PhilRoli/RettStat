@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/types/database";
 
 type ShiftplanInsert = Database["public"]["Tables"]["shiftplans"]["Insert"];
 type ShiftplanUpdate = Database["public"]["Tables"]["shiftplans"]["Update"];
@@ -15,7 +15,8 @@ export function useCreateShiftplan() {
     mutationFn: async (data: ShiftplanInsert) => {
       const { data: shiftplan, error } = await supabase
         .from("shiftplans")
-        .insert(data)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(data as any)
         .select()
         .single();
 
@@ -35,12 +36,15 @@ export function useUpdateShiftplan() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: ShiftplanUpdate & { id: string }) => {
-      const { data: shiftplan, error } = await supabase
+      const result = await supabase
         .from("shiftplans")
+        // @ts-expect-error - Supabase types are too restrictive for update
         .update(data)
         .eq("id", id)
         .select()
         .single();
+
+      const { data: shiftplan, error } = result;
 
       if (error) throw error;
       return shiftplan;
