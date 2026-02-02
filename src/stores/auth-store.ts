@@ -3,30 +3,25 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, Session } from "@supabase/supabase-js";
-import type { UserRole, Permission } from "@/lib/permissions";
-import { hasPermission } from "@/lib/permissions";
+import type { Database } from "@/types/database";
 
-interface UserProfile {
-  role: UserRole;
-  full_name: string | null;
-}
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface AuthState {
   user: User | null;
   session: Session | null;
-  profile: UserProfile | null;
+  profile: Profile | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
-  setProfile: (profile: UserProfile | null) => void;
+  setProfile: (profile: Profile | null) => void;
   setLoading: (loading: boolean) => void;
   signOut: () => void;
-  hasPermission: (permission: Permission) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       session: null,
       profile: null,
@@ -43,12 +38,6 @@ export const useAuthStore = create<AuthState>()(
           session: null,
           profile: null,
         }),
-
-      hasPermission: (permission: Permission) => {
-        const { profile } = get();
-        if (!profile) return false;
-        return hasPermission(profile.role, permission);
-      },
     }),
     {
       name: "rettstat-auth",

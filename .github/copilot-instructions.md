@@ -205,6 +205,10 @@ export function useShifts() {
   - Prefer named sizes over arbitrary values when available
 - ❌ Using deprecated TypeScript/React APIs
   - Use `React.ComponentRef<T>` NOT `React.ElementRef<T>`
+- ❌ Using old role-based permission system
+  - Use `usePermissions()` or `useHasPermission()` hooks for permission checks
+  - NEVER use the deprecated `hasPermission(role, permission)` function
+  - Permission system is now granular and per-unit with inheritance
 - ❌ Creating unnecessary code or unused variables
   - Remove unused imports, functions, and variables
   - Keep code minimal and focused

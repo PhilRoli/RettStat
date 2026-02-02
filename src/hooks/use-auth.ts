@@ -16,7 +16,6 @@ export function useAuth() {
     setProfile,
     setLoading,
     signOut: signOutStore,
-    hasPermission,
   } = useAuthStore();
   const router = useRouter();
   const supabase = createClient();
@@ -31,7 +30,7 @@ export function useAuth() {
       if (session?.user) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("role, full_name")
+          .select("*")
           .eq("id", session.user.id)
           .single();
 
@@ -54,7 +53,7 @@ export function useAuth() {
       if (session?.user) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("role, full_name")
+          .select("*")
           .eq("id", session.user.id)
           .single();
 
@@ -128,7 +127,6 @@ export function useAuth() {
     profile,
     isLoading,
     isAuthenticated: !!user,
-    hasPermission,
     signIn,
     signUp,
     signOut,
