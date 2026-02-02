@@ -239,6 +239,72 @@ export interface QuickLinkRecord extends BaseRecord {
   is_active: boolean;
 }
 
+// Event Category
+export interface EventCategoryRecord extends BaseRecord {
+  name: string;
+  color: string;
+  description?: string;
+}
+
+// Event
+export interface EventRecord extends BaseRecord {
+  name: string;
+  description?: string;
+  category?: string; // relation to event_categories
+  unit: string; // relation to units
+  location?: string;
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  status: "draft" | "published" | "cancelled" | "completed";
+  max_participants?: number;
+  registration_deadline?: string;
+  notes?: string;
+  created_by?: string; // relation to users
+}
+
+// Event Position
+export interface EventPositionRecord extends BaseRecord {
+  event: string; // relation to events
+  name: string;
+  description?: string;
+  required_qualifications?: string[]; // relation to qualifications
+  min_count: number;
+  max_count?: number;
+  sort_order: number;
+}
+
+// Event Registration
+export interface EventRegistrationRecord extends BaseRecord {
+  event: string; // relation to events
+  position: string; // relation to event_positions
+  user: string; // relation to profiles
+  status: "pending" | "confirmed" | "cancelled" | "waitlist";
+  registered_at: string;
+  confirmed_by?: string; // relation to users
+  notes?: string;
+}
+
+// Event Group
+export interface EventGroupRecord extends BaseRecord {
+  event: string; // relation to events
+  name: string;
+  description?: string;
+  leader?: string; // relation to profiles
+  members?: string[]; // relation to profiles
+}
+
+// Push Subscription
+export interface PushSubscriptionRecord extends BaseRecord {
+  user: string; // relation to users
+  endpoint: string;
+  p256dh: string; // public key
+  auth: string; // auth secret
+  user_agent?: string;
+  is_active: boolean;
+}
+
 // Collection type map for type-safe queries
 export interface CollectionRecords {
   users: UserRecord;
@@ -265,6 +331,12 @@ export interface CollectionRecords {
   news_attachments: NewsAttachmentRecord;
   news_read_status: NewsReadStatusRecord;
   quick_links: QuickLinkRecord;
+  event_categories: EventCategoryRecord;
+  events: EventRecord;
+  event_positions: EventPositionRecord;
+  event_registrations: EventRegistrationRecord;
+  event_groups: EventGroupRecord;
+  push_subscriptions: PushSubscriptionRecord;
 }
 
 // Helper type for getting record type by collection name

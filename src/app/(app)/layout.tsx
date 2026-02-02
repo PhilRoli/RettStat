@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/toaster";
+import { NotificationPermissionBanner } from "@/components/notifications";
+import { OfflineIndicator } from "@/components/offline";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,8 +35,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AppShell>
+      <OfflineIndicator />
       {children}
       <Toaster />
+      <NotificationPermissionBanner />
     </AppShell>
   );
 }

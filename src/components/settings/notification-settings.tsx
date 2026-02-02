@@ -6,9 +6,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
+import { NotificationToggle } from "@/components/notifications";
 
 type NotificationPreferences = {
   email: {
@@ -87,95 +89,105 @@ export function NotificationSettings() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Email Notifications */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">{t("emailTitle")}</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="email-shifts">{t("shifts")}</Label>
-              <p className="text-muted-foreground text-sm">{t("shiftsDescription")}</p>
-            </div>
-            <Switch
-              id="email-shifts"
-              checked={preferences.email.shifts}
-              onCheckedChange={() => handleToggle("email", "shifts")}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="email-events">{t("events")}</Label>
-              <p className="text-muted-foreground text-sm">{t("eventsDescription")}</p>
-            </div>
-            <Switch
-              id="email-events"
-              checked={preferences.email.events}
-              onCheckedChange={() => handleToggle("email", "events")}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="email-news">{t("news")}</Label>
-              <p className="text-muted-foreground text-sm">{t("newsDescription")}</p>
-            </div>
-            <Switch
-              id="email-news"
-              checked={preferences.email.news}
-              onCheckedChange={() => handleToggle("email", "news")}
-            />
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Push Subscription Toggle */}
+      <div className="rounded-lg border p-4">
+        <NotificationToggle />
       </div>
 
-      {/* Push Notifications */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">{t("pushTitle")}</h3>
+      <Separator />
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Email Notifications */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="push-shifts">{t("shifts")}</Label>
-              <p className="text-muted-foreground text-sm">{t("shiftsDescription")}</p>
+          <h3 className="text-lg font-medium">{t("emailTitle")}</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-shifts">{t("shifts")}</Label>
+                <p className="text-muted-foreground text-sm">{t("shiftsDescription")}</p>
+              </div>
+              <Switch
+                id="email-shifts"
+                checked={preferences.email.shifts}
+                onCheckedChange={() => handleToggle("email", "shifts")}
+              />
             </div>
-            <Switch
-              id="push-shifts"
-              checked={preferences.push.shifts}
-              onCheckedChange={() => handleToggle("push", "shifts")}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="push-events">{t("events")}</Label>
-              <p className="text-muted-foreground text-sm">{t("eventsDescription")}</p>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-events">{t("events")}</Label>
+                <p className="text-muted-foreground text-sm">{t("eventsDescription")}</p>
+              </div>
+              <Switch
+                id="email-events"
+                checked={preferences.email.events}
+                onCheckedChange={() => handleToggle("email", "events")}
+              />
             </div>
-            <Switch
-              id="push-events"
-              checked={preferences.push.events}
-              onCheckedChange={() => handleToggle("push", "events")}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="push-news">{t("news")}</Label>
-              <p className="text-muted-foreground text-sm">{t("newsDescription")}</p>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-news">{t("news")}</Label>
+                <p className="text-muted-foreground text-sm">{t("newsDescription")}</p>
+              </div>
+              <Switch
+                id="email-news"
+                checked={preferences.email.news}
+                onCheckedChange={() => handleToggle("email", "news")}
+              />
             </div>
-            <Switch
-              id="push-news"
-              checked={preferences.push.news}
-              onCheckedChange={() => handleToggle("push", "news")}
-            />
           </div>
         </div>
-      </div>
 
-      <Button type="submit" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {t("saveButton")}
-      </Button>
-    </form>
+        {/* Push Notification Preferences */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">{t("pushTitle")}</h3>
+          <p className="text-muted-foreground text-sm">{t("pushPreferencesDescription")}</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="push-shifts">{t("shifts")}</Label>
+                <p className="text-muted-foreground text-sm">{t("shiftsDescription")}</p>
+              </div>
+              <Switch
+                id="push-shifts"
+                checked={preferences.push.shifts}
+                onCheckedChange={() => handleToggle("push", "shifts")}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="push-events">{t("events")}</Label>
+                <p className="text-muted-foreground text-sm">{t("eventsDescription")}</p>
+              </div>
+              <Switch
+                id="push-events"
+                checked={preferences.push.events}
+                onCheckedChange={() => handleToggle("push", "events")}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="push-news">{t("news")}</Label>
+                <p className="text-muted-foreground text-sm">{t("newsDescription")}</p>
+              </div>
+              <Switch
+                id="push-news"
+                checked={preferences.push.news}
+                onCheckedChange={() => handleToggle("push", "news")}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Button type="submit" disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {t("saveButton")}
+        </Button>
+      </form>
+    </div>
   );
 }
