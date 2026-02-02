@@ -644,6 +644,36 @@
     "noVehicleData": "Keine Fahrzeugdaten verfügbar",
     "errorLoading": "Statistiken konnten nicht geladen werden"
   },
+  "events": {
+    "title": "Events",
+    "createEvent": "Event erstellen",
+    "upcoming": "Kommend",
+    "past": "Vergangen",
+    "noEvents": "Keine Events gefunden",
+    "noUpcomingEvents": "Keine kommenden Events",
+    "noPastEvents": "Keine vergangenen Events",
+    "errorLoading": "Events konnten nicht geladen werden",
+    "eventNotFound": "Event nicht gefunden",
+    "backToEvents": "Zurück zu Events",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "location": "Ort",
+    "unit": "Einheit",
+    "maxParticipants": "Max. Teilnehmer",
+    "notes": "Notizen",
+    "positions": "Positionen",
+    "noPositions": "Keine Positionen definiert",
+    "assignUser": "Zuweisen",
+    "assignUserToPosition": "Benutzer zu {position} zuweisen",
+    "selectUser": "Benutzer auswählen",
+    "assign": "Zuweisen",
+    "status": {
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "cancelled": "Abgesagt",
+      "completed": "Abgeschlossen"
+    }
+  },
   "devAccess": {
     "title": "Entwicklungszugang Erforderlich",
     "description": "Sie haben keine Berechtigung für den Zugriff auf die Entwicklungsumgebung.",

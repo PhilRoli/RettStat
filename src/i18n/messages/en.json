@@ -644,6 +644,36 @@
     "noVehicleData": "No vehicle data available",
     "errorLoading": "Failed to load statistics"
   },
+  "events": {
+    "title": "Events",
+    "createEvent": "Create Event",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "noEvents": "No events found",
+    "noUpcomingEvents": "No upcoming events",
+    "noPastEvents": "No past events",
+    "errorLoading": "Failed to load events",
+    "eventNotFound": "Event not found",
+    "backToEvents": "Back to Events",
+    "date": "Date",
+    "time": "Time",
+    "location": "Location",
+    "unit": "Unit",
+    "maxParticipants": "Max Participants",
+    "notes": "Notes",
+    "positions": "Positions",
+    "noPositions": "No positions defined",
+    "assignUser": "Assign",
+    "assignUserToPosition": "Assign user to {position}",
+    "selectUser": "Select user",
+    "assign": "Assign",
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    }
+  },
   "devAccess": {
     "title": "Development Access Required",
     "description": "You don't have permission to access the development environment.",

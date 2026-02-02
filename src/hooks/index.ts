@@ -14,3 +14,17 @@ export { useCreateTour, useUpdateTour, useDeleteTour } from "./use-tour-mutation
 export { useVehicles, useVehicles as useUnitVehicles } from "./use-vehicles";
 export { useUnitMembers } from "./use-unit-members";
 export { useStatistics } from "./use-statistics";
+export {
+  useEvents,
+  useEvent,
+  useEventPositions,
+  useEventCategories,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
+  useCreatePosition,
+  useUpdatePosition,
+  useDeletePosition,
+  useCreateRegistration,
+  useDeleteRegistration,
+} from "./use-events";
