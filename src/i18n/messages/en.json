@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "RettStat",
+    "description": "EMS Shift Management System"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "shifts": "Shift Plan",
+    "statistics": "Statistics",
+    "events": "Events",
+    "admin": "Administration",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "home": {
+    "welcome": "Welcome to RettStat",
+    "subtitle": "Your central hub for shift plans, statistics, and events.",
+    "nextShift": "Next Shift",
+    "thisMonth": "This Month",
+    "upcomingEvents": "Upcoming Events",
+    "yearTotal": "Year Total",
+    "quickActions": "Quick Actions",
+    "viewShiftPlan": "View Shift Plan",
+    "browseEvents": "Browse Events",
+    "statistics": "Statistics",
+    "news": "News & Announcements"
+  },
+  "shifts": {
+    "title": "Shift Plan",
+    "addShift": "Add Shift",
+    "editShift": "Edit Shift",
+    "deleteShift": "Delete Shift",
+    "shiftDetails": "Shift Details",
+    "date": "Date",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "duration": "Duration",
+    "position": "Position",
+    "notes": "Notes"
+  },
+  "events": {
+    "title": "Events",
+    "addEvent": "Add Event",
+    "editEvent": "Edit Event",
+    "deleteEvent": "Delete Event",
+    "eventDetails": "Event Details",
+    "positions": "Positions",
+    "signUp": "Sign Up",
+    "signedUp": "Signed Up",
+    "available": "Available",
+    "filled": "Filled"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "personal": "Personal Statistics",
+    "unit": "Unit Statistics",
+    "totalHours": "Total Hours",
+    "totalShifts": "Total Shifts",
+    "averageShiftLength": "Average Shift Length",
+    "export": "Export"
+  },
+  "admin": {
+    "title": "Administration",
+    "users": "Users",
+    "qualifications": "Qualifications",
+    "assignments": "Assignments",
+    "roles": "Roles",
+    "settings": "System Settings"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "offline": {
+    "status": "Offline",
+    "message": "You are currently offline. Changes will be synced when connection is restored."
+  },
+  "time": {
+    "hours": "{count, plural, =1 {# hour} other {# hours}}",
+    "shifts": "{count, plural, =1 {# shift} other {# shifts}}",
+    "days": "{count, plural, =1 {# day} other {# days}}"
+  }
+}

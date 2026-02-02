@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "RettStat",
+    "description": "Rettungsdienst Schichtmanagement-System"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "refresh": "Aktualisieren",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "yes": "Ja",
+    "no": "Nein",
+    "confirm": "Bestätigen",
+    "close": "Schließen"
+  },
+  "nav": {
+    "home": "Startseite",
+    "shifts": "Dienstplan",
+    "statistics": "Statistiken",
+    "events": "Veranstaltungen",
+    "admin": "Verwaltung",
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  },
+  "home": {
+    "welcome": "Willkommen bei RettStat",
+    "subtitle": "Ihre zentrale Anlaufstelle für Dienstpläne, Statistiken und Veranstaltungen.",
+    "nextShift": "Nächste Schicht",
+    "thisMonth": "Diesen Monat",
+    "upcomingEvents": "Kommende Veranstaltungen",
+    "yearTotal": "Jahresgesamt",
+    "quickActions": "Schnellaktionen",
+    "viewShiftPlan": "Dienstplan ansehen",
+    "browseEvents": "Veranstaltungen durchsuchen",
+    "statistics": "Statistiken",
+    "news": "Neuigkeiten & Ankündigungen"
+  },
+  "shifts": {
+    "title": "Dienstplan",
+    "addShift": "Schicht hinzufügen",
+    "editShift": "Schicht bearbeiten",
+    "deleteShift": "Schicht löschen",
+    "shiftDetails": "Schichtdetails",
+    "date": "Datum",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "duration": "Dauer",
+    "position": "Position",
+    "notes": "Notizen"
+  },
+  "events": {
+    "title": "Veranstaltungen",
+    "addEvent": "Veranstaltung hinzufügen",
+    "editEvent": "Veranstaltung bearbeiten",
+    "deleteEvent": "Veranstaltung löschen",
+    "eventDetails": "Veranstaltungsdetails",
+    "positions": "Positionen",
+    "signUp": "Anmelden",
+    "signedUp": "Angemeldet",
+    "available": "Verfügbar",
+    "filled": "Besetzt"
+  },
+  "statistics": {
+    "title": "Statistiken",
+    "personal": "Persönliche Statistiken",
+    "unit": "Einheitsstatistiken",
+    "totalHours": "Gesamtstunden",
+    "totalShifts": "Gesamtschichten",
+    "averageShiftLength": "Durchschnittliche Schichtlänge",
+    "export": "Exportieren"
+  },
+  "admin": {
+    "title": "Verwaltung",
+    "users": "Benutzer",
+    "qualifications": "Qualifikationen",
+    "assignments": "Zuweisungen",
+    "roles": "Rollen",
+    "settings": "Systemeinstellungen"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "forgotPassword": "Passwort vergessen?",
+    "rememberMe": "Angemeldet bleiben"
+  },
+  "theme": {
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
+  },
+  "offline": {
+    "status": "Offline",
+    "message": "Sie sind derzeit offline. Änderungen werden synchronisiert, sobald die Verbindung wiederhergestellt ist."
+  },
+  "time": {
+    "hours": "{count, plural, =1 {# Stunde} other {# Stunden}}",
+    "shifts": "{count, plural, =1 {# Schicht} other {# Schichten}}",
+    "days": "{count, plural, =1 {# Tag} other {# Tage}}"
+  }
+}
