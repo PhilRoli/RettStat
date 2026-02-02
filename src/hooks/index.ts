@@ -40,3 +40,4 @@ export {
   useServiceWorker,
   usePushSubscription,
 } from "./use-notifications";
+export { useOfflineEvents, useOfflineMutation, useSyncPendingMutations } from "./use-offline";

@@ -740,5 +740,13 @@
     "notSupportedDescription": "Push-Benachrichtigungen werden auf diesem Gerät nicht unterstützt",
     "blocked": "Blockiert",
     "blockedDescription": "Erlauben Sie Benachrichtigungen in Ihren Browsereinstellungen"
+  },
+  "offline": {
+    "offline": "Offline",
+    "offlineMessage": "Sie sind offline. Einige Funktionen sind möglicherweise eingeschränkt.",
+    "sync": "Jetzt synchronisieren",
+    "syncComplete": "Synchronisierung abgeschlossen",
+    "syncError": "Synchronisierung fehlgeschlagen",
+    "cachedData": "Zeige zwischengespeicherte Daten"
   }
 }

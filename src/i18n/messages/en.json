@@ -740,5 +740,13 @@
     "notSupportedDescription": "Push notifications are not supported on this device",
     "blocked": "Blocked",
     "blockedDescription": "Allow notifications in your browser settings to enable"
+  },
+  "offline": {
+    "offline": "Offline",
+    "offlineMessage": "You are offline. Some features may be limited.",
+    "sync": "Sync Now",
+    "syncComplete": "Sync complete",
+    "syncError": "Sync failed",
+    "cachedData": "Showing cached data"
   }
 }
