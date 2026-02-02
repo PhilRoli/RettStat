@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { NewsRecord, NewsAttachmentRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,16 +44,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, Edit, Trash2, Upload, FileText, X } from "lucide-react";
-import type { Database } from "@/types/database";
-import type { NewsCategory } from "@/types/database";
 
-type News = Database["public"]["Tables"]["news"]["Row"];
-type NewsInsert = Database["public"]["Tables"]["news"]["Insert"];
-type NewsAttachment = Database["public"]["Tables"]["news_attachments"]["Row"];
-type Unit = Database["public"]["Tables"]["units"]["Row"];
+type NewsCategory = "general" | "important" | "event" | "training";
 
-interface NewsWithAttachments extends News {
-  news_attachments?: NewsAttachment[];
+interface NewsWithAttachments extends NewsRecord {
+  expand?: {
+    "news_attachments(news)"?: NewsAttachmentRecord[];
+  };
 }
 
 export function NewsManagement() {
@@ -61,7 +59,7 @@ export function NewsManagement() {
   const { toast } = useToast();
 
   const [news, setNews] = useState<NewsWithAttachments[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [units, setUnits] = useState<UnitRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -78,35 +76,35 @@ export function NewsManagement() {
     title: "",
     content: "",
     category: "general" as NewsCategory,
-    target_unit_ids: [] as string[],
+    unit: "" as string,
     is_published: false,
+    is_pinned: false,
   });
 
-  const [attachments, setAttachments] = useState<NewsAttachment[]>([]);
+  const [attachments, setAttachments] = useState<NewsAttachmentRecord[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
 
       const [newsRes, unitsRes] = await Promise.all([
-        supabase
-          .from("news")
-          .select("*, news_attachments(*)")
-          .order("created_at", { ascending: false }),
-        supabase.from("units").select("*").order("name", { ascending: true }),
+        pb.collection("news").getFullList<NewsWithAttachments>({
+          sort: "-created",
+          expand: "news_attachments(news)",
+        }),
+        pb.collection("units").getFullList<UnitRecord>({
+          sort: "name",
+        }),
       ]);
 
-      if (newsRes.error) throw newsRes.error;
-      if (unitsRes.error) throw unitsRes.error;
-
-      setNews((newsRes.data as NewsWithAttachments[]) || []);
-      setUnits(unitsRes.data || []);
+      setNews(newsRes);
+      setUnits(unitsRes);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -125,8 +123,9 @@ export function NewsManagement() {
       title: "",
       content: "",
       category: "general",
-      target_unit_ids: [],
+      unit: "",
       is_published: false,
+      is_pinned: false,
     });
     setAttachments([]);
     setDialogOpen(true);
@@ -137,11 +136,12 @@ export function NewsManagement() {
     setFormData({
       title: newsItem.title,
       content: newsItem.content,
-      category: newsItem.category,
-      target_unit_ids: newsItem.target_unit_ids || [],
+      category: "general" as NewsCategory,
+      unit: newsItem.unit || "",
       is_published: newsItem.published_at !== null,
+      is_pinned: newsItem.is_pinned,
     });
-    setAttachments(newsItem.news_attachments || []);
+    setAttachments(newsItem.expand?.["news_attachments(news)"] || []);
     setDialogOpen(true);
   };
 
@@ -150,36 +150,24 @@ export function NewsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const newsData: NewsInsert = {
+      const newsData = {
         title: formData.title,
         content: formData.content,
-        category: formData.category,
-        target_unit_ids: formData.target_unit_ids.length > 0 ? formData.target_unit_ids : null,
+        unit: formData.unit || null,
         published_at: formData.is_published ? new Date().toISOString() : null,
+        is_pinned: formData.is_pinned,
+        author: pb.authStore.record?.id,
       };
 
       if (selectedNews) {
-        const { error } = await supabase
-          .from("news")
-          // @ts-expect-error - Supabase generated types are overly strict for updates
-          .update(newsData)
-          .eq("id", selectedNews.id);
-
-        if (error) throw error;
+        await pb.collection("news").update(selectedNews.id, newsData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        const { error } = await supabase
-          .from("news")
-          // @ts-expect-error - Supabase generated types are overly strict for inserts
-          .insert(newsData);
-
-        if (error) throw error;
+        await pb.collection("news").create(newsData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -211,19 +199,14 @@ export function NewsManagement() {
 
     setSaving(true);
     try {
-      const supabase = createClient();
-
-      // Delete attachments from storage and database
+      // Delete attachments first (PocketBase cascades or we delete manually)
       const newsItem = news.find((n) => n.id === deleteNewsId);
-      if (newsItem?.news_attachments) {
-        for (const attachment of newsItem.news_attachments) {
-          await supabase.storage.from("news-attachments").remove([attachment.file_path]);
-        }
+      const newsAttachments = newsItem?.expand?.["news_attachments(news)"] || [];
+      for (const attachment of newsAttachments) {
+        await pb.collection("news_attachments").delete(attachment.id);
       }
 
-      const { error } = await supabase.from("news").delete().eq("id", deleteNewsId);
-
-      if (error) throw error;
+      await pb.collection("news").delete(deleteNewsId);
 
       toast({
         title: t("deleteSuccessTitle"),
@@ -283,37 +266,15 @@ export function NewsManagement() {
     }
 
     setUploading(true);
-    let uploadedFileName: string | null = null;
 
     try {
-      const supabase = createClient();
+      const formData = new FormData();
+      formData.append("news", selectedNews.id);
+      formData.append("file", uploadFile);
+      formData.append("filename", uploadFile.name);
+      formData.append("file_size", uploadFile.size.toString());
 
-      // Sanitize filename: remove path traversal characters
-      const sanitizedName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      uploadedFileName = `${selectedNews.id}/${Date.now()}-${sanitizedName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("news-attachments")
-        .upload(uploadedFileName, uploadFile);
-
-      if (uploadError) throw uploadError;
-
-      const { error: dbError } = await supabase
-        .from("news_attachments")
-        // @ts-expect-error - Supabase generated types are overly strict for inserts
-        .insert({
-          news_id: selectedNews.id,
-          file_name: uploadFile.name,
-          file_path: uploadedFileName,
-          file_size: uploadFile.size,
-          mime_type: uploadFile.type,
-        });
-
-      if (dbError) {
-        // Cleanup: delete uploaded file if database insert fails
-        await supabase.storage.from("news-attachments").remove([uploadedFileName]);
-        throw dbError;
-      }
+      await pb.collection("news_attachments").create(formData);
 
       toast({
         title: t("uploadSuccessTitle"),
@@ -344,19 +305,7 @@ export function NewsManagement() {
 
     setSaving(true);
     try {
-      const supabase = createClient();
-
-      const attachment = attachments.find((a) => a.id === deleteAttachmentId);
-      if (!attachment) return;
-
-      await supabase.storage.from("news-attachments").remove([attachment.file_path]);
-
-      const { error } = await supabase
-        .from("news_attachments")
-        .delete()
-        .eq("id", deleteAttachmentId);
-
-      if (error) throw error;
+      await pb.collection("news_attachments").delete(deleteAttachmentId);
 
       toast({
         title: t("deleteAttachmentSuccessTitle"),
@@ -378,12 +327,10 @@ export function NewsManagement() {
     }
   };
 
-  const toggleUnit = (unitId: string) => {
+  const handleUnitChange = (unitId: string) => {
     setFormData((prev) => ({
       ...prev,
-      target_unit_ids: prev.target_unit_ids.includes(unitId)
-        ? prev.target_unit_ids.filter((id) => id !== unitId)
-        : [...prev.target_unit_ids, unitId],
+      unit: unitId === "all" ? "" : unitId,
     }));
   };
 
@@ -419,8 +366,8 @@ export function NewsManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>{t("titleColumn")}</TableHead>
-              <TableHead>{t("categoryColumn")}</TableHead>
               <TableHead>{t("targetUnitsColumn")}</TableHead>
+              <TableHead>{t("pinnedColumn")}</TableHead>
               <TableHead>{t("publishedColumn")}</TableHead>
               <TableHead>{t("createdColumn")}</TableHead>
               <TableHead className="w-25">{t("actionsColumn")}</TableHead>
@@ -437,14 +384,14 @@ export function NewsManagement() {
               news.map((newsItem) => (
                 <TableRow key={newsItem.id}>
                   <TableCell className="font-medium">{newsItem.title}</TableCell>
-                  <TableCell className="capitalize">{newsItem.category}</TableCell>
                   <TableCell>
-                    {newsItem.target_unit_ids
-                      ? `${newsItem.target_unit_ids.length} ${t("units")}`
+                    {newsItem.unit
+                      ? units.find((u) => u.id === newsItem.unit)?.name || t("unknownUnit")
                       : t("allUnits")}
                   </TableCell>
+                  <TableCell>{newsItem.is_pinned ? t("yes") : t("no")}</TableCell>
                   <TableCell>{newsItem.published_at ? t("yes") : t("no")}</TableCell>
-                  <TableCell>{formatDate(newsItem.created_at)}</TableCell>
+                  <TableCell>{formatDate(newsItem.created)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(newsItem)}>
@@ -492,45 +439,37 @@ export function NewsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="news-category">{t("categoryLabel")}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value: NewsCategory) =>
-                  setFormData({ ...formData, category: value })
-                }
-              >
-                <SelectTrigger id="news-category">
-                  <SelectValue />
+              <Label htmlFor="news-unit">{t("targetUnitsLabel")}</Label>
+              <Select value={formData.unit || "all"} onValueChange={handleUnitChange}>
+                <SelectTrigger id="news-unit">
+                  <SelectValue placeholder={t("allUnits")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">{t("categoryGeneral")}</SelectItem>
-                  <SelectItem value="important">{t("categoryImportant")}</SelectItem>
-                  <SelectItem value="event">{t("categoryEvent")}</SelectItem>
-                  <SelectItem value="training">{t("categoryTraining")}</SelectItem>
+                  <SelectItem value="all">{t("allUnits")}</SelectItem>
+                  {units.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-muted-foreground text-sm">{t("targetUnitsHint")}</p>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("targetUnitsLabel")}</Label>
-              <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-4">
-                {units.map((unit) => (
-                  <div key={unit.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`unit-${unit.id}`}
-                      checked={formData.target_unit_ids.includes(unit.id)}
-                      onCheckedChange={() => toggleUnit(unit.id)}
-                    />
-                    <label
-                      htmlFor={`unit-${unit.id}`}
-                      className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {unit.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-muted-foreground text-sm">{t("targetUnitsHint")}</p>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is-pinned"
+                checked={formData.is_pinned}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, is_pinned: checked as boolean })
+                }
+              />
+              <label
+                htmlFor="is-pinned"
+                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {t("pinnedLabel")}
+              </label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -563,7 +502,7 @@ export function NewsManagement() {
                       >
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          <span className="text-sm">{attachment.file_name}</span>
+                          <span className="text-sm">{attachment.filename}</span>
                           <span className="text-muted-foreground text-xs">
                             ({Math.round((attachment.file_size || 0) / 1024)} KB)
                           </span>

@@ -12,5 +12,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: (await import(`./src/i18n/messages/${locale}.json`)).default,
+    timeZone: "Europe/Vienna", // Austria timezone for EMS operations
   };
 });

@@ -248,6 +248,18 @@ export function useShifts() {
 3. Ask the user for clarification
 4. Enter plan mode for complex features
 
+## Pre-Commit Checklist
+
+**ALWAYS run these commands before committing:**
+
+```bash
+bun run lint        # Fix ESLint warnings
+bun run type-check  # Catch TypeScript errors
+bun run test        # Run unit tests (vitest)
+```
+
+These checks are also run by CI, but running them locally first saves time. Note: Use `bun run test` not `bun test` (the latter runs Bun's test runner which picks up e2e tests incorrectly).
+
 ## Sub-Agent Instructions
 
 When delegating work to sub-agents (task tool), always include:

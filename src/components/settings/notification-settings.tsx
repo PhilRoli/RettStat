@@ -7,13 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
-import type { NotificationPreferences } from "@/types/database";
+
+type NotificationPreferences = {
+  email: {
+    shifts: boolean;
+    events: boolean;
+    news: boolean;
+  };
+  push: {
+    shifts: boolean;
+    events: boolean;
+    news: boolean;
+  };
+};
 
 export function NotificationSettings() {
   const t = useTranslations("settings.notifications");
-  const { user, profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
@@ -40,17 +52,11 @@ export function NotificationSettings() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
+      if (!profile?.id) throw new Error("Profile not found");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from("profiles")
-        .update({
-          notification_preferences: preferences,
-        })
-        .eq("id", user!.id);
-
-      if (error) throw error;
+      await pb.collection("profiles").update(profile.id, {
+        notification_preferences: preferences,
+      });
 
       await refreshProfile();
 

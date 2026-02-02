@@ -34,7 +34,10 @@ yarn-error.log*
 
 # env files
 .env*.local
+.env
+.env.production
 !.env.example
+!.env.production.example
 
 # vercel
 .vercel
@@ -52,3 +55,5 @@ next-env.d.ts
 # Supabase
 supabase/.branches
 supabase/.temp
+pb_data/
+pocketbase/pb_data/

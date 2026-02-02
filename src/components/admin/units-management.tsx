@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Plus, Edit, Trash2, ChevronRight } from "lucide-react";
-import type { Database } from "@/types/database";
 
-type Unit = Database["public"]["Tables"]["units"]["Row"];
+type Unit = UnitRecord;
 
 interface UnitTreeNode extends Unit {
   children?: UnitTreeNode[];
@@ -50,22 +50,19 @@ export function UnitsManagement() {
 
   useEffect(() => {
     fetchUnits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     buildUnitTree();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [units]);
 
   const fetchUnits = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
-
-      const { data, error } = await supabase.from("units").select("*").order("name");
-
-      if (error) throw error;
-
-      setUnits(data || []);
+      const data = await pb.collection("units").getFullList<UnitRecord>({ sort: "name" });
+      setUnits(data);
     } catch (error) {
       console.error("Error fetching units:", error);
       toast({
@@ -89,8 +86,8 @@ export function UnitsManagement() {
 
     // Build tree structure
     unitMap.forEach((unit) => {
-      if (unit.parent_unit_id) {
-        const parent = unitMap.get(unit.parent_unit_id);
+      if (unit.parent_unit) {
+        const parent = unitMap.get(unit.parent_unit);
         if (parent) {
           parent.children = parent.children || [];
           parent.children.push(unit);
@@ -118,22 +115,6 @@ export function UnitsManagement() {
     setUnitTree(roots);
   };
 
-  const flattenTree = (nodes: UnitTreeNode[]): UnitTreeNode[] => {
-    const result: UnitTreeNode[] = [];
-
-    const traverse = (items: UnitTreeNode[]) => {
-      items.forEach((item) => {
-        result.push(item);
-        if (item.children && item.children.length > 0) {
-          traverse(item.children);
-        }
-      });
-    };
-
-    traverse(nodes);
-    return result;
-  };
-
   const handleAdd = () => {
     setSelectedUnit(null);
     setFormData({
@@ -147,7 +128,7 @@ export function UnitsManagement() {
     setSelectedUnit(unit);
     setFormData({
       name: unit.name,
-      parentUnitId: unit.parent_unit_id || "",
+      parentUnitId: unit.parent_unit || "",
     });
     setDialogOpen(true);
   };
@@ -157,11 +138,9 @@ export function UnitsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       const unitData = {
         name: formData.name,
-        parent_unit_id: formData.parentUnitId || null,
+        parent_unit: formData.parentUnitId || "",
       };
 
       if (selectedUnit) {
@@ -170,8 +149,8 @@ export function UnitsManagement() {
           const isCircular = (parentId: string): boolean => {
             if (parentId === selectedUnit.id) return true;
             const parent = units.find((u) => u.id === parentId);
-            if (!parent || !parent.parent_unit_id) return false;
-            return isCircular(parent.parent_unit_id);
+            if (!parent || !parent.parent_unit) return false;
+            return isCircular(parent.parent_unit);
           };
 
           if (isCircular(formData.parentUnitId)) {
@@ -185,23 +164,14 @@ export function UnitsManagement() {
           }
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("units")
-          .update(unitData)
-          .eq("id", selectedUnit.id);
-
-        if (error) throw error;
+        await pb.collection("units").update(selectedUnit.id, unitData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("units").insert([unitData]);
-
-        if (error) throw error;
+        await pb.collection("units").create(unitData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -227,7 +197,7 @@ export function UnitsManagement() {
     if (!confirm(t("deleteConfirm"))) return;
 
     // Check if unit has children
-    const hasChildren = units.some((u) => u.parent_unit_id === unit.id);
+    const hasChildren = units.some((u) => u.parent_unit === unit.id);
     if (hasChildren) {
       toast({
         variant: "destructive",
@@ -238,10 +208,7 @@ export function UnitsManagement() {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("units").delete().eq("id", unit.id);
-
-      if (error) throw error;
+      await pb.collection("units").delete(unit.id);
 
       toast({
         title: t("deleteSuccessTitle"),

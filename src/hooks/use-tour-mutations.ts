@@ -1,66 +1,42 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/supabase";
+import { pb } from "@/lib/pocketbase";
+import type { TourRecord } from "@/lib/pocketbase/types";
 
-type TourInsert = Database["public"]["Tables"]["tours"]["Insert"];
-type TourUpdate = Database["public"]["Tables"]["tours"]["Update"];
+type TourInsert = Omit<TourRecord, "id" | "created" | "updated">;
+type TourUpdate = Partial<TourInsert>;
 
 export function useCreateTour() {
   const queryClient = useQueryClient();
-  const supabase = createClient();
-
   return useMutation({
-    mutationFn: async (data: TourInsert) => {
-      const { data: tour, error } = await supabase.from("tours").insert(data).select().single();
-
-      if (error) throw error;
-      return tour;
-    },
+    mutationFn: async (data: TourInsert) => pb.collection("tours").create<TourRecord>(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shiftplans"] });
-      queryClient.invalidateQueries({ queryKey: ["shiftplan"] });
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
     },
   });
 }
 
 export function useUpdateTour() {
   const queryClient = useQueryClient();
-  const supabase = createClient();
-
   return useMutation({
-    mutationFn: async ({ id, ...data }: TourUpdate & { id: string }) => {
-      const { data: tour, error } = await supabase
-        .from("tours")
-        .update(data)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return tour;
-    },
+    mutationFn: async ({ id, data }: { id: string; data: TourUpdate }) =>
+      pb.collection("tours").update<TourRecord>(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shiftplans"] });
-      queryClient.invalidateQueries({ queryKey: ["shiftplan"] });
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
     },
   });
 }
 
 export function useDeleteTour() {
   const queryClient = useQueryClient();
-  const supabase = createClient();
-
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tours").delete().eq("id", id);
-
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => pb.collection("tours").delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shiftplans"] });
-      queryClient.invalidateQueries({ queryKey: ["shiftplan"] });
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
     },
   });
 }

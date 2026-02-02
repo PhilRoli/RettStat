@@ -3,24 +3,30 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type {
+  NewsRecord,
+  NewsAttachmentRecord,
+  NewsReadStatusRecord,
+} from "@/lib/pocketbase/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Download } from "lucide-react";
-import type { Database } from "@/types/database";
+import { Loader2, FileText } from "lucide-react";
 
 type NewsCategory = "general" | "emergency" | "training" | "event" | "maintenance" | "policy";
 type NewsPriority = "low" | "normal" | "high" | "urgent";
 
-type News = Database["public"]["Tables"]["news"]["Row"] & {
-  news_read_status: { read_at: string }[];
-  news_attachments: Database["public"]["Tables"]["news_attachments"]["Row"][];
+type NewsWithRelations = NewsRecord & {
+  priority?: NewsPriority;
+  category?: NewsCategory;
+  news_read_status: NewsReadStatusRecord[];
+  news_attachments: NewsAttachmentRecord[];
 };
 
 export function NewsFeed() {
   const { user } = useAuth();
-  const [news, setNews] = useState<News[]>([]);
+  const [news, setNews] = useState<NewsWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | "all">("all");
   const t = useTranslations("home.news");
@@ -39,36 +45,45 @@ export function NewsFeed() {
     if (user) {
       loadNews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedCategory]);
 
   const loadNews = async () => {
     try {
-      const supabase = createClient();
+      const filter = selectedCategory !== "all" ? `category="${selectedCategory}"` : "";
 
-      let query = supabase
-        .from("news")
-        .select(
-          `
-          *,
-          news_read_status!left (
-            read_at
-          ),
-          news_attachments (
-            *
-          )
-        `
-        )
-        .order("published_at", { ascending: false })
-        .limit(10);
+      const newsItems = await pb.collection("news").getList<NewsRecord>(1, 10, {
+        filter,
+        sort: "-published_at",
+      });
 
-      if (selectedCategory !== "all") {
-        query = query.eq("category", selectedCategory);
-      }
+      // Fetch read status and attachments for each news item
+      const newsWithRelations = await Promise.all(
+        newsItems.items.map(async (item) => {
+          const [readStatus, attachments] = await Promise.all([
+            pb
+              .collection("news_read_status")
+              .getFullList<NewsReadStatusRecord>({
+                filter: `news="${item.id}" && user="${user?.id}"`,
+              })
+              .catch(() => []),
+            pb
+              .collection("news_attachments")
+              .getFullList<NewsAttachmentRecord>({
+                filter: `news="${item.id}"`,
+              })
+              .catch(() => []),
+          ]);
 
-      const { data, error } = await query;
+          return {
+            ...item,
+            news_read_status: readStatus,
+            news_attachments: attachments,
+          } as NewsWithRelations;
+        })
+      );
 
-      if (error) throw error;
-      setNews((data as News[]) || []);
+      setNews(newsWithRelations);
     } catch (error) {
       console.error("Error loading news:", error);
     } finally {
@@ -80,18 +95,11 @@ export function NewsFeed() {
     if (!user) return;
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("news_read_status").upsert(
-        {
-          news_id: newsId,
-          user_id: user.id,
-        } as never,
-        {
-          onConflict: "news_id,user_id",
-        }
-      );
-
-      if (error) throw error;
+      await pb.collection("news_read_status").create({
+        news: newsId,
+        user: user.id,
+        read_at: new Date().toISOString(),
+      });
 
       // Update local state
       setNews((prev) =>
@@ -99,7 +107,7 @@ export function NewsFeed() {
           item.id === newsId
             ? {
                 ...item,
-                news_read_status: [{ read_at: new Date().toISOString() }],
+                news_read_status: [{ read_at: new Date().toISOString() } as NewsReadStatusRecord],
               }
             : item
         )
@@ -109,11 +117,11 @@ export function NewsFeed() {
     }
   };
 
-  const isUnread = (item: News) => {
+  const isUnread = (item: NewsWithRelations) => {
     return item.news_read_status.length === 0;
   };
 
-  const getPriorityColor = (priority: NewsPriority) => {
+  const getPriorityColor = (priority?: NewsPriority) => {
     switch (priority) {
       case "urgent":
         return "destructive";
@@ -183,7 +191,7 @@ export function NewsFeed() {
                         </Badge>
                       )}
                     </div>
-                    {item.priority !== "normal" && (
+                    {item.priority && item.priority !== "normal" && (
                       <Badge variant={getPriorityColor(item.priority)} className="text-xs">
                         {t(`priority.${item.priority}`)}
                       </Badge>

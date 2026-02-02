@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { QualificationRecord, QualificationCategoryRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,16 +34,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Plus, Edit, Trash2, Award } from "lucide-react";
-import type { Database } from "@/types/database";
 
-type Qualification = Database["public"]["Tables"]["qualifications"]["Row"];
-type QualificationInsert = Database["public"]["Tables"]["qualifications"]["Insert"];
-type QualificationCategory = Database["public"]["Tables"]["qualification_categories"]["Row"];
-type QualificationCategoryInsert =
-  Database["public"]["Tables"]["qualification_categories"]["Insert"];
-
-interface QualificationWithCategory extends Qualification {
-  qualification_categories?: QualificationCategory | null;
+interface QualificationWithCategory extends QualificationRecord {
+  expand?: {
+    category?: QualificationCategoryRecord;
+  };
 }
 
 export function QualificationsManagement() {
@@ -51,7 +47,7 @@ export function QualificationsManagement() {
   const { toast } = useToast();
 
   const [qualifications, setQualifications] = useState<QualificationWithCategory[]>([]);
-  const [categories, setCategories] = useState<QualificationCategory[]>([]);
+  const [categories, setCategories] = useState<QualificationCategoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -60,46 +56,43 @@ export function QualificationsManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [selectedQual, setSelectedQual] = useState<QualificationWithCategory | null>(null);
-  const [selectedCat, setSelectedCat] = useState<QualificationCategory | null>(null);
+  const [selectedCat, setSelectedCat] = useState<QualificationCategoryRecord | null>(null);
   const [deleteItem, setDeleteItem] = useState<{ type: "qual" | "cat"; id: string } | null>(null);
 
   const [qualFormData, setQualFormData] = useState({
     name: "",
-    abbreviation: "",
-    category_id: "",
-    level: 1,
+    category: "",
     description: "",
-    icon: "",
+    validity_months: undefined as number | undefined,
   });
 
   const [catFormData, setCatFormData] = useState({
     name: "",
     description: "",
-    icon: "",
+    sort_order: 0,
   });
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
 
       const [qualsRes, catsRes] = await Promise.all([
-        supabase
-          .from("qualifications")
-          .select("*, qualification_categories(*)")
-          .order("level", { ascending: true }),
-        supabase.from("qualification_categories").select("*").order("name", { ascending: true }),
+        pb.collection("qualifications").getFullList<QualificationWithCategory>({
+          sort: "name",
+          expand: "category",
+        }),
+        pb.collection("qualification_categories").getFullList<QualificationCategoryRecord>({
+          sort: "sort_order,name",
+        }),
       ]);
 
-      if (qualsRes.error) throw qualsRes.error;
-      if (catsRes.error) throw catsRes.error;
-
-      setQualifications((qualsRes.data as QualificationWithCategory[]) || []);
-      setCategories(catsRes.data || []);
+      setQualifications(qualsRes);
+      setCategories(catsRes);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -116,11 +109,9 @@ export function QualificationsManagement() {
     setSelectedQual(null);
     setQualFormData({
       name: "",
-      abbreviation: "",
-      category_id: "",
-      level: 1,
+      category: "",
       description: "",
-      icon: "",
+      validity_months: undefined,
     });
     setQualDialogOpen(true);
   };
@@ -129,11 +120,9 @@ export function QualificationsManagement() {
     setSelectedQual(qual);
     setQualFormData({
       name: qual.name,
-      abbreviation: qual.abbreviation || "",
-      category_id: qual.category_id || "",
-      level: qual.level || 1,
+      category: qual.category || "",
       description: qual.description || "",
-      icon: qual.icon || "",
+      validity_months: qual.validity_months,
     });
     setQualDialogOpen(true);
   };
@@ -143,35 +132,22 @@ export function QualificationsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const qualData: QualificationInsert = {
+      const qualData = {
         name: qualFormData.name,
-        abbreviation: qualFormData.abbreviation || null,
-        category_id: qualFormData.category_id || null,
-        level: qualFormData.level,
-        description: qualFormData.description || null,
-        icon: qualFormData.icon || null,
+        category: qualFormData.category || "",
+        description: qualFormData.description || "",
+        validity_months: qualFormData.validity_months,
       };
 
       if (selectedQual) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("qualifications")
-          .update(qualData)
-          .eq("id", selectedQual.id);
-
-        if (error) throw error;
+        await pb.collection("qualifications").update(selectedQual.id, qualData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("qualifications").insert(qualData);
-
-        if (error) throw error;
+        await pb.collection("qualifications").create(qualData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -198,17 +174,17 @@ export function QualificationsManagement() {
     setCatFormData({
       name: "",
       description: "",
-      icon: "",
+      sort_order: categories.length,
     });
     setCatDialogOpen(true);
   };
 
-  const handleCatEdit = (cat: QualificationCategory) => {
+  const handleCatEdit = (cat: QualificationCategoryRecord) => {
     setSelectedCat(cat);
     setCatFormData({
       name: cat.name,
       description: cat.description || "",
-      icon: cat.icon || "",
+      sort_order: cat.sort_order,
     });
     setCatDialogOpen(true);
   };
@@ -218,32 +194,21 @@ export function QualificationsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const catData: QualificationCategoryInsert = {
+      const catData = {
         name: catFormData.name,
-        description: catFormData.description || null,
-        icon: catFormData.icon || null,
+        description: catFormData.description || "",
+        sort_order: catFormData.sort_order,
       };
 
       if (selectedCat) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("qualification_categories")
-          .update(catData)
-          .eq("id", selectedCat.id);
-
-        if (error) throw error;
+        await pb.collection("qualification_categories").update(selectedCat.id, catData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("qualification_categories").insert(catData);
-
-        if (error) throw error;
+        await pb.collection("qualification_categories").create(catData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -276,19 +241,10 @@ export function QualificationsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       if (deleteItem.type === "qual") {
-        const { error } = await supabase.from("qualifications").delete().eq("id", deleteItem.id);
-
-        if (error) throw error;
+        await pb.collection("qualifications").delete(deleteItem.id);
       } else {
-        const { error } = await supabase
-          .from("qualification_categories")
-          .delete()
-          .eq("id", deleteItem.id);
-
-        if (error) throw error;
+        await pb.collection("qualification_categories").delete(deleteItem.id);
       }
 
       toast({
@@ -346,9 +302,8 @@ export function QualificationsManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("nameColumn")}</TableHead>
-                    <TableHead>{t("abbreviationColumn")}</TableHead>
                     <TableHead>{t("categoryColumn")}</TableHead>
-                    <TableHead className="w-20">{t("levelColumn")}</TableHead>
+                    <TableHead className="w-24">{t("validityMonthsColumn")}</TableHead>
                     <TableHead className="hidden lg:table-cell">{t("descriptionColumn")}</TableHead>
                     <TableHead className="text-right">{t("actionsColumn")}</TableHead>
                   </TableRow>
@@ -356,7 +311,7 @@ export function QualificationsManagement() {
                 <TableBody>
                   {qualifications.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         {t("noQualifications")}
                       </TableCell>
                     </TableRow>
@@ -365,15 +320,12 @@ export function QualificationsManagement() {
                       <TableRow key={qual.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            {qual.icon && <Award className="h-4 w-4" />}
+                            <Award className="h-4 w-4" />
                             {qual.name}
                           </div>
                         </TableCell>
-                        <TableCell>{qual.abbreviation || "-"}</TableCell>
-                        <TableCell>
-                          {qual.qualification_categories?.name || t("noCategory")}
-                        </TableCell>
-                        <TableCell>{qual.level}</TableCell>
+                        <TableCell>{qual.expand?.category?.name || t("noCategory")}</TableCell>
+                        <TableCell>{qual.validity_months ?? "-"}</TableCell>
                         <TableCell className="hidden max-w-xs truncate lg:table-cell">
                           {qual.description || "-"}
                         </TableCell>
@@ -482,22 +434,10 @@ export function QualificationsManagement() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="qual-abbr">{t("abbreviationLabel")}</Label>
-                <Input
-                  id="qual-abbr"
-                  value={qualFormData.abbreviation}
-                  onChange={(e) =>
-                    setQualFormData({ ...qualFormData, abbreviation: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="qual-cat">{t("categoryLabel")}</Label>
                 <Select
-                  value={qualFormData.category_id}
-                  onValueChange={(value) =>
-                    setQualFormData({ ...qualFormData, category_id: value })
-                  }
+                  value={qualFormData.category}
+                  onValueChange={(value) => setQualFormData({ ...qualFormData, category: value })}
                 >
                   <SelectTrigger id="qual-cat">
                     <SelectValue placeholder={t("selectCategory")} />
@@ -512,16 +452,19 @@ export function QualificationsManagement() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="qual-level">{t("levelLabel")}</Label>
+                <Label htmlFor="qual-validity">{t("validityMonthsLabel")}</Label>
                 <Input
-                  id="qual-level"
+                  id="qual-validity"
                   type="number"
-                  min="1"
-                  value={qualFormData.level}
+                  min="0"
+                  value={qualFormData.validity_months ?? ""}
                   onChange={(e) =>
-                    setQualFormData({ ...qualFormData, level: parseInt(e.target.value) || 1 })
+                    setQualFormData({
+                      ...qualFormData,
+                      validity_months: e.target.value ? parseInt(e.target.value) : undefined,
+                    })
                   }
-                  required
+                  placeholder={t("validityMonthsPlaceholder")}
                 />
               </div>
               <div className="grid gap-2">
@@ -533,15 +476,6 @@ export function QualificationsManagement() {
                     setQualFormData({ ...qualFormData, description: e.target.value })
                   }
                   rows={3}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="qual-icon">{t("iconLabel")}</Label>
-                <Input
-                  id="qual-icon"
-                  value={qualFormData.icon}
-                  onChange={(e) => setQualFormData({ ...qualFormData, icon: e.target.value })}
-                  placeholder="award"
                 />
               </div>
             </div>
@@ -588,12 +522,15 @@ export function QualificationsManagement() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="cat-icon">{t("iconLabel")}</Label>
+                <Label htmlFor="cat-sort">{t("sortOrderLabel")}</Label>
                 <Input
-                  id="cat-icon"
-                  value={catFormData.icon}
-                  onChange={(e) => setCatFormData({ ...catFormData, icon: e.target.value })}
-                  placeholder="folder"
+                  id="cat-sort"
+                  type="number"
+                  min="0"
+                  value={catFormData.sort_order}
+                  onChange={(e) =>
+                    setCatFormData({ ...catFormData, sort_order: parseInt(e.target.value) || 0 })
+                  }
                 />
               </div>
             </div>

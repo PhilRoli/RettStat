@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,13 +25,27 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Search, User, Edit, Shield, Award, UserCog } from "lucide-react";
-import type { Database } from "@/types/database";
+import type {
+  ProfileRecord,
+  UserRecord,
+  UserAssignmentRecord,
+  UnitRecord,
+} from "@/lib/pocketbase/types";
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+interface ProfileWithExpand extends ProfileRecord {
+  expand?: {
+    user?: UserRecord;
+  };
+}
 
-interface UserWithUnits extends Profile {
-  user_units?: Array<{ unit_id: string; units?: { name: string } }>;
+interface UserAssignmentWithExpand extends UserAssignmentRecord {
+  expand?: {
+    unit?: UnitRecord;
+  };
+}
+
+interface UserWithUnits extends ProfileWithExpand {
+  user_assignments?: UserAssignmentWithExpand[];
 }
 
 export function UsersManagement() {
@@ -58,6 +72,7 @@ export function UsersManagement() {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -70,7 +85,7 @@ export function UsersManagement() {
           (user) =>
             user.first_name?.toLowerCase().includes(query) ||
             user.last_name?.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query) ||
+            user.email?.toLowerCase().includes(query) ||
             user.service_id?.toLowerCase().includes(query) ||
             user.phone?.toLowerCase().includes(query)
         )
@@ -81,27 +96,42 @@ export function UsersManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          `
-          *,
-          user_units (
-            unit_id,
-            units (
-              name
-            )
-          )
-        `
-        )
-        .order("created_at", { ascending: false });
+      // Fetch profiles with expanded user data
+      const profiles = await pb.collection("profiles").getFullList<ProfileWithExpand>({
+        sort: "-created",
+        expand: "user",
+      });
 
-      if (error) throw error;
+      // Fetch user assignments with expanded unit data for all profiles
+      const userIds = profiles.map((p) => p.user).filter(Boolean);
+      const userAssignmentsMap: Map<string, UserAssignmentWithExpand[]> = new Map();
 
-      setUsers((data as UserWithUnits[]) || []);
-      setFilteredUsers((data as UserWithUnits[]) || []);
+      if (userIds.length > 0) {
+        const userAssignments = await pb
+          .collection("user_assignments")
+          .getFullList<UserAssignmentWithExpand>({
+            filter: userIds.map((id) => `user="${id}"`).join(" || "),
+            expand: "unit",
+          });
+
+        // Group assignments by user ID
+        for (const assignment of userAssignments) {
+          const existing = userAssignmentsMap.get(assignment.user) || [];
+          existing.push(assignment);
+          userAssignmentsMap.set(assignment.user, existing);
+        }
+      }
+
+      // Combine profiles with their assignments
+      const usersWithUnits: UserWithUnits[] = profiles.map((profile) => ({
+        ...profile,
+        email: profile.expand?.user?.email || "",
+        user_assignments: userAssignmentsMap.get(profile.user) || [],
+      }));
+
+      setUsers(usersWithUnits);
+      setFilteredUsers(usersWithUnits);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
@@ -119,7 +149,7 @@ export function UsersManagement() {
     setFormData({
       firstName: user.first_name || "",
       lastName: user.last_name || "",
-      email: user.email,
+      email: user.email || "",
       phone: user.phone || "",
       serviceId: user.service_id || "",
     });
@@ -133,24 +163,14 @@ export function UsersManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const profileUpdate: ProfileUpdate = {
+      await pb.collection("profiles").update(selectedUser.id, {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
         service_id: formData.serviceId,
-      };
+      });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: profileError } = await (supabase as any)
-        .from("profiles")
-        .update(profileUpdate)
-        .eq("id", selectedUser.id);
-
-      if (profileError) throw profileError;
-
-      // Update email if changed (this requires auth.admin privileges in production)
+      // Update email if changed (this requires admin API in production)
       if (formData.email !== selectedUser.email) {
         // Note: In production, this would require admin API call
         // For now, we'll skip email updates or handle via admin SDK
@@ -195,19 +215,13 @@ export function UsersManagement() {
   };
 
   const getUserUnits = (user: UserWithUnits) => {
-    if (!user.user_units || user.user_units.length === 0) {
+    if (!user.user_assignments || user.user_assignments.length === 0) {
       return t("noUnits");
     }
-    return user.user_units
-      .map((uu) => (uu.units as unknown as { name: string })?.name || "")
+    return user.user_assignments
+      .map((ua) => ua.expand?.unit?.name || "")
       .filter(Boolean)
       .join(", ");
-  };
-
-  const getInitials = (user: UserWithUnits) => {
-    const first = user.first_name?.[0] || "";
-    const last = user.last_name?.[0] || "";
-    return first + last || user.email[0].toUpperCase();
   };
 
   if (loading) {
@@ -265,7 +279,9 @@ export function UsersManagement() {
                   <TableRow key={user.id}>
                     <TableCell>
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarImage
+                          src={user.avatar ? pb.files.getURL(user, user.avatar) : undefined}
+                        />
                         <AvatarFallback>
                           <User className="h-4 w-4" />
                         </AvatarFallback>

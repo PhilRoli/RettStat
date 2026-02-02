@@ -3,30 +3,28 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { TourRecord, VehicleRecord, TourTypeRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Car, Loader2 } from "lucide-react";
 import Link from "next/link";
-import type { Database } from "@/types/database";
 
-type Tour = Database["public"]["Tables"]["tours"]["Row"] & {
-  shiftplan: {
-    unit: {
-      name: string;
+type TourWithRelations = TourRecord & {
+  expand?: {
+    shiftplan?: {
+      expand?: {
+        unit?: UnitRecord;
+      };
     };
-  } | null;
-  vehicle: {
-    call_sign: string;
-  } | null;
-  tour_type: {
-    name: string;
-  } | null;
+    vehicle?: VehicleRecord;
+    tour_type?: TourTypeRecord;
+  };
 };
 
 export function NextShifts() {
   const { user } = useAuth();
-  const [tours, setTours] = useState<Tour[]>([]);
+  const [tours, setTours] = useState<TourWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const t = useTranslations("home.nextShifts");
 
@@ -34,38 +32,20 @@ export function NextShifts() {
     if (user) {
       loadNextShifts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadNextShifts = async () => {
     try {
-      const supabase = createClient();
       const now = new Date().toISOString();
 
-      const { data, error } = await supabase
-        .from("tours")
-        .select(
-          `
-          *,
-          shiftplan:shiftplans!inner (
-            unit:units (
-              name
-            )
-          ),
-          vehicle:vehicles (
-            call_sign
-          ),
-          tour_type:tour_types (
-            name
-          )
-        `
-        )
-        .gte("end_time", now)
-        .or(`driver_id.eq.${user?.id},lead_id.eq.${user?.id},student_id.eq.${user?.id}`)
-        .order("start_time", { ascending: true })
-        .limit(3);
+      const result = await pb.collection("tours").getList<TourWithRelations>(1, 3, {
+        filter: `end_time>="${now}" && (driver="${user?.id}" || lead="${user?.id}" || student="${user?.id}")`,
+        sort: "start_time",
+        expand: "shiftplan.unit,vehicle,tour_type",
+      });
 
-      if (error) throw error;
-      setTours((data as Tour[]) || []);
+      setTours(result.items);
     } catch (error) {
       console.error("Error loading next shifts:", error);
     } finally {
@@ -73,10 +53,10 @@ export function NextShifts() {
     }
   };
 
-  const getPosition = (tour: Tour) => {
-    if (tour.driver_id === user?.id) return t("driver");
-    if (tour.lead_id === user?.id) return t("lead");
-    if (tour.student_id === user?.id) return t("student");
+  const getPosition = (tour: TourWithRelations) => {
+    if (tour.driver === user?.id) return t("driver");
+    if (tour.lead === user?.id) return t("lead");
+    if (tour.student === user?.id) return t("student");
     return "";
   };
 
@@ -140,8 +120,8 @@ export function NextShifts() {
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{getPosition(tour)}</Badge>
-                    {tour.tour_type && (
-                      <span className="text-sm font-medium">{tour.tour_type.name}</span>
+                    {tour.expand?.tour_type && (
+                      <span className="text-sm font-medium">{tour.expand.tour_type.name}</span>
                     )}
                   </div>
                   <div className="text-muted-foreground flex items-center gap-4 text-sm">
@@ -156,14 +136,16 @@ export function NextShifts() {
                       </span>
                     </div>
                   </div>
-                  {tour.shiftplan?.unit && (
-                    <p className="text-muted-foreground text-sm">{tour.shiftplan.unit.name}</p>
+                  {tour.expand?.shiftplan?.expand?.unit && (
+                    <p className="text-muted-foreground text-sm">
+                      {tour.expand.shiftplan.expand.unit.name}
+                    </p>
                   )}
                 </div>
-                {tour.vehicle && (
+                {tour.expand?.vehicle && (
                   <div className="flex items-center gap-1 text-sm font-medium">
                     <Car className="h-4 w-4" />
-                    <span>{tour.vehicle.call_sign}</span>
+                    <span>{tour.expand.vehicle.call_sign}</span>
                   </div>
                 )}
               </div>

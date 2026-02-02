@@ -1,4 +1,4 @@
-# Production Docker Compose for RettStat
+# Production Docker Compose for RettStat with PocketBase
 # Deploy with: docker compose -f docker-compose.prod.yml up -d
 
 name: rettstat-prod
@@ -13,20 +13,16 @@ services:
       - "80:80"
       - "443:443"
     command:
-      # Traefik Configuration
       - "--api.dashboard=true"
       - "--log.level=INFO"
       - "--accesslog=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=rettstat-prod_web"
-      # Entrypoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # HTTP to HTTPS redirect
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      # Let's Encrypt
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
@@ -36,7 +32,6 @@ services:
     networks:
       - web
     labels:
-      # Traefik Dashboard
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
@@ -52,14 +47,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_SUPABASE_URL: https://api.${DOMAIN}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      NEXT_PUBLIC_POCKETBASE_URL: https://api.${DOMAIN}
     networks:
       - web
       - backend
     depends_on:
-      db:
+      pocketbase:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
@@ -67,7 +60,6 @@ services:
       - "traefik.http.routers.app.entrypoints=websecure"
       - "traefik.http.routers.app.tls.certresolver=letsencrypt"
       - "traefik.http.services.app.loadbalancer.server.port=3000"
-      # Security headers
       - "traefik.http.middlewares.security-headers.headers.framedeny=true"
       - "traefik.http.middlewares.security-headers.headers.sslredirect=true"
       - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
@@ -75,258 +67,82 @@ services:
       - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
       - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
       - "traefik.http.routers.app.middlewares=security-headers"
-      # Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
-  # PostgreSQL Database
-  db:
-    image: supabase/postgres:15.8.1.060
-    container_name: rettstat-db
+  # Next.js Application - Dev Environment
+  app-dev:
+    image: ghcr.io/${GITHUB_USERNAME}/rettstat:develop
+    container_name: rettstat-app-dev
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./backups:/backups
+      NODE_ENV: production
+      NEXT_PUBLIC_POCKETBASE_URL: https://api-dev.${DOMAIN}
     networks:
+      - web
+      - backend
+    depends_on:
+      pocketbase-dev:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-dev.rule=Host(`dev.${DOMAIN}`)"
+      - "traefik.http.routers.app-dev.entrypoints=websecure"
+      - "traefik.http.routers.app-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.app-dev.loadbalancer.server.port=3000"
+      - "traefik.http.routers.app-dev.middlewares=security-headers"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # PocketBase Backend (API + Database + Storage)
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: rettstat-pocketbase
+    restart: unless-stopped
+    volumes:
+      - pb-data:/pb/pb_data
+      - pb-public:/pb/pb_public
+      - ./backups:/pb/pb_backups
+    networks:
+      - web
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
     labels:
-      # Watchtower
+      - "traefik.enable=true"
+      - "traefik.http.routers.pocketbase.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.pocketbase.entrypoints=websecure"
+      - "traefik.http.routers.pocketbase.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pocketbase.loadbalancer.server.port=8090"
+      - "traefik.http.routers.pocketbase.middlewares=security-headers"
       - "com.centurylinklabs.watchtower.enable=true"
 
-  # Kong API Gateway
-  kong:
-    image: kong:2.8.1
-    container_name: rettstat-kong
+  # PocketBase Backend - Dev Environment (Synced from Prod)
+  pocketbase-dev:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: rettstat-pocketbase-dev
     restart: unless-stopped
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
     volumes:
-      - ./kong.yml:/var/lib/kong/kong.yml:ro
+      - pb-data-dev:/pb/pb_data
+      - pb-public-dev:/pb/pb_public
     networks:
       - web
       - backend
-    depends_on:
-      - auth
-      - rest
-      - realtime
-      - storage
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kong.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.kong.entrypoints=websecure"
-      - "traefik.http.routers.kong.tls.certresolver=letsencrypt"
-      - "traefik.http.services.kong.loadbalancer.server.port=8000"
-      - "traefik.http.routers.kong.middlewares=security-headers"
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # GoTrue Auth Server
-  auth:
-    image: supabase/gotrue:v2.164.0
-    container_name: rettstat-auth
-    restart: unless-stopped
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: https://api.${DOMAIN}
-      GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      GOTRUE_SITE_URL: https://${DOMAIN}
-      GOTRUE_URI_ALLOW_LIST: ""
-      GOTRUE_DISABLE_SIGNUP: "false"
-      GOTRUE_JWT_ADMIN_ROLES: service_role
-      GOTRUE_JWT_AUD: authenticated
-      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
-      GOTRUE_JWT_EXP: 3600
-      GOTRUE_JWT_SECRET: ${JWT_SECRET}
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
-      GOTRUE_MAILER_AUTOCONFIRM: "false"
-      # Lettermint SMTP Configuration
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_FROM_EMAIL}
-      GOTRUE_SMTP_HOST: ${SMTP_HOST}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT}
-      GOTRUE_SMTP_USER: ${SMTP_USER}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_SENDER_NAME: RettStat
-      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: "Bestätigen Sie Ihre E-Mail-Adresse"
-      GOTRUE_MAILER_SUBJECTS_INVITE: "Sie wurden zu RettStat eingeladen"
-      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: "Ihr RettStat Login-Link"
-      GOTRUE_MAILER_SUBJECTS_RECOVERY: "Setzen Sie Ihr Passwort zurück"
-      GOTRUE_RATE_LIMIT_EMAIL_SENT: 100
-    networks:
-      - backend
-    depends_on:
-      db:
-        condition: service_healthy
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # PostgREST API
-  rest:
-    image: postgrest/postgrest:v12.2.3
-    container_name: rettstat-rest
-    restart: unless-stopped
-    environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
-      PGRST_DB_SCHEMAS: public,storage,graphql_public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
-      PGRST_APP_SETTINGS_JWT_EXP: 3600
-    networks:
-      - backend
-    depends_on:
-      db:
-        condition: service_healthy
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Supabase Realtime
-  realtime:
-    image: supabase/realtime:v2.33.58
-    container_name: rettstat-realtime
-    restart: unless-stopped
-    environment:
-      PORT: 4000
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: supabase_admin
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: postgres
-      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
-      DB_ENC_KEY: ${REALTIME_ENC_KEY}
-      API_JWT_SECRET: ${JWT_SECRET}
-      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE}
-      ERL_AFLAGS: -proto_dist inet_tcp
-      DNS_NODES: "''"
-      RLIMIT_NOFILE: "10000"
-      APP_NAME: realtime
-      SEED_SELF_HOST: "true"
-    networks:
-      - backend
-    depends_on:
-      db:
-        condition: service_healthy
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Supabase Storage
-  storage:
-    image: supabase/storage-api:v1.11.13
-    container_name: rettstat-storage
-    restart: unless-stopped
-    environment:
-      ANON_KEY: ${SUPABASE_ANON_KEY}
-      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-      POSTGREST_URL: http://rest:3000
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      FILE_SIZE_LIMIT: 52428800
-      STORAGE_BACKEND: file
-      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
-      TENANT_ID: stub
-      REGION: stub
-      GLOBAL_S3_BUCKET: stub
-      ENABLE_IMAGE_TRANSFORMATION: "true"
-      IMGPROXY_URL: http://imgproxy:8080
-    volumes:
-      - storage-data:/var/lib/storage
-    networks:
-      - backend
-    depends_on:
-      db:
-        condition: service_healthy
-      rest:
-        condition: service_started
-      imgproxy:
-        condition: service_started
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Image Proxy
-  imgproxy:
-    image: darthsim/imgproxy:v3.8.0
-    container_name: rettstat-imgproxy
-    restart: unless-stopped
-    environment:
-      IMGPROXY_BIND: ":8080"
-      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
-      IMGPROXY_USE_ETAG: "true"
-      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
-    networks:
-      - backend
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Postgres Meta (for Studio)
-  meta:
-    image: supabase/postgres-meta:v0.83.2
-    container_name: rettstat-meta
-    restart: unless-stopped
-    environment:
-      PG_META_PORT: 8080
-      PG_META_DB_HOST: db
-      PG_META_DB_PORT: 5432
-      PG_META_DB_NAME: postgres
-      PG_META_DB_USER: supabase_admin
-      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - backend
-    depends_on:
-      db:
-        condition: service_healthy
-    labels:
-      # Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Supabase Studio (Optional - for database management)
-  studio:
-    image: supabase/studio:20241202-71e5240
-    container_name: rettstat-studio
-    restart: unless-stopped
-    environment:
-      STUDIO_PG_META_URL: http://meta:8080
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DEFAULT_ORGANIZATION_NAME: RettStat
-      DEFAULT_PROJECT_NAME: RettStat Production
-      SUPABASE_URL: https://api.${DOMAIN}
-      SUPABASE_PUBLIC_URL: https://api.${DOMAIN}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-    networks:
-      - web
-      - backend
-    depends_on:
-      - meta
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.studio.rule=Host(`studio.${DOMAIN}`)"
-      - "traefik.http.routers.studio.entrypoints=websecure"
-      - "traefik.http.routers.studio.tls.certresolver=letsencrypt"
-      - "traefik.http.services.studio.loadbalancer.server.port=3000"
-      - "traefik.http.routers.studio.middlewares=studio-auth"
-      - "traefik.http.middlewares.studio-auth.basicauth.users=${STUDIO_AUTH}"
-      # Watchtower
+      - "traefik.http.routers.pocketbase-dev.rule=Host(`api-dev.${DOMAIN}`)"
+      - "traefik.http.routers.pocketbase-dev.entrypoints=websecure"
+      - "traefik.http.routers.pocketbase-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pocketbase-dev.loadbalancer.server.port=8090"
+      - "traefik.http.routers.pocketbase-dev.middlewares=security-headers"
       - "com.centurylinklabs.watchtower.enable=true"
 
   # Watchtower - Automatic container updates
@@ -340,7 +156,6 @@ services:
       WATCHTOWER_LABEL_ENABLE: "true"
       WATCHTOWER_INCLUDE_RESTARTING: "true"
       WATCHTOWER_ROLLING_RESTART: "true"
-      # GitHub Container Registry credentials
       REPO_USER: ${GITHUB_USERNAME}
       REPO_PASS: ${GITHUB_TOKEN}
     volumes:
@@ -356,5 +171,7 @@ networks:
 
 volumes:
   traefik-letsencrypt:
-  db-data:
-  storage-data:
+  pb-data:
+  pb-public:
+  pb-data-dev:
+  pb-public-dev:

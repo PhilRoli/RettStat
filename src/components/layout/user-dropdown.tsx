@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Shield, LogOut, User } from "lucide-react";
+import { Settings, Shield, LogOut } from "lucide-react";
 import Link from "next/link";
 
 export function UserDropdown() {
@@ -22,11 +22,14 @@ export function UserDropdown() {
 
   if (!profile) return null;
 
-  const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email;
+  const fullName =
+    `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email || "";
   const initials =
     profile.first_name && profile.last_name
       ? `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase()
-      : profile.email[0].toUpperCase();
+      : profile.email
+        ? profile.email[0].toUpperCase()
+        : "?";
 
   return (
     <DropdownMenu>

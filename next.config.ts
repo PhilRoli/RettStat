@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
 
   // Enable standalone output for Docker
   output: "standalone",
+
+  // Disable experimental features that may not work with Bun
+  experimental: {
+    // Disable worker threads to avoid Bun compatibility issues
+    webpackBuildWorker: false,
+  },
 };
 
 export default withNextIntl(nextConfig);

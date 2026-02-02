@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,21 +34,21 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Plus, Edit, Trash2, UserCog } from "lucide-react";
-import type { Database } from "@/types/database";
-import type { AssignmentType } from "@/types/database";
+import type {
+  AssignmentRecord,
+  AssignmentCategoryRecord,
+  PermissionRecord,
+  AssignmentDefaultPermissionRecord,
+} from "@/lib/pocketbase/types";
 
-type Assignment = Database["public"]["Tables"]["assignments"]["Row"];
-type AssignmentInsert = Database["public"]["Tables"]["assignments"]["Insert"];
-type AssignmentCategory = Database["public"]["Tables"]["assignment_categories"]["Row"];
-type AssignmentCategoryInsert = Database["public"]["Tables"]["assignment_categories"]["Insert"];
-type Permission = Database["public"]["Tables"]["permissions"]["Row"];
-
-interface AssignmentWithCategory extends Assignment {
-  assignment_categories?: AssignmentCategory | null;
+interface AssignmentWithExpand extends AssignmentRecord {
+  expand?: {
+    category?: AssignmentCategoryRecord;
+  };
 }
 
-interface AssignmentPermission {
-  assignment_id: string;
+interface CategoryPermission {
+  category_id: string;
   permission_id: string;
 }
 
@@ -57,10 +57,10 @@ export function AssignmentsManagement() {
   const tCommon = useTranslations("common");
   const { toast } = useToast();
 
-  const [assignments, setAssignments] = useState<AssignmentWithCategory[]>([]);
-  const [categories, setCategories] = useState<AssignmentCategory[]>([]);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [assignmentPermissions, setAssignmentPermissions] = useState<AssignmentPermission[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentWithExpand[]>([]);
+  const [categories, setCategories] = useState<AssignmentCategoryRecord[]>([]);
+  const [permissions, setPermissions] = useState<PermissionRecord[]>([]);
+  const [categoryPermissions, setCategoryPermissions] = useState<CategoryPermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -69,54 +69,63 @@ export function AssignmentsManagement() {
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithCategory | null>(null);
-  const [selectedCat, setSelectedCat] = useState<AssignmentCategory | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithExpand | null>(null);
+  const [selectedCat, setSelectedCat] = useState<AssignmentCategoryRecord | null>(null);
   const [deleteItem, setDeleteItem] = useState<{ type: "assign" | "cat"; id: string } | null>(null);
 
   const [assignFormData, setAssignFormData] = useState({
-    name: "",
-    category_id: "",
+    title: "",
+    category: "",
     description: "",
-    icon: "",
-    type: "station" as AssignmentType,
+    location: "",
+    start_date: "",
+    end_date: "",
+    max_participants: "",
   });
 
   const [catFormData, setCatFormData] = useState({
     name: "",
     description: "",
-    icon: "",
+    color: "#3b82f6",
+    sort_order: 0,
   });
 
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const supabase = createClient();
 
-      const [assignRes, catsRes, permsRes, assignPermsRes] = await Promise.all([
-        supabase
-          .from("assignments")
-          .select("*, assignment_categories(*)")
-          .order("name", { ascending: true }),
-        supabase.from("assignment_categories").select("*").order("name", { ascending: true }),
-        supabase.from("permissions").select("*").order("name", { ascending: true }),
-        supabase.from("assignment_default_permissions").select("assignment_id, permission_id"),
+      const [assignRes, catsRes, permsRes, catPermsRes] = await Promise.all([
+        pb.collection("assignments").getFullList<AssignmentWithExpand>({
+          sort: "title",
+          expand: "category",
+        }),
+        pb.collection("assignment_categories").getFullList<AssignmentCategoryRecord>({
+          sort: "sort_order,name",
+        }),
+        pb.collection("permissions").getFullList<PermissionRecord>({
+          sort: "name",
+        }),
+        pb
+          .collection("assignment_default_permissions")
+          .getFullList<AssignmentDefaultPermissionRecord>(),
       ]);
 
-      if (assignRes.error) throw assignRes.error;
-      if (catsRes.error) throw catsRes.error;
-      if (permsRes.error) throw permsRes.error;
-      if (assignPermsRes.error) throw assignPermsRes.error;
-
-      setAssignments((assignRes.data as AssignmentWithCategory[]) || []);
-      setCategories(catsRes.data || []);
-      setPermissions(permsRes.data || []);
-      setAssignmentPermissions(assignPermsRes.data || []);
+      setAssignments(assignRes);
+      setCategories(catsRes);
+      setPermissions(permsRes);
+      setCategoryPermissions(
+        catPermsRes.map((cp) => ({
+          category_id: cp.assignment_category,
+          permission_id: cp.permission,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -132,23 +141,27 @@ export function AssignmentsManagement() {
   const handleAssignCreate = () => {
     setSelectedAssignment(null);
     setAssignFormData({
-      name: "",
-      category_id: "",
+      title: "",
+      category: "",
       description: "",
-      icon: "",
-      type: "station",
+      location: "",
+      start_date: "",
+      end_date: "",
+      max_participants: "",
     });
     setAssignDialogOpen(true);
   };
 
-  const handleAssignEdit = (assign: AssignmentWithCategory) => {
+  const handleAssignEdit = (assign: AssignmentWithExpand) => {
     setSelectedAssignment(assign);
     setAssignFormData({
-      name: assign.name,
-      category_id: assign.category_id || "",
+      title: assign.title,
+      category: assign.category || "",
       description: assign.description || "",
-      icon: assign.icon || "",
-      type: assign.type,
+      location: assign.location || "",
+      start_date: assign.start_date || "",
+      end_date: assign.end_date || "",
+      max_participants: assign.max_participants?.toString() || "",
     });
     setAssignDialogOpen(true);
   };
@@ -158,34 +171,27 @@ export function AssignmentsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const assignData: AssignmentInsert = {
-        name: assignFormData.name,
-        category_id: assignFormData.category_id || null,
-        description: assignFormData.description || null,
-        icon: assignFormData.icon || null,
-        type: assignFormData.type,
+      const assignData = {
+        title: assignFormData.title,
+        category: assignFormData.category || undefined,
+        description: assignFormData.description || undefined,
+        location: assignFormData.location || undefined,
+        start_date: assignFormData.start_date || undefined,
+        end_date: assignFormData.end_date || undefined,
+        max_participants: assignFormData.max_participants
+          ? parseInt(assignFormData.max_participants)
+          : undefined,
       };
 
       if (selectedAssignment) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("assignments")
-          .update(assignData)
-          .eq("id", selectedAssignment.id);
-
-        if (error) throw error;
+        await pb.collection("assignments").update(selectedAssignment.id, assignData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("assignments").insert(assignData);
-
-        if (error) throw error;
+        await pb.collection("assignments").create(assignData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -212,17 +218,19 @@ export function AssignmentsManagement() {
     setCatFormData({
       name: "",
       description: "",
-      icon: "",
+      color: "#3b82f6",
+      sort_order: categories.length,
     });
     setCatDialogOpen(true);
   };
 
-  const handleCatEdit = (cat: AssignmentCategory) => {
+  const handleCatEdit = (cat: AssignmentCategoryRecord) => {
     setSelectedCat(cat);
     setCatFormData({
       name: cat.name,
       description: cat.description || "",
-      icon: cat.icon || "",
+      color: cat.color || "#3b82f6",
+      sort_order: cat.sort_order,
     });
     setCatDialogOpen(true);
   };
@@ -232,32 +240,22 @@ export function AssignmentsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
-      const catData: AssignmentCategoryInsert = {
+      const catData = {
         name: catFormData.name,
-        description: catFormData.description || null,
-        icon: catFormData.icon || null,
+        description: catFormData.description || undefined,
+        color: catFormData.color,
+        sort_order: catFormData.sort_order,
       };
 
       if (selectedCat) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from("assignment_categories")
-          .update(catData)
-          .eq("id", selectedCat.id);
-
-        if (error) throw error;
+        await pb.collection("assignment_categories").update(selectedCat.id, catData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any).from("assignment_categories").insert(catData);
-
-        if (error) throw error;
+        await pb.collection("assignment_categories").create(catData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -279,65 +277,46 @@ export function AssignmentsManagement() {
     }
   };
 
-  const handlePermissionsClick = (assign: AssignmentWithCategory) => {
-    setSelectedAssignment(assign);
-    const currentPerms = assignmentPermissions
-      .filter((ap) => ap.assignment_id === assign.id)
-      .map((ap) => ap.permission_id);
+  const handlePermissionsClick = (cat: AssignmentCategoryRecord) => {
+    setSelectedCat(cat);
+    const currentPerms = categoryPermissions
+      .filter((cp) => cp.category_id === cat.id)
+      .map((cp) => cp.permission_id);
     setSelectedPermissions(currentPerms);
     setPermDialogOpen(true);
   };
 
   const handlePermissionsSubmit = async () => {
-    if (!selectedAssignment) return;
+    if (!selectedCat) return;
 
     setSaving(true);
 
     try {
-      const supabase = createClient();
+      // Fetch existing permissions for this category
+      const existingPerms = await pb
+        .collection("assignment_default_permissions")
+        .getFullList<AssignmentDefaultPermissionRecord>({
+          filter: `assignment_category = "${selectedCat.id}"`,
+        });
 
-      // Fetch existing permissions
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existingPerms } = await (supabase as any)
-        .from("assignment_default_permissions")
-        .select("id, permission_id")
-        .eq("assignment_id", selectedAssignment.id);
-
-      const existingPermIds = new Set(
-        existingPerms?.map((p: { permission_id: string }) => p.permission_id) || []
-      );
+      const existingPermIds = new Set(existingPerms.map((p) => p.permission));
       const newPermIds = new Set(selectedPermissions);
 
       // Calculate differences
-      const toDelete =
-        existingPerms?.filter((p: { permission_id: string }) => !newPermIds.has(p.permission_id)) ||
-        [];
+      const toDelete = existingPerms.filter((p) => !newPermIds.has(p.permission));
       const toAdd = selectedPermissions.filter((id) => !existingPermIds.has(id));
 
       // Delete removed permissions
-      if (toDelete.length > 0) {
-        const deleteIds = toDelete.map((p: { id: string }) => p.id);
-        const { error: deleteError } = await supabase
-          .from("assignment_default_permissions")
-          .delete()
-          .in("id", deleteIds);
-
-        if (deleteError) throw deleteError;
+      for (const perm of toDelete) {
+        await pb.collection("assignment_default_permissions").delete(perm.id);
       }
 
       // Insert new permissions
-      if (toAdd.length > 0) {
-        const newPerms = toAdd.map((perm_id) => ({
-          assignment_id: selectedAssignment.id,
-          permission_id: perm_id,
-        }));
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: insertError } = await (supabase as any)
-          .from("assignment_default_permissions")
-          .insert(newPerms);
-
-        if (insertError) throw insertError;
+      for (const permId of toAdd) {
+        await pb.collection("assignment_default_permissions").create({
+          assignment_category: selectedCat.id,
+          permission: permId,
+        });
       }
 
       toast({
@@ -370,19 +349,10 @@ export function AssignmentsManagement() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       if (deleteItem.type === "assign") {
-        const { error } = await supabase.from("assignments").delete().eq("id", deleteItem.id);
-
-        if (error) throw error;
+        await pb.collection("assignments").delete(deleteItem.id);
       } else {
-        const { error } = await supabase
-          .from("assignment_categories")
-          .delete()
-          .eq("id", deleteItem.id);
-
-        if (error) throw error;
+        await pb.collection("assignment_categories").delete(deleteItem.id);
       }
 
       toast({
@@ -463,14 +433,9 @@ export function AssignmentsManagement() {
                     assignments.map((assign) => (
                       <TableRow key={assign.id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {assign.icon && <UserCog className="h-4 w-4" />}
-                            {assign.name}
-                          </div>
+                          <div className="flex items-center gap-2">{assign.title}</div>
                         </TableCell>
-                        <TableCell>
-                          {assign.assignment_categories?.name || t("noCategory")}
-                        </TableCell>
+                        <TableCell>{assign.expand?.category?.name || t("noCategory")}</TableCell>
                         <TableCell className="hidden max-w-md truncate lg:table-cell">
                           {assign.description || "-"}
                         </TableCell>
@@ -482,14 +447,6 @@ export function AssignmentsManagement() {
                               onClick={() => handleAssignEdit(assign)}
                             >
                               <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handlePermissionsClick(assign)}
-                              title={t("permissionsButton")}
-                            >
-                              <UserCog className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="outline"
@@ -538,7 +495,15 @@ export function AssignmentsManagement() {
                   ) : (
                     categories.map((cat) => (
                       <TableRow key={cat.id}>
-                        <TableCell className="font-medium">{cat.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-3 w-3 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            {cat.name}
+                          </div>
+                        </TableCell>
                         <TableCell className="hidden max-w-md truncate md:table-cell">
                           {cat.description || "-"}
                         </TableCell>
@@ -546,6 +511,14 @@ export function AssignmentsManagement() {
                           <div className="flex justify-end gap-2">
                             <Button variant="outline" size="sm" onClick={() => handleCatEdit(cat)}>
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePermissionsClick(cat)}
+                              title={t("permissionsButton")}
+                            >
+                              <UserCog className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="outline"
@@ -573,29 +546,35 @@ export function AssignmentsManagement() {
             </p>
 
             <div className="space-y-4">
-              {assignments.map((assign) => {
-                const assignPerms = assignmentPermissions
-                  .filter((ap) => ap.assignment_id === assign.id)
-                  .map((ap) => ap.permission_id);
+              {categories.map((cat) => {
+                const catPerms = categoryPermissions
+                  .filter((cp) => cp.category_id === cat.id)
+                  .map((cp) => cp.permission_id);
 
                 return (
-                  <div key={assign.id} className="rounded-md border p-4">
+                  <div key={cat.id} className="rounded-md border p-4">
                     <div className="mb-2 flex items-center justify-between">
-                      <h4 className="font-medium">{assign.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <h4 className="font-medium">{cat.name}</h4>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePermissionsClick(assign)}
+                        onClick={() => handlePermissionsClick(cat)}
                       >
                         <Edit className="mr-2 h-4 w-4" />
                         {t("editPermissions")}
                       </Button>
                     </div>
                     <div className="text-muted-foreground text-sm">
-                      {assignPerms.length === 0
+                      {catPerms.length === 0
                         ? t("noPermissions")
                         : permissions
-                            .filter((p) => assignPerms.includes(p.id))
+                            .filter((p) => catPerms.includes(p.id))
                             .map((p) => p.name)
                             .join(", ")}
                     </div>
@@ -619,20 +598,20 @@ export function AssignmentsManagement() {
           <form onSubmit={handleAssignSubmit}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="assign-name">{t("nameLabel")}</Label>
+                <Label htmlFor="assign-title">{t("titleLabel")}</Label>
                 <Input
-                  id="assign-name"
-                  value={assignFormData.name}
-                  onChange={(e) => setAssignFormData({ ...assignFormData, name: e.target.value })}
+                  id="assign-title"
+                  value={assignFormData.title}
+                  onChange={(e) => setAssignFormData({ ...assignFormData, title: e.target.value })}
                   required
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="assign-cat">{t("categoryLabel")}</Label>
                 <Select
-                  value={assignFormData.category_id}
+                  value={assignFormData.category}
                   onValueChange={(value) =>
-                    setAssignFormData({ ...assignFormData, category_id: value })
+                    setAssignFormData({ ...assignFormData, category: value })
                   }
                 >
                   <SelectTrigger id="assign-cat">
@@ -647,24 +626,52 @@ export function AssignmentsManagement() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="assign-start">{t("startDateLabel")}</Label>
+                  <Input
+                    id="assign-start"
+                    type="datetime-local"
+                    value={assignFormData.start_date}
+                    onChange={(e) =>
+                      setAssignFormData({ ...assignFormData, start_date: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="assign-end">{t("endDateLabel")}</Label>
+                  <Input
+                    id="assign-end"
+                    type="datetime-local"
+                    value={assignFormData.end_date}
+                    onChange={(e) =>
+                      setAssignFormData({ ...assignFormData, end_date: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
               <div className="grid gap-2">
-                <Label htmlFor="assign-type">{t("typeLabel")}</Label>
-                <Select
-                  value={assignFormData.type}
-                  onValueChange={(value) =>
-                    setAssignFormData({ ...assignFormData, type: value as AssignmentType })
+                <Label htmlFor="assign-location">{t("locationLabel")}</Label>
+                <Input
+                  id="assign-location"
+                  value={assignFormData.location}
+                  onChange={(e) =>
+                    setAssignFormData({ ...assignFormData, location: e.target.value })
                   }
-                >
-                  <SelectTrigger id="assign-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="station">{t("typeStation")}</SelectItem>
-                    <SelectItem value="vehicle">{t("typeVehicle")}</SelectItem>
-                    <SelectItem value="team">{t("typeTeam")}</SelectItem>
-                    <SelectItem value="other">{t("typeOther")}</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="assign-max">{t("maxParticipantsLabel")}</Label>
+                <Input
+                  id="assign-max"
+                  type="number"
+                  min="1"
+                  value={assignFormData.max_participants}
+                  onChange={(e) =>
+                    setAssignFormData({ ...assignFormData, max_participants: e.target.value })
+                  }
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="assign-desc">{t("descriptionLabel")}</Label>
@@ -675,15 +682,6 @@ export function AssignmentsManagement() {
                     setAssignFormData({ ...assignFormData, description: e.target.value })
                   }
                   rows={3}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="assign-icon">{t("iconLabel")}</Label>
-                <Input
-                  id="assign-icon"
-                  value={assignFormData.icon}
-                  onChange={(e) => setAssignFormData({ ...assignFormData, icon: e.target.value })}
-                  placeholder="user-cog"
                 />
               </div>
             </div>
@@ -730,12 +728,32 @@ export function AssignmentsManagement() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="cat-icon">{t("iconLabel")}</Label>
+                <Label htmlFor="cat-color">{t("colorLabel")}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="cat-color"
+                    type="color"
+                    value={catFormData.color}
+                    onChange={(e) => setCatFormData({ ...catFormData, color: e.target.value })}
+                    className="h-10 w-14 cursor-pointer p-1"
+                  />
+                  <Input
+                    value={catFormData.color}
+                    onChange={(e) => setCatFormData({ ...catFormData, color: e.target.value })}
+                    placeholder="#3b82f6"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="cat-order">{t("sortOrderLabel")}</Label>
                 <Input
-                  id="cat-icon"
-                  value={catFormData.icon}
-                  onChange={(e) => setCatFormData({ ...catFormData, icon: e.target.value })}
-                  placeholder="folder"
+                  id="cat-order"
+                  type="number"
+                  value={catFormData.sort_order}
+                  onChange={(e) =>
+                    setCatFormData({ ...catFormData, sort_order: parseInt(e.target.value) || 0 })
+                  }
                 />
               </div>
             </div>
@@ -758,7 +776,7 @@ export function AssignmentsManagement() {
           <DialogHeader>
             <DialogTitle>{t("editPermissionsTitle")}</DialogTitle>
             <DialogDescription>
-              {t("editPermissionsDescription", { assignment: selectedAssignment?.name || "" })}
+              {t("editPermissionsDescription", { category: selectedCat?.name || "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 space-y-2 overflow-y-auto py-4">

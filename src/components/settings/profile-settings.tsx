@@ -8,11 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Upload, User } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/types/database";
-
-type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export function ProfileSettings() {
   const t = useTranslations("settings.profile");
@@ -31,30 +28,20 @@ export function ProfileSettings() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
+      if (!profile?.id) throw new Error("Profile not found");
 
       // Update profile
-      const profileUpdate: ProfileUpdate = {
+      await pb.collection("profiles").update(profile.id, {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
-      };
+      });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: profileError } = await (supabase as any)
-        .from("profiles")
-        .update(profileUpdate)
-        .eq("id", user!.id);
-
-      if (profileError) throw profileError;
-
-      // Update email if changed
-      if (formData.email !== user?.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
+      // Update email if changed (requires user to be authenticated)
+      if (formData.email !== user?.email && user?.id) {
+        await pb.collection("users").update(user.id, {
           email: formData.email,
         });
-
-        if (emailError) throw emailError;
 
         toast({
           title: t("emailUpdateTitle"),
@@ -82,36 +69,17 @@ export function ProfileSettings() {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !profile?.id) return;
 
     try {
       setLoading(true);
-      const supabase = createClient();
 
-      // Upload to Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("avatars").upload(fileName, file);
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("avatar", file);
 
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(fileName);
-
-      // Update profile
-      const avatarUpdate: ProfileUpdate = {
-        avatar_url: publicUrl,
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateError } = await (supabase as any)
-        .from("profiles")
-        .update(avatarUpdate)
-        .eq("id", user!.id);
-
-      if (updateError) throw updateError;
+      // Upload avatar directly to profile record
+      await pb.collection("profiles").update(profile.id, formData);
 
       await refreshProfile();
 
@@ -131,12 +99,18 @@ export function ProfileSettings() {
     }
   };
 
+  // Get avatar URL from PocketBase
+  const getAvatarUrl = () => {
+    if (!profile?.id || !profile?.avatar) return undefined;
+    return pb.files.getUrl(profile, profile.avatar);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Avatar */}
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20">
-          <AvatarImage src={profile?.avatar_url || undefined} />
+          <AvatarImage src={getAvatarUrl()} />
           <AvatarFallback>
             <User className="h-10 w-10" />
           </AvatarFallback>
