@@ -1,19 +1,19 @@
 # Multi-stage Dockerfile for RettStat Next.js Application
-# Uses Bun as package manager and runtime
+# Uses Bun for dependencies, build, and runtime
 
 # Stage 1: Dependencies
-FROM oven/bun:1.2.1 AS deps
+FROM oven/bun:1 AS deps
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json bun.lock ./
 
-# Install dependencies
-RUN bun install --frozen-lockfile --production=false
+# Install all dependencies (including devDependencies for build)
+RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
-FROM oven/bun:1.2.1 AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -27,13 +27,18 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build Next.js application
+# Build Next.js application with Bun
 RUN bun run build
 
 # Stage 3: Runner
-FROM oven/bun:1.2.1-slim AS runner
+FROM oven/bun:1-slim AS runner
 
 WORKDIR /app
+
+# Install shadow package for user management (slim image doesn't have adduser)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    adduser \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
