@@ -255,9 +255,10 @@ export function useShifts() {
 ```bash
 bun run lint        # Fix ESLint warnings
 bun run type-check  # Catch TypeScript errors
+bun run test        # Run unit tests (vitest)
 ```
 
-Both checks are also run by lint-staged on commit, but running them manually first saves time.
+These checks are also run by CI, but running them locally first saves time. Note: Use `bun run test` not `bun test` (the latter runs Bun's test runner which picks up e2e tests incorrectly).
 
 ## Sub-Agent Instructions
 
