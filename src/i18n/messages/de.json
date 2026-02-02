@@ -629,5 +629,16 @@
       "language": "Sprache",
       "languageDescription": "Wählen Sie Ihre bevorzugte Sprache"
     }
+  },
+  "devAccess": {
+    "title": "Entwicklungszugang Erforderlich",
+    "description": "Sie haben keine Berechtigung für den Zugriff auf die Entwicklungsumgebung.",
+    "howToGetAccess": "So erhalten Sie Zugang:",
+    "step1": "Kontaktieren Sie Ihren Systemadministrator",
+    "step2": "Bitten Sie ihn, dev_access in Ihrem Profil zu aktivieren",
+    "step3": "Melden Sie sich ab und wieder an, um auf diese Umgebung zuzugreifen",
+    "goToProduction": "Zur Produktionsumgebung",
+    "logout": "Abmelden",
+    "environment": "Entwicklungsumgebung"
   }
 }
