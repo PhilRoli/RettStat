@@ -103,26 +103,36 @@ rettstat/
   - [x] TypeScript deprecations removed
   - [x] Tailwind canonical classes
   - [x] Code quality guidelines
-- [x] Phase 4: Database Schema & API
-  - [x] PostgreSQL schema design (12 tables)
-  - [x] Row Level Security (RLS) policies
-  - [x] Database functions and triggers
-  - [x] TypeScript types generation
-  - [x] Migration files created
+
+- [x] Phase 4: Database Schema v1 (DEPRECATED)
+  - [x] Initial 12-table schema design
+  - [x] Replaced by v2 schema in Phase 4.5
+
+- [x] Phase 4.5: Database Schema v2 (Complete Redesign)
+  - [x] 24-table schema design
+  - [x] Core tables: profiles (simplified), units (hierarchical)
+  - [x] Category tables: 6 new category tables for master data
+  - [x] Entity tables: assignments, qualifications, vehicles, absences, event_groups
+  - [x] User relationships: qualifications (no expiration), assignments (with units, no end date), absences (new)
+  - [x] Shiftplans: New structure with shiftplans + tours (replaces shifts)
+  - [x] Events: Enhanced with categories, groups, admin_events
+  - [x] Row Level Security policies for all tables
+  - [x] Database functions and triggers (validation, statistics, auto-updates)
+  - [x] Complete TypeScript types (1,021 lines)
+  - [x] Comprehensive documentation
 
 ### In Progress 🔄
 
-- [ ] Phase 4: Complete Supabase Setup (migrations need to be applied)
+- [ ] Phase 4.5: Supabase Deployment & Testing
   - [x] Schema designed and migrations created
   - [ ] Supabase local instance configured
   - [ ] Migrations applied and tested
-  - [ ] Real-time subscriptions implemented
+  - [ ] Real-time subscriptions tested
   - [ ] Seed data created for testing
-- [ ] Phase 5: Feature Implementation (NEXT)
 
 ### Planned 📋
 
-- [ ] Phase 4: Database Schema & API
+- [ ] Phase 5: Feature Implementation (NEXT)
 - [ ] Phase 5: Feature Implementation
   - [ ] Home Page
   - [ ] Shift Plan Page
@@ -202,70 +212,142 @@ rettstat/
 - Assignments management
 - System settings
 
-## Database Schema
+## Database Schema (Version 2)
 
-### Tables (12)
+**Last Updated:** 2026-02-02  
+**Total Tables:** 24
+
+### Core Tables
 
 1. **profiles** - User profiles extending auth.users
-   - Personal information, role (admin/manager/member), contact details
-2. **qualifications** - Types of qualifications (certifications, licenses)
-   - Name, description, renewal requirements
-3. **user_qualifications** - User qualifications with expiration tracking
-   - Obtained date, expiration date, certificate number
-4. **assignments** - Assignments (stations, vehicles, teams)
-   - Name, type (station/vehicle/team/other), description
-5. **user_assignments** - User assignment history
-   - Assigned date, end date, primary assignment flag
-6. **shift_types** - Shift type templates
-   - Name, default times, duration, color coding
-7. **shifts** - Individual shift records
-   - User, type, assignment, times, status (scheduled/confirmed/completed/cancelled/no_show)
-8. **events** - Event management
-   - Name, type (emergency/training/community/competition/other), location, times, status
-9. **event_positions** - Positions within events
-   - Name, required qualifications, quantity needed/filled
-10. **event_registrations** - User event registrations
-    - Position, status (registered/confirmed/attended/cancelled/no_show)
-11. **news** - Announcements and news
-    - Title, content, category, priority, publishing dates
-12. **monthly_statistics** - Pre-computed statistics cache
-    - User, year, month, total shifts/hours/events
+   - Fields: first_name, last_name, email, service_id, role, avatar_url, phone, is_active
+   - Removed: DOB, address data, emergency contacts (privacy simplification)
+
+2. **units** - Organizational hierarchy (NEW)
+   - Self-referential structure for organizational units (station → district → region)
+
+### Category Tables (Master Data)
+
+3. **assignment_categories** - Categories for assignments (NEW)
+4. **qualification_categories** - Categories for qualifications (NEW)
+5. **vehicle_types** - Types of vehicles (NEW)
+6. **absence_categories** - Categories for absences (NEW)
+7. **tour_types** - Types of tours (NEW, replaces shift_types)
+8. **event_categories** - Event categories with custom ordering (NEW)
+
+### Entity Tables
+
+9. **assignments** - Assignments (stations, vehicles, teams)
+   - Added: category_id, icon
+
+10. **qualifications** - Qualifications/certifications
+    - Added: category_id, level, icon
+    - Removed: renewal tracking (simplified)
+
+11. **vehicles** - Individual vehicles (NEW)
+    - Fields: vehicle_type, call_sign, primary_unit, secondary_unit
+
+12. **absences** - Types of absences (NEW, master data)
+
+13. **event_groups** - Event position groups (NEW)
+    - Supports admin groups and break groups
+
+### User Relationship Tables
+
+14. **user_qualifications** - User qualifications
+    - Removed: expiration_date (no end date tracking)
+    - Keep: obtained_date (start date)
+
+15. **user_assignments** - User assignments
+    - Added: unit_id (required)
+    - Removed: end_date (ongoing assignments)
+
+16. **user_absences** - User absence instances (NEW)
+    - Linked to assignments with date validation
+    - Must fall within assignment period
+
+### Shiftplan Tables (Redesigned)
+
+17. **shiftplans** - Shift containers (NEW, replaces shifts)
+    - Container for full shift (unit, lead, times)
+    - Typically contains 11-14 tours
+
+18. **tours** - Individual tours within shiftplans (NEW)
+    - Fields: vehicle, tour_type, name, times
+    - Crew: driver_id, lead_id, student_id (all user references)
+
+### Event Tables
+
+19. **events** - Events
+    - Added: category_id, start_time, end_time
+    - Removed: event_type enum, max_participants
+
+20. **event_positions** - Positions within events
+    - Added: icon, minimum_qualification_ids (array), is_group_lead, group_id
+    - Supports multiple qualification requirements
+
+21. **event_registrations** - User event registrations (unchanged)
+
+22. **admin_events** - Admin notes about events (NEW)
+    - Track incidents, issues, observations during events
+
+### News & Statistics
+
+23. **news** - Announcements and news (unchanged)
+
+24. **monthly_statistics** - Pre-computed statistics (unchanged)
+    - To be updated for new shiftplan structure
 
 ### Row Level Security (RLS)
 
 - All tables have RLS enabled
-- Role-based policies (admin, manager, member)
-- Users can view all data, edit their own data
-- Admins/managers can manage shifts, events, qualifications
-- Helper functions: `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
+- **Role-based policies:**
+  - **Admin**: Full access to all tables
+  - **Manager**: Can create/edit shiftplans, events, news
+  - **Member**: Can view all data, edit own registrations and absences
+- **Helper functions:** `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
 
-### Database Functions
+### Database Functions & Triggers
 
-- `auto_create_profile()` - Trigger to create profile on user signup
-- `auto_update_event_position_counts()` - Trigger to update position fills
-- `calculate_monthly_stats()` - Trigger to update statistics on shift changes
-- `get_user_statistics(user_id, start_date, end_date)` - Query user stats
-- `get_unit_statistics(start_date, end_date)` - Query organization-wide stats
-- `check_expiring_qualifications(days_ahead)` - Find qualifications expiring soon
+**Triggers:**
+
+- `auto_create_profile()` - Create profile on user signup
+- `validate_absence_dates()` - Ensure absence dates within assignment period
+- `update_event_position_counts()` - Auto-update position filled counts
+- `trigger_update_monthly_stats()` - Recalculate stats on tour changes
+- `update_updated_at_column()` - Auto-update updated_at timestamps
+
+**Query Functions:**
+
+- `get_user_statistics(user_id, start_date, end_date)` - User statistics for date range
+- `get_unit_statistics(start_date, end_date)` - Organization-wide statistics
+- `check_expiring_qualifications(days_ahead)` - List qualifications by obtained date
 
 ### Migrations
 
-Migrations are located in `supabase/migrations/`:
+**Current Migrations (v2):**
 
-- `20260202_initial_schema.sql` - Complete database schema
-- `20260202_rls_policies.sql` - Row Level Security policies
-- `20260202_functions_triggers.sql` - Functions and triggers
+- `20260202_v2_complete_schema.sql` - All 24 tables with constraints and indexes
+- `20260202_v2_rls_policies.sql` - Row Level Security policies
+- `20260202_v2_functions_triggers.sql` - Functions and triggers
 
-**Note:** Migrations need to be applied using the Supabase CLI:
+**Apply migrations using Supabase CLI:**
 
 ```bash
 supabase start      # Start local Supabase instance
 supabase db reset   # Apply all migrations
 ```
 
-## API Endpoints
+### Key Design Decisions
 
-_To be documented in Phase 4_
+1. **No End Dates**: User qualifications and assignments don't expire (ongoing)
+2. **Shiftplan Structure**: Shiftplans contain multiple tours; each tour has vehicle and crew
+3. **Absences**: Linked to assignments, dates validated within assignment period
+4. **Events**: Category → Group → Position hierarchy with custom ordering
+5. **Icon Support**: Most entities support icon field for visual identification
+6. **Arrays**: Event positions support multiple required qualifications (UUID[])
+
+## API Endpoints
 
 ## Environment Variables
 
