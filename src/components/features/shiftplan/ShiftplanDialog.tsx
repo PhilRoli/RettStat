@@ -77,11 +77,13 @@ export function ShiftplanDialog({ open, onClose, unitId, selectedDate }: Shiftpl
 
     try {
       await createShiftplanMutation.mutateAsync({
-        unit_id: unitId,
-        shift_lead_id: shiftLeadId,
+        unit: unitId,
+        shift_lead: shiftLeadId,
+        date: date,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
-        notes: notes || null,
+        notes: notes || undefined,
+        status: "draft",
       });
 
       toast({ description: t("shiftplanCreated") });

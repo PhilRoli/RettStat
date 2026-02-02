@@ -64,7 +64,7 @@ export function ShiftplanDayView({
   };
 
   const getPersonName = (
-    person: { first_name: string | null; last_name: string | null } | null | undefined
+    person: { first_name?: string | null; last_name?: string | null } | null | undefined
   ) => {
     if (!person) return null;
     const first = person.first_name || "";
@@ -125,7 +125,7 @@ export function ShiftplanDayView({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-muted-foreground text-sm">{t("shiftLead")}</p>
-                  <p className="font-medium">{getPersonName(shiftplan.shift_lead)}</p>
+                  <p className="font-medium">{getPersonName(shiftplan.expand?.shift_lead)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">

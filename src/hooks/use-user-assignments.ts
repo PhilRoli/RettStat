@@ -1,71 +1,85 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
-import { useAuthStore } from "@/stores/auth-store";
-import type { Database } from "@/types/database";
+import { pb } from "@/lib/pocketbase";
+import { useAuth } from "./use-auth";
+import type { UserAssignmentRecord, UnitRecord } from "@/lib/pocketbase/types";
 
-type UserAssignment = Database["public"]["Tables"]["user_assignments"]["Row"] & {
-  units: Database["public"]["Tables"]["units"]["Row"];
-  assignments: Database["public"]["Tables"]["assignments"]["Row"];
-};
-
-/**
- * Hook to fetch user's active assignments
- * Returns units where the user has assignments
- */
 export function useUserAssignments() {
-  const user = useAuthStore((state) => state.user);
-  const supabase = createClient();
-
+  const { user } = useAuth();
   return useQuery({
     queryKey: ["user-assignments", user?.id],
     queryFn: async () => {
-      if (!user?.id) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from("user_assignments")
-        .select(
-          `
-          *,
-          units (*),
-          assignments (*)
-        `
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      return (data as unknown as UserAssignment[]) || [];
+      if (!user?.id) return [];
+      return pb.collection("user_assignments").getFullList<UserAssignmentRecord>({
+        filter: `user="${user.id}"`,
+        expand: "assignment,assignment.unit",
+        sort: "-created",
+      });
     },
     enabled: !!user?.id,
   });
 }
 
-/**
- * Hook to get unique units from user's assignments
- * Returns deduplicated list of units
- */
 export function useUserUnits() {
-  const { data: assignments, ...query } = useUserAssignments();
+  const { user } = useAuth();
 
-  const units = assignments?.reduce(
-    (acc, assignment) => {
-      if (assignment.units && !acc.find((u) => u.id === assignment.units.id)) {
-        acc.push(assignment.units);
+  return useQuery({
+    queryKey: ["user-units", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      // Get all assignments for the user with expanded unit data
+      const assignments = await pb
+        .collection("user_assignments")
+        .getFullList<
+          UserAssignmentRecord & {
+            expand?: { assignment?: { unit?: string; expand?: { unit?: UnitRecord } } };
+          }
+        >({
+          filter: `user="${user.id}"`,
+          expand: "assignment.unit",
+          sort: "-created",
+        });
+
+      // Extract unique units from assignments
+      const unitMap = new Map<string, UnitRecord>();
+      for (const assignment of assignments) {
+        const unit = assignment.expand?.assignment?.expand?.unit;
+        if (unit && !unitMap.has(unit.id)) {
+          unitMap.set(unit.id, unit);
+        }
       }
-      return acc;
-    },
-    [] as Database["public"]["Tables"]["units"]["Row"][]
-  );
 
-  return {
-    ...query,
-    data: units || [],
-  };
+      // If no units from assignments, try getting units directly where user has profile
+      if (unitMap.size === 0) {
+        // Fallback: get all units the user's profile is associated with
+        const profile = await pb
+          .collection("profiles")
+          .getFirstListItem<{ unit?: string }>(`user="${user.id}"`, { expand: "unit" })
+          .catch(() => null);
+
+        if (profile?.unit) {
+          const unit = await pb
+            .collection("units")
+            .getOne<UnitRecord>(profile.unit)
+            .catch(() => null);
+          if (unit) {
+            unitMap.set(unit.id, unit);
+          }
+        }
+      }
+
+      // If still no units, get all units as fallback (for development)
+      if (unitMap.size === 0) {
+        const allUnits = await pb.collection("units").getFullList<UnitRecord>({
+          sort: "name",
+        });
+        return allUnits;
+      }
+
+      return Array.from(unitMap.values());
+    },
+    enabled: !!user?.id,
+  });
 }

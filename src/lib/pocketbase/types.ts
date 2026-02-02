@@ -21,8 +21,8 @@ export interface UserRecord extends BaseRecord {
 // Profile
 export interface ProfileRecord extends BaseRecord {
   user: string; // relation to users
-  first_name: string;
-  last_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   phone?: string;
   avatar?: string; // file field
   service_id?: string;
@@ -157,21 +157,25 @@ export interface TourTypeRecord extends BaseRecord {
 export interface ShiftplanRecord extends BaseRecord {
   date: string;
   unit: string; // relation to units
-  shift_lead?: string; // relation to users
+  shift_lead?: string; // relation to profiles
+  start_time: string; // shift start time
+  end_time: string; // shift end time
   notes?: string;
   status: "draft" | "published" | "completed";
+  created_by?: string; // relation to users
 }
 
 // Tour
 export interface TourRecord extends BaseRecord {
   shiftplan: string; // relation to shiftplans
-  vehicle: string; // relation to vehicles
+  vehicle?: string; // relation to vehicles (optional)
   tour_type?: string; // relation to tour_types
-  driver?: string; // relation to users
-  lead?: string; // relation to users
-  student?: string; // relation to users
+  driver?: string; // relation to profiles
+  lead?: string; // relation to profiles
+  student?: string; // relation to profiles
+  name?: string; // tour name/identifier
   start_time: string;
-  end_time?: string;
+  end_time: string;
   notes?: string;
 }
 
