@@ -16,28 +16,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useShiftplanByDate } from "@/hooks";
+import { useShiftplanByDate, useDeleteShiftplan, useDeleteTour } from "@/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
+import { Trash2, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ShiftplanDayViewProps {
   unitId: string;
   date: Date | null;
   onClose: () => void;
+  isEditMode?: boolean;
 }
 
-export function ShiftplanDayView({ unitId, date, onClose }: ShiftplanDayViewProps) {
+export function ShiftplanDayView({
+  unitId,
+  date,
+  onClose,
+  isEditMode = false,
+}: ShiftplanDayViewProps) {
   const t = useTranslations("shifts");
   const locale = useLocale();
   const dateLocale = locale === "de" ? de : enUS;
+  const { toast } = useToast();
 
   const { data: shiftplan, isLoading } = useShiftplanByDate({
     unitId,
     date: date || new Date(),
   });
+
+  const deleteShiftplanMutation = useDeleteShiftplan();
+  const deleteTourMutation = useDeleteTour();
 
   const formatTime = (timeString: string) => {
     return format(new Date(timeString), "HH:mm", { locale: dateLocale });
@@ -50,6 +63,37 @@ export function ShiftplanDayView({ unitId, date, onClose }: ShiftplanDayViewProp
   const getPersonName = (person: { first_name: string; last_name: string } | null | undefined) => {
     if (!person) return null;
     return `${person.first_name} ${person.last_name}`;
+  };
+
+  const handleDeleteShiftplan = async () => {
+    if (!shiftplan || !window.confirm(t("confirmDelete"))) return;
+
+    try {
+      await deleteShiftplanMutation.mutateAsync(shiftplan.id);
+      toast({ description: t("shiftplanDeleted") });
+      onClose();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete shiftplan",
+      });
+    }
+  };
+
+  const handleDeleteTour = async (tourId: string) => {
+    if (!window.confirm(t("confirmDeleteTour"))) return;
+
+    try {
+      await deleteTourMutation.mutateAsync(tourId);
+      toast({ description: t("tourDeleted") });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete tour",
+      });
+    }
   };
 
   return (
@@ -76,11 +120,23 @@ export function ShiftplanDayView({ unitId, date, onClose }: ShiftplanDayViewProp
                   <p className="text-muted-foreground text-sm">{t("shiftLead")}</p>
                   <p className="font-medium">{getPersonName(shiftplan.shift_lead)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground text-sm">{t("duration")}</p>
-                  <p className="font-medium">
-                    {formatTime(shiftplan.start_time)} - {formatTime(shiftplan.end_time)}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-muted-foreground text-sm">{t("duration")}</p>
+                    <p className="font-medium">
+                      {formatTime(shiftplan.start_time)} - {formatTime(shiftplan.end_time)}
+                    </p>
+                  </div>
+                  {isEditMode && (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={handleDeleteShiftplan}
+                      disabled={deleteShiftplanMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
               {shiftplan.notes && (
@@ -103,12 +159,16 @@ export function ShiftplanDayView({ unitId, date, onClose }: ShiftplanDayViewProp
                     <TableHead>{t("driver")}</TableHead>
                     <TableHead className="hidden sm:table-cell">{t("lead")}</TableHead>
                     <TableHead className="hidden lg:table-cell">{t("student")}</TableHead>
+                    {isEditMode && <TableHead className="w-16"></TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shiftplan.tours.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-muted-foreground text-center">
+                      <TableCell
+                        colSpan={isEditMode ? 8 : 7}
+                        className="text-muted-foreground text-center"
+                      >
                         {t("noShiftplans")}
                       </TableCell>
                     </TableRow>
@@ -163,12 +223,37 @@ export function ShiftplanDayView({ unitId, date, onClose }: ShiftplanDayViewProp
                             )}
                           </div>
                         </TableCell>
+                        {isEditMode && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteTour(tour.id)}
+                              disabled={deleteTourMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
                 </TableBody>
               </Table>
             </div>
+
+            {/* Add Tour Button */}
+            {isEditMode && (
+              <Button
+                onClick={() => {
+                  /* TODO: Implement add tour dialog */
+                }}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t("addTour")}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>

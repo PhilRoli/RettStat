@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { useUserUnits, useShiftplanDates } from "@/hooks";
+import { Calendar, ChevronLeft, ChevronRight, Edit, Eye } from "lucide-react";
+import { useUserUnits, useShiftplanDates, useHasPermission } from "@/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShiftplanDayView } from "@/components/features/shiftplan";
 export default function ShiftplanPage() {
@@ -21,8 +21,10 @@ export default function ShiftplanPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const { data: units, isLoading: isLoadingUnits } = useUserUnits();
+  const { hasPermission: canEdit } = useHasPermission("edit_shiftplans", selectedUnit);
 
   // Initialize selectedUnit when units load
   if (!selectedUnit && units && units.length > 0) {
@@ -88,8 +90,26 @@ export default function ShiftplanPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        {canEdit && (
+          <Button
+            variant={isEditMode ? "default" : "outline"}
+            onClick={() => setIsEditMode(!isEditMode)}
+          >
+            {isEditMode ? (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                {t("viewMode")}
+              </>
+            ) : (
+              <>
+                <Edit className="mr-2 h-4 w-4" />
+                {t("editMode")}
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Controls */}
@@ -207,6 +227,7 @@ export default function ShiftplanPage() {
         unitId={selectedUnit}
         date={selectedDate}
         onClose={() => setSelectedDate(null)}
+        isEditMode={isEditMode && canEdit}
       />
     </div>
   );
