@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
-import { createClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
+import type { UserPermissionRecord, PermissionRecord } from "@/lib/pocketbase/types";
 
 export type Permission =
   | "view_shiftplans"
@@ -45,26 +46,29 @@ export function usePermissions(unitId?: string): UsePermissionsReturn {
 
     try {
       setIsLoading(true);
-      const supabase = createClient();
 
-      // Call the RPC function to get all permissions for the user
-      const { data, error } = await supabase.rpc("get_user_permissions", {
-        p_user_id: user.id,
-        p_unit_id: unitId || null,
-      } as never); // Temporary type cast until we add RPC function types
-
-      if (error) {
-        console.error("Error loading permissions:", error);
-        setPermissions(new Set());
-        return;
+      // Build filter for user permissions
+      let filter = `user="${user.id}"`;
+      if (unitId) {
+        // Include permissions for specific unit or global (no unit)
+        filter = `user="${user.id}" && (unit="${unitId}" || unit="")`;
       }
 
-      // Convert array of permission names to Set
+      // Fetch user permissions with expanded permission names
+      const userPermissions = await pb
+        .collection("user_permissions")
+        .getFullList<UserPermissionRecord & { expand?: { permission?: PermissionRecord } }>({
+          filter,
+          expand: "permission",
+        });
+
+      // Extract permission names
       const permissionSet = new Set<Permission>(
-        ((data as unknown as { permission_name: string }[]) || []).map(
-          (p) => p.permission_name as Permission
-        )
+        userPermissions
+          .map((up) => up.expand?.permission?.name as Permission)
+          .filter((name): name is Permission => !!name)
       );
+
       setPermissions(permissionSet);
     } catch (error) {
       console.error("Error loading permissions:", error);
@@ -80,10 +84,6 @@ export function usePermissions(unitId?: string): UsePermissionsReturn {
   }, [user?.id, unitId]);
 
   const hasPermission = (permission: Permission): boolean => {
-    // If checking a different unit than initially loaded, need to verify via RPC
-    // For now, just check against loaded permissions
-    // TODO: Implement dynamic unit checking if needed
-
     // System admin has all permissions
     if (permissions.has("system_admin")) {
       return true;

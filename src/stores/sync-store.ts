@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { db, addToSyncQueue, getSyncQueueItems, removeSyncQueueItem } from "@/lib/db";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { pb } from "@/lib/pocketbase";
 
 interface SyncState {
   isOnline: boolean;
@@ -43,24 +43,21 @@ export const useSyncStore = create<SyncState>()(
         set({ isSyncing: true });
 
         try {
-          const supabase = getSupabaseClient();
           const items = await getSyncQueueItems();
 
           for (const item of items) {
             try {
-              // Use type assertion for dynamic table operations
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const tableRef = supabase.from(item.table) as any;
+              const collection = pb.collection(item.table);
 
               switch (item.operation) {
                 case "insert":
-                  await tableRef.insert(item.data);
+                  await collection.create(item.data);
                   break;
                 case "update":
-                  await tableRef.update(item.data).eq("id", item.recordId);
+                  await collection.update(item.recordId, item.data);
                   break;
                 case "delete":
-                  await tableRef.delete().eq("id", item.recordId);
+                  await collection.delete(item.recordId);
                   break;
               }
 
