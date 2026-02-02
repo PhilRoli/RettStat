@@ -13,9 +13,9 @@ export function useCreateTour() {
 
   return useMutation({
     mutationFn: async (data: TourInsert) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: tour, error } = await supabase
         .from("tours")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(data as any)
         .select()
         .single();
