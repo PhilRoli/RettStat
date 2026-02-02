@@ -1,7 +1,7 @@
 /**
- * RettStat Database Types v2
- * Generated from Supabase schema v2
- * Complete database structure for EMS shift management
+ * RettStat Database Types v3
+ * Generated from Supabase schema v3
+ * Complete database structure for EMS shift management with permission system
  */
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
@@ -10,10 +10,10 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 // ENUMS
 // ============================================================================
 
-export type UserRole = "admin" | "manager" | "member";
 export type AssignmentType = "station" | "vehicle" | "team" | "other";
 export type EventStatus = "planned" | "confirmed" | "in_progress" | "completed" | "cancelled";
 export type RegistrationStatus = "registered" | "confirmed" | "attended" | "cancelled" | "no_show";
+export type EventSwitchRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
 export type NewsCategory =
   | "general"
   | "emergency"
@@ -22,6 +22,19 @@ export type NewsCategory =
   | "maintenance"
   | "policy";
 export type NewsPriority = "low" | "normal" | "high" | "urgent";
+
+export type NotificationPreferences = {
+  email: {
+    shifts: boolean;
+    events: boolean;
+    news: boolean;
+  };
+  push: {
+    shifts: boolean;
+    events: boolean;
+    news: boolean;
+  };
+};
 
 // ============================================================================
 // DATABASE INTERFACE
@@ -65,9 +78,9 @@ export interface Database {
           first_name: string | null;
           last_name: string | null;
           service_id: string | null;
-          role: UserRole;
           avatar_url: string | null;
           phone: string | null;
+          notification_preferences: NotificationPreferences;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -78,9 +91,9 @@ export interface Database {
           first_name?: string | null;
           last_name?: string | null;
           service_id?: string | null;
-          role?: UserRole;
           avatar_url?: string | null;
           phone?: string | null;
+          notification_preferences?: NotificationPreferences;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -91,12 +104,85 @@ export interface Database {
           first_name?: string | null;
           last_name?: string | null;
           service_id?: string | null;
-          role?: UserRole;
           avatar_url?: string | null;
           phone?: string | null;
+          notification_preferences?: NotificationPreferences;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+
+      // ======================================================================
+      // PERMISSION SYSTEM TABLES
+      // ======================================================================
+
+      permissions: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          created_at?: string;
+        };
+      };
+
+      user_permissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          permission_id: string;
+          unit_id: string | null;
+          granted_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          permission_id: string;
+          unit_id?: string | null;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          permission_id?: string;
+          unit_id?: string | null;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+      };
+
+      assignment_default_permissions: {
+        Row: {
+          id: string;
+          assignment_id: string;
+          permission_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          assignment_id: string;
+          permission_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          assignment_id?: string;
+          permission_id?: string;
+          created_at?: string;
         };
       };
 
@@ -164,6 +250,7 @@ export interface Database {
           name: string;
           description: string | null;
           icon: string | null;
+          color: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -172,6 +259,7 @@ export interface Database {
           name: string;
           description?: string | null;
           icon?: string | null;
+          color?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -180,6 +268,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           icon?: string | null;
+          color?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -647,6 +736,9 @@ export interface Database {
           end_time: string;
           status: EventStatus;
           notes: string | null;
+          allow_self_assign: boolean;
+          allow_self_assign_after_break: boolean;
+          restrict_to_admins: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -661,6 +753,9 @@ export interface Database {
           end_time: string;
           status?: EventStatus;
           notes?: string | null;
+          allow_self_assign?: boolean;
+          allow_self_assign_after_break?: boolean;
+          restrict_to_admins?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -675,6 +770,9 @@ export interface Database {
           end_time?: string;
           status?: EventStatus;
           notes?: string | null;
+          allow_self_assign?: boolean;
+          allow_self_assign_after_break?: boolean;
+          restrict_to_admins?: boolean;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -731,9 +829,11 @@ export interface Database {
           id: string;
           event_id: string;
           event_position_id: string | null;
-          user_id: string;
+          user_id: string | null;
+          temp_user_id: string | null;
           status: RegistrationStatus;
           registered_at: string;
+          assigned_at: string | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -742,9 +842,11 @@ export interface Database {
           id?: string;
           event_id: string;
           event_position_id?: string | null;
-          user_id: string;
+          user_id?: string | null;
+          temp_user_id?: string | null;
           status?: RegistrationStatus;
           registered_at?: string;
+          assigned_at?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -753,12 +855,89 @@ export interface Database {
           id?: string;
           event_id?: string;
           event_position_id?: string | null;
-          user_id?: string;
+          user_id?: string | null;
+          temp_user_id?: string | null;
           status?: RegistrationStatus;
           registered_at?: string;
+          assigned_at?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+
+      event_switch_requests: {
+        Row: {
+          id: string;
+          event_id: string;
+          requester_id: string;
+          requester_position_id: string;
+          target_id: string;
+          target_position_id: string;
+          status: EventSwitchRequestStatus;
+          requested_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          requester_id: string;
+          requester_position_id: string;
+          target_id: string;
+          target_position_id: string;
+          status?: EventSwitchRequestStatus;
+          requested_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          requester_id?: string;
+          requester_position_id?: string;
+          target_id?: string;
+          target_position_id?: string;
+          status?: EventSwitchRequestStatus;
+          requested_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      event_dashboard_sessions: {
+        Row: {
+          id: string;
+          event_id: string;
+          session_code: string;
+          device_token: string | null;
+          created_by: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          session_code: string;
+          device_token?: string | null;
+          created_by: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          session_code?: string;
+          device_token?: string | null;
+          created_by?: string;
+          expires_at?: string;
+          created_at?: string;
         };
       };
 
@@ -804,6 +983,7 @@ export interface Database {
           expires_at: string | null;
           is_pinned: boolean;
           author_id: string | null;
+          target_unit_ids: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -817,6 +997,7 @@ export interface Database {
           expires_at?: string | null;
           is_pinned?: boolean;
           author_id?: string | null;
+          target_unit_ids?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -830,6 +1011,121 @@ export interface Database {
           expires_at?: string | null;
           is_pinned?: boolean;
           author_id?: string | null;
+          target_unit_ids?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      news_attachments: {
+        Row: {
+          id: string;
+          news_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number | null;
+          mime_type: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          news_id: string;
+          file_name: string;
+          file_path: string;
+          file_size?: number | null;
+          mime_type?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          news_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number | null;
+          mime_type?: string | null;
+          created_at?: string;
+        };
+      };
+
+      news_read_status: {
+        Row: {
+          id: string;
+          news_id: string;
+          user_id: string;
+          read_at: string;
+        };
+        Insert: {
+          id?: string;
+          news_id: string;
+          user_id: string;
+          read_at?: string;
+        };
+        Update: {
+          id?: string;
+          news_id?: string;
+          user_id?: string;
+          read_at?: string;
+        };
+      };
+
+      quick_links: {
+        Row: {
+          id: string;
+          name: string;
+          url: string | null;
+          phone: string | null;
+          icon: string | null;
+          order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          url?: string | null;
+          phone?: string | null;
+          icon?: string | null;
+          order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          url?: string | null;
+          phone?: string | null;
+          icon?: string | null;
+          order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      temp_users: {
+        Row: {
+          id: string;
+          name: string;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };

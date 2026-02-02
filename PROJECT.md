@@ -212,99 +212,144 @@ rettstat/
 - Assignments management
 - System settings
 
-## Database Schema (Version 2)
+## Database Schema (Version 3)
 
 **Last Updated:** 2026-02-02  
-**Total Tables:** 24
+**Total Tables:** 33  
+**Major Change:** Role-based authentication replaced with granular permission system
 
 ### Core Tables
 
 1. **profiles** - User profiles extending auth.users
-   - Fields: first_name, last_name, email, service_id, role, avatar_url, phone, is_active
-   - Removed: DOB, address data, emergency contacts (privacy simplification)
+   - Fields: first_name, last_name, email, service_id, avatar_url, phone, notification_preferences (JSONB), is_active
+   - **REMOVED:** role column (replaced by permission system)
+   - **ADDED:** notification_preferences for email/push notifications (shifts, events, news)
 
-2. **units** - Organizational hierarchy (NEW)
+2. **units** - Organizational hierarchy
    - Self-referential structure for organizational units (station → district → region)
+
+### Permission System Tables (NEW)
+
+3. **permissions** - Master data of available permissions
+   - 14 permissions: view_shiftplans, edit_shiftplans, view_statistics, view_events, create_events, manage_events, view_members, manage_members, manage_qualifications, manage_assignments, manage_vehicles, manage_units, manage_news, system_admin
+
+4. **user_permissions** - Per-unit permission grants
+   - Supports unit inheritance (permission granted to parent applies to children)
+   - Global permissions when unit_id is NULL
+
+5. **assignment_default_permissions** - Default permissions granted by assignments
+   - Admin-configurable: which assignments grant which permissions
 
 ### Category Tables (Master Data)
 
-3. **assignment_categories** - Categories for assignments (NEW)
-4. **qualification_categories** - Categories for qualifications (NEW)
-5. **vehicle_types** - Types of vehicles (NEW)
-6. **absence_categories** - Categories for absences (NEW)
-7. **tour_types** - Types of tours (NEW, replaces shift_types)
-8. **event_categories** - Event categories with custom ordering (NEW)
+6. **assignment_categories** - Categories for assignments
+7. **qualification_categories** - Categories for qualifications
+8. **vehicle_types** - Types of vehicles
+   - **ADDED:** color field for visual identification in calendars/statistics
+9. **absence_categories** - Categories for absences
+10. **tour_types** - Types of tours
+11. **event_categories** - Event categories with custom ordering
 
 ### Entity Tables
 
-9. **assignments** - Assignments (stations, vehicles, teams)
-   - Added: category_id, icon
+12. **assignments** - Assignments (stations, vehicles, teams)
+    - Added: category_id, icon
 
-10. **qualifications** - Qualifications/certifications
+13. **qualifications** - Qualifications/certifications
     - Added: category_id, level, icon
-    - Removed: renewal tracking (simplified)
 
-11. **vehicles** - Individual vehicles (NEW)
+14. **vehicles** - Individual vehicles
     - Fields: vehicle_type, call_sign, primary_unit, secondary_unit
 
-12. **absences** - Types of absences (NEW, master data)
+15. **absences** - Types of absences
 
-13. **event_groups** - Event position groups (NEW)
+16. **event_groups** - Event position groups
     - Supports admin groups and break groups
 
 ### User Relationship Tables
 
-14. **user_qualifications** - User qualifications
-    - Removed: expiration_date (no end date tracking)
-    - Keep: obtained_date (start date)
+17. **user_qualifications** - User qualifications
+    - No end date tracking
 
-15. **user_assignments** - User assignments
+18. **user_assignments** - User assignments
     - Added: unit_id (required)
-    - Removed: end_date (ongoing assignments)
+    - No end date (ongoing assignments)
 
-16. **user_absences** - User absence instances (NEW)
+19. **user_absences** - User absence instances
     - Linked to assignments with date validation
     - Must fall within assignment period
 
 ### Shiftplan Tables (Redesigned)
 
-17. **shiftplans** - Shift containers (NEW, replaces shifts)
+20. **shiftplans** - Shift containers
     - Container for full shift (unit, lead, times)
     - Typically contains 11-14 tours
 
-18. **tours** - Individual tours within shiftplans (NEW)
+21. **tours** - Individual tours within shiftplans
     - Fields: vehicle, tour_type, name, times
     - Crew: driver_id, lead_id, student_id (all user references)
 
 ### Event Tables
 
-19. **events** - Events
+22. **events** - Events
     - Added: category_id, start_time, end_time
-    - Removed: event_type enum, max_participants
+    - **ADDED:** allow_self_assign, allow_self_assign_after_break, restrict_to_admins (control event registration modes)
 
-20. **event_positions** - Positions within events
+23. **event_positions** - Positions within events
     - Added: icon, minimum_qualification_ids (array), is_group_lead, group_id
     - Supports multiple qualification requirements
 
-21. **event_registrations** - User event registrations (unchanged)
+24. **event_registrations** - User event registrations
+    - **ADDED:** temp_user_id (for temporary placeholders), assigned_at
+    - Constraint: either user_id OR temp_user_id (mutually exclusive)
 
-22. **admin_events** - Admin notes about events (NEW)
+25. **event_switch_requests** (NEW) - Position swap requests between users
+    - Track requests to switch positions between users
+    - Status: pending, approved, rejected, cancelled
+
+26. **event_dashboard_sessions** (NEW) - Dashboard sessions for TV displays
+    - QR code verification system
+    - 6-character codes for secure dashboard access
+
+27. **admin_events** - Admin notes about events
     - Track incidents, issues, observations during events
+
+28. **temp_users** (NEW) - Temporary user placeholders
+    - Reusable across events
+    - Can be replaced with real users later
 
 ### News & Statistics
 
-23. **news** - Announcements and news (unchanged)
+29. **news** - Announcements and news
+    - **ADDED:** target_unit_ids (array) - target specific units or null for all
 
-24. **monthly_statistics** - Pre-computed statistics (unchanged)
+30. **news_attachments** (NEW) - File attachments for news
+    - Stored in Supabase Storage
+
+31. **news_read_status** (NEW) - Track which users have read which news
+    - Unique: (news_id, user_id)
+
+32. **quick_links** (NEW) - Admin-configurable quick links
+    - Home page quick access links (phone numbers, URLs)
+    - Admin can reorder and enable/disable
+
+33. **monthly_statistics** - Pre-computed statistics
     - To be updated for new shiftplan structure
 
 ### Row Level Security (RLS)
 
 - All tables have RLS enabled
-- **Role-based policies:**
-  - **Admin**: Full access to all tables
-  - **Manager**: Can create/edit shiftplans, events, news
-  - **Member**: Can view all data, edit own registrations and absences
+- **Permission-based policies (v3):**
+  - **system_admin**: Full access to all tables
+  - **Per-unit permissions**: view_shiftplans, edit_shiftplans, view_statistics, manage_events, etc.
+  - **Permission inheritance**: Permissions granted to parent units apply to child units
+  - **Assignment-based**: Assignments can grant default permissions (configurable)
+
+### Permission System Helper Functions
+
+- `has_permission(user_id, permission_name, unit_id)` - Check if user has permission in unit (with inheritance)
+- `get_user_permissions(user_id, unit_id)` - Get all permissions for user in unit
+- `get_unit_hierarchy(unit_id)` - Get all parent units for inheritance
 - **Helper functions:** `is_admin()`, `is_admin_or_manager()`, `get_user_role()`
 
 ### Database Functions & Triggers
