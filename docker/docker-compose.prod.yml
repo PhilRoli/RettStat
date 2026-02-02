@@ -69,6 +69,29 @@ services:
       - "traefik.http.routers.app.middlewares=security-headers"
       - "com.centurylinklabs.watchtower.enable=true"
 
+  # Next.js Application - Dev Environment
+  app-dev:
+    image: ghcr.io/${GITHUB_USERNAME}/rettstat:develop
+    container_name: rettstat-app-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_POCKETBASE_URL: https://api-dev.${DOMAIN}
+    networks:
+      - web
+      - backend
+    depends_on:
+      pocketbase-dev:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-dev.rule=Host(`dev.${DOMAIN}`)"
+      - "traefik.http.routers.app-dev.entrypoints=websecure"
+      - "traefik.http.routers.app-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.app-dev.loadbalancer.server.port=3000"
+      - "traefik.http.routers.app-dev.middlewares=security-headers"
+      - "com.centurylinklabs.watchtower.enable=true"
+
   # PocketBase Backend (API + Database + Storage)
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
@@ -94,6 +117,32 @@ services:
       - "traefik.http.routers.pocketbase.tls.certresolver=letsencrypt"
       - "traefik.http.services.pocketbase.loadbalancer.server.port=8090"
       - "traefik.http.routers.pocketbase.middlewares=security-headers"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # PocketBase Backend - Dev Environment (Synced from Prod)
+  pocketbase-dev:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: rettstat-pocketbase-dev
+    restart: unless-stopped
+    volumes:
+      - pb-data-dev:/pb/pb_data
+      - pb-public-dev:/pb/pb_public
+    networks:
+      - web
+      - backend
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pocketbase-dev.rule=Host(`api-dev.${DOMAIN}`)"
+      - "traefik.http.routers.pocketbase-dev.entrypoints=websecure"
+      - "traefik.http.routers.pocketbase-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pocketbase-dev.loadbalancer.server.port=8090"
+      - "traefik.http.routers.pocketbase-dev.middlewares=security-headers"
       - "com.centurylinklabs.watchtower.enable=true"
 
   # Watchtower - Automatic container updates
@@ -124,3 +173,5 @@ volumes:
   traefik-letsencrypt:
   pb-data:
   pb-public:
+  pb-data-dev:
+  pb-public-dev:

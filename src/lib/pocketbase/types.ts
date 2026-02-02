@@ -27,6 +27,7 @@ export interface ProfileRecord extends BaseRecord {
   avatar?: string; // file field
   service_id?: string;
   is_active: boolean;
+  dev_access: boolean; // Access to development environment
   // Expanded fields from user relation
   email?: string; // From expanded user
   avatar_url?: string; // Computed/legacy field

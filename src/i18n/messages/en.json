@@ -629,5 +629,16 @@
       "language": "Language",
       "languageDescription": "Choose your preferred language"
     }
+  },
+  "devAccess": {
+    "title": "Development Access Required",
+    "description": "You don't have permission to access the development environment.",
+    "howToGetAccess": "How to get access:",
+    "step1": "Contact your system administrator",
+    "step2": "Ask them to enable dev_access on your profile",
+    "step3": "Log out and log in again to access this environment",
+    "goToProduction": "Go to Production",
+    "logout": "Logout",
+    "environment": "Development Environment"
   }
 }
