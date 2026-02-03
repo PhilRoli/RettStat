@@ -191,17 +191,39 @@ print_success "Installation directory created: $INSTALL_DIR"
 
 # Clone repository if not exists
 print_step "Step 5: Cloning repository"
-if [ ! -d "repo" ]; then
-    # Configure git to use the token for this repo
+
+# Check if repo exists and is a valid git repo
+if [ -d "repo/.git" ]; then
+    # Update existing repo - configure credentials temporarily
+    cd repo
+    git remote set-url origin "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/PhilRoli/rettstat.git"
+    git pull
+    git remote set-url origin "$REPO_URL"
+    cd ..
+    print_success "Repository updated"
+elif [ -d "repo" ]; then
+    # Directory exists but not a valid git repo - remove and re-clone
+    print_step "Removing incomplete repo directory..."
+    rm -rf repo
     git clone "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/PhilRoli/rettstat.git" repo
-    # Remove credentials from git remote for security
     cd repo
     git remote set-url origin "$REPO_URL"
     cd ..
     print_success "Repository cloned"
 else
-    cd repo && git pull && cd ..
-    print_success "Repository updated"
+    # Fresh clone
+    git clone "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/PhilRoli/rettstat.git" repo
+    cd repo
+    git remote set-url origin "$REPO_URL"
+    cd ..
+    print_success "Repository cloned"
+fi
+
+# Verify repo was cloned successfully
+if [ ! -f "repo/docker/docker-compose.prod.yml" ]; then
+    print_error "Repository clone failed or is incomplete"
+    print_error "Please check your GitHub token and try again"
+    exit 1
 fi
 
 # Create .env file
