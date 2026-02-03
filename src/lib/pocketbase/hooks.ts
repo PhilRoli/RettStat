@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { pb } from "./client";
+import { getPb } from "./client";
 import type { RecordType, CollectionRecords } from "./types";
 import { ClientResponseError } from "pocketbase";
 
@@ -30,6 +30,7 @@ export function usePocketbaseList<T extends keyof CollectionRecords>(
   return useQuery({
     queryKey: pbKeys.list(collection, options?.filter),
     queryFn: async () => {
+      const pb = getPb();
       const records = await pb.collection(collection).getFullList<RecordType<T>>({
         filter: options?.filter,
         sort: options?.sort,
@@ -54,6 +55,7 @@ export function usePocketbaseOne<T extends keyof CollectionRecords>(
     queryKey: pbKeys.detail(collection, id || ""),
     queryFn: async () => {
       if (!id) throw new Error("ID is required");
+      const pb = getPb();
       const record = await pb.collection(collection).getOne<RecordType<T>>(id, {
         expand: options?.expand,
       });
@@ -69,6 +71,7 @@ export function usePocketbaseCreate<T extends keyof CollectionRecords>(collectio
 
   return useMutation({
     mutationFn: async (data: Partial<RecordType<T>>) => {
+      const pb = getPb();
       const record = await pb.collection(collection).create<RecordType<T>>(data);
       return record;
     },
@@ -85,6 +88,7 @@ export function usePocketbaseUpdate<T extends keyof CollectionRecords>(collectio
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<RecordType<T>> }) => {
+      const pb = getPb();
       const record = await pb.collection(collection).update<RecordType<T>>(id, data);
       return record;
     },
@@ -102,6 +106,7 @@ export function usePocketbaseDelete<T extends keyof CollectionRecords>(collectio
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const pb = getPb();
       await pb.collection(collection).delete(id);
       return id;
     },

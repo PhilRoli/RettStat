@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { AbsenceCategoryRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -121,6 +121,7 @@ export function AbsencesManagement() {
       };
 
       if (selectedCat) {
+        const pb = getPb();
         await pb.collection("absence_categories").update(selectedCat.id, catData);
 
         toast({
@@ -128,6 +129,7 @@ export function AbsencesManagement() {
           description: t("updateSuccessDescription"),
         });
       } else {
+        const pb = getPb();
         await pb.collection("absence_categories").create(catData);
 
         toast({
@@ -160,6 +162,7 @@ export function AbsencesManagement() {
 
     setSaving(true);
     try {
+      const pb = getPb();
       await pb.collection("absence_categories").delete(deleteItem.id);
 
       toast({
