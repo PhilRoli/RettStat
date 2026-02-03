@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getMessages } from "next-intl/server";
-import { Providers } from "@/components/providers";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import "./globals.css";
 
@@ -42,21 +40,16 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const messages = await getMessages();
-  const locale = "en"; // Default locale - could be from headers/cookies in production
-
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}>
-        <Providers locale={locale} messages={messages}>
-          {children}
-          <OfflineIndicator />
-        </Providers>
+        {children}
+        <OfflineIndicator />
       </body>
     </html>
   );
