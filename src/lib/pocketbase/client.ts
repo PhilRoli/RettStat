@@ -22,11 +22,24 @@ function getPocketBaseUrl(): string {
   return `https://api.${hostname}`;
 }
 
-// Create PocketBase client instance
-export const pb = new PocketBase(getPocketBaseUrl());
+// Lazy client instance - only created on first access (client-side)
+let pbInstance: PocketBase | null = null;
 
-// Disable auto-cancellation for SSR
-pb.autoCancellation(false);
+/**
+ * Get PocketBase client instance (lazy initialization)
+ * Use this instead of direct `pb` import to ensure correct URL on client-side
+ */
+export function getPb(): PocketBase {
+  if (!pbInstance) {
+    pbInstance = new PocketBase(getPocketBaseUrl());
+    pbInstance.autoCancellation(false);
+  }
+  return pbInstance;
+}
+
+// Legacy export for backwards compatibility (use getPb() instead)
+// Note: This will use SSR URL if imported at module level. Use getPb() for correct client-side URL.
+export const pb = getPb();
 
 // Type-safe collections helper
 export const collections = {
