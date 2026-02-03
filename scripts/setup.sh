@@ -192,7 +192,7 @@ print_success "Firewall configured"
 # Create installation directory
 print_step "Step 4: Creating installation directory"
 sudo mkdir -p "$INSTALL_DIR"
-sudo chown $USER:$USER "$INSTALL_DIR"
+sudo chown -R $USER:$USER "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 print_success "Installation directory created: $INSTALL_DIR"
 
@@ -276,7 +276,7 @@ cp repo/docker/docker-compose.prod.yml ./docker-compose.yml
 
 # Copy scripts (use sudo to handle permission issues from previous runs)
 sudo mkdir -p scripts backups logs
-sudo chown $USER:$USER scripts backups logs
+sudo chown -R $USER:$USER scripts backups logs
 cp repo/scripts/*.sh scripts/
 chmod +x scripts/*.sh
 print_success "Docker Compose configured"
