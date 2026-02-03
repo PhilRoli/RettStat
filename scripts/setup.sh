@@ -119,7 +119,7 @@ prompt_password GITHUB_TOKEN "GitHub Personal Access Token (ghp_...)"
 
 echo ""
 echo "DEV ENVIRONMENT"
-read -p "Enable development environment at dev.${DOMAIN}? [y/N]: " enable_dev
+printf "Enable development environment at dev.%s? [y/N]: " "$DOMAIN"; read -r enable_dev </dev/tty
 if [[ "$enable_dev" =~ ^[Yy]$ ]]; then
     DEV_ENABLED="true"
 else
@@ -154,7 +154,7 @@ else
     echo "  SMTP:        Not configured"
 fi
 echo ""
-read -p "Proceed with installation? [Y/n]: " confirm
+printf "Proceed with installation? [Y/n]: "; read -r confirm </dev/tty
 if [[ "$confirm" =~ ^[Nn]$ ]]; then
     print_error "Installation cancelled"
     exit 0
