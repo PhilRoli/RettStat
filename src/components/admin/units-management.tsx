@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ export function UnitsManagement() {
   const fetchUnits = async () => {
     try {
       setLoading(true);
+      const pb = getPb();
       const data = await pb.collection("units").getFullList<UnitRecord>({ sort: "name" });
       setUnits(data);
     } catch (error) {
@@ -164,6 +165,7 @@ export function UnitsManagement() {
           }
         }
 
+        const pb = getPb();
         await pb.collection("units").update(selectedUnit.id, unitData);
 
         toast({
@@ -171,6 +173,7 @@ export function UnitsManagement() {
           description: t("updateSuccessDescription"),
         });
       } else {
+        const pb = getPb();
         await pb.collection("units").create(unitData);
 
         toast({
@@ -208,6 +211,7 @@ export function UnitsManagement() {
     }
 
     try {
+      const pb = getPb();
       await pb.collection("units").delete(unit.id);
 
       toast({

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type {
   NewsRecord,
   NewsAttachmentRecord,
@@ -52,6 +52,7 @@ export function NewsFeed() {
     try {
       const filter = selectedCategory !== "all" ? `category="${selectedCategory}"` : "";
 
+      const pb = getPb();
       const newsItems = await pb.collection("news").getList<NewsRecord>(1, 10, {
         filter,
         sort: "-published_at",
@@ -95,6 +96,7 @@ export function NewsFeed() {
     if (!user) return;
 
     try {
+      const pb = getPb();
       await pb.collection("news_read_status").create({
         news: newsId,
         user: user.id,

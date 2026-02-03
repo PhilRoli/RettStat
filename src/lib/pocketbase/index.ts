@@ -4,7 +4,7 @@
  */
 
 // Client
-export { pb, collections } from "./client";
+export { pb, getPb, collections } from "./client";
 
 // Types
 export type * from "./types";
