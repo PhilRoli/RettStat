@@ -3,7 +3,7 @@
  * Helper functions for authentication operations
  */
 
-import { getPb } from "./client";
+import { pb } from "./client";
 import type { UserRecord, ProfileRecord } from "./types";
 
 export interface AuthResponse {
@@ -15,7 +15,6 @@ export interface AuthResponse {
  * Login with email and password
  */
 export async function login(email: string, password: string): Promise<AuthResponse> {
-  const pb = getPb();
   const authData = await pb.collection("users").authWithPassword(email, password);
   return {
     token: authData.token,
@@ -35,8 +34,6 @@ export async function signup(
     lastName?: string;
   }
 ): Promise<UserRecord> {
-  const pb = getPb();
-
   // Create user account
   const user = await pb.collection("users").create<UserRecord>({
     email,
@@ -62,7 +59,6 @@ export async function signup(
  * Logout current user
  */
 export function logout(): void {
-  const pb = getPb();
   pb.authStore.clear();
 }
 
@@ -70,7 +66,6 @@ export function logout(): void {
  * Request password reset email
  */
 export async function requestPasswordReset(email: string): Promise<void> {
-  const pb = getPb();
   await pb.collection("users").requestPasswordReset(email);
 }
 
@@ -82,7 +77,6 @@ export async function confirmPasswordReset(
   password: string,
   passwordConfirm: string
 ): Promise<void> {
-  const pb = getPb();
   await pb.collection("users").confirmPasswordReset(token, password, passwordConfirm);
 }
 
@@ -90,7 +84,6 @@ export async function confirmPasswordReset(
  * Update email address
  */
 export async function updateEmail(newEmail: string): Promise<void> {
-  const pb = getPb();
   if (!pb.authStore.model?.id) {
     throw new Error("Not authenticated");
   }
@@ -101,7 +94,6 @@ export async function updateEmail(newEmail: string): Promise<void> {
  * Confirm email change with token
  */
 export async function confirmEmailChange(token: string, password: string): Promise<void> {
-  const pb = getPb();
   await pb.collection("users").confirmEmailChange(token, password);
 }
 
@@ -109,7 +101,6 @@ export async function confirmEmailChange(token: string, password: string): Promi
  * Refresh authentication token
  */
 export async function refreshAuth(): Promise<void> {
-  const pb = getPb();
   await pb.collection("users").authRefresh();
 }
 
@@ -117,7 +108,6 @@ export async function refreshAuth(): Promise<void> {
  * Get current authenticated user
  */
 export function getCurrentUser(): UserRecord | null {
-  const pb = getPb();
   return pb.authStore.model as UserRecord | null;
 }
 
@@ -125,7 +115,6 @@ export function getCurrentUser(): UserRecord | null {
  * Check if user is authenticated
  */
 export function isAuthenticated(): boolean {
-  const pb = getPb();
   return pb.authStore.isValid;
 }
 
@@ -133,7 +122,6 @@ export function isAuthenticated(): boolean {
  * Get current auth token
  */
 export function getAuthToken(): string | null {
-  const pb = getPb();
   return pb.authStore.token;
 }
 
@@ -141,7 +129,6 @@ export function getAuthToken(): string | null {
  * Subscribe to auth state changes
  */
 export function onAuthChange(callback: (token: string, model: UserRecord | null) => void) {
-  const pb = getPb();
   return pb.authStore.onChange((token, model) => {
     callback(token, model as UserRecord | null);
   });

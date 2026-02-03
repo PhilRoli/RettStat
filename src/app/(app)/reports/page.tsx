@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, FileSpreadsheet, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getPb } from "@/lib/pocketbase";
+import { pb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +84,6 @@ export default function ReportsPage() {
 
       const filter = `(driver = "${user.id}" || lead = "${user.id}" || student = "${user.id}") && shiftplan.date >= "${startDate}" && shiftplan.date <= "${endDate}"`;
 
-      const pb = getPb();
       return pb.collection("tours").getFullList<TourWithExpand>({
         filter,
         expand: "vehicle.vehicle_type,shiftplan,driver,lead,student",
