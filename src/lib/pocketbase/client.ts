@@ -1,7 +1,29 @@
 import PocketBase from "pocketbase";
 
+// Derive PocketBase URL from the current hostname
+function getPocketBaseUrl(): string {
+  // Server-side: use environment variable if set
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
+  }
+
+  // Client-side: derive from hostname
+  const hostname = window.location.hostname;
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "http://127.0.0.1:8090";
+  }
+
+  if (hostname === "dev.rettstat.at") {
+    return "https://api-dev.rettstat.at";
+  }
+
+  // Default production: rettstat.at -> api.rettstat.at
+  return `https://api.${hostname}`;
+}
+
 // Create PocketBase client instance
-export const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090");
+export const pb = new PocketBase(getPocketBaseUrl());
 
 // Disable auto-cancellation for SSR
 pb.autoCancellation(false);
