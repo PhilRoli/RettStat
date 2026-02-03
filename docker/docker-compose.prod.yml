@@ -9,6 +9,8 @@ services:
     image: traefik:v3.3
     container_name: rettstat-traefik
     restart: unless-stopped
+    environment:
+      DOCKER_API_VERSION: "1.44"
     ports:
       - "80:80"
       - "443:443"
@@ -147,7 +149,7 @@ services:
 
   # Watchtower - Automatic container updates
   watchtower:
-    image: containrrr/watchtower:1.7.1
+    image: containrrr/watchtower:latest
     container_name: rettstat-watchtower
     restart: unless-stopped
     environment:
@@ -156,6 +158,7 @@ services:
       WATCHTOWER_LABEL_ENABLE: "true"
       WATCHTOWER_INCLUDE_RESTARTING: "true"
       WATCHTOWER_ROLLING_RESTART: "true"
+      DOCKER_API_VERSION: "1.44"
       REPO_USER: ${GITHUB_USERNAME}
       REPO_PASS: ${GITHUB_TOKEN}
     volumes:
