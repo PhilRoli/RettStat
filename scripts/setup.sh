@@ -175,8 +175,14 @@ if ! command -v docker &> /dev/null; then
     sudo usermod -aG docker $USER
     rm /tmp/get-docker.sh
     print_success "Docker installed"
+    echo -e "${YELLOW}Note: You've been added to the docker group. This script will use sudo for Docker commands.${NC}"
 else
     print_success "Docker already installed"
+    # Ensure user is in docker group
+    if ! groups $USER | grep -q docker; then
+        sudo usermod -aG docker $USER
+        echo -e "${YELLOW}Note: You've been added to the docker group. This script will use sudo for Docker commands.${NC}"
+    fi
 fi
 
 # Configure firewall
@@ -236,8 +242,8 @@ fi
 # Create .env file
 print_step "Step 6: Creating environment file"
 
-# Generate Traefik auth hash
-TRAEFIK_AUTH=$(htpasswd -nb "$TRAEFIK_USER" "$TRAEFIK_PASS")
+# Generate Traefik auth hash (escape $ for docker-compose)
+TRAEFIK_AUTH=$(htpasswd -nb "$TRAEFIK_USER" "$TRAEFIK_PASS" | sed 's/\$/\$\$/g')
 
 cat > .env <<EOF
 # RettStat Production Environment
@@ -324,7 +330,7 @@ print_success "Cron jobs configured"
 
 # Start services
 print_step "Step 10: Starting services"
-docker compose up -d
+sudo docker compose up -d
 print_success "Services started"
 
 # Wait a moment for containers to start
