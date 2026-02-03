@@ -245,6 +245,9 @@ print_step "Step 6: Creating environment file"
 # Generate Traefik auth hash (escape $ for docker-compose)
 TRAEFIK_AUTH=$(htpasswd -nb "$TRAEFIK_USER" "$TRAEFIK_PASS" | sed 's/\$/\$\$/g')
 
+# Convert username to lowercase for Docker image references
+GITHUB_USERNAME_LOWER=$(echo "$GITHUB_USERNAME" | tr '[:upper:]' '[:lower:]')
+
 cat > .env <<EOF
 # RettStat Production Environment
 # Generated on $(date)
@@ -254,7 +257,7 @@ DOMAIN=${DOMAIN}
 ACME_EMAIL=${ACME_EMAIL}
 
 # GitHub Container Registry
-GITHUB_USERNAME=${GITHUB_USERNAME}
+GITHUB_USERNAME=${GITHUB_USERNAME_LOWER}
 GITHUB_TOKEN=${GITHUB_TOKEN}
 
 # Traefik Dashboard Authentication
