@@ -147,7 +147,7 @@ services:
 
   # WUD (What's Up Docker) - Automatic container updates
   wud:
-    image: fmartinou/whatsupd ocker:latest
+    image: getwud/wud:latest
     container_name: rettstat-wud
     restart: unless-stopped
     environment:
