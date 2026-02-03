@@ -67,7 +67,7 @@ services:
       - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
       - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
       - "traefik.http.routers.app.middlewares=security-headers"
-      - "com.centurylinklabs.watchtower.enable=true"
+      - "wud.watch=true"
 
   # Next.js Application - Dev Environment
   app-dev:
@@ -90,7 +90,7 @@ services:
       - "traefik.http.routers.app-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.app-dev.loadbalancer.server.port=3000"
       - "traefik.http.routers.app-dev.middlewares=security-headers"
-      - "com.centurylinklabs.watchtower.enable=true"
+      - "wud.watch=true"
 
   # PocketBase Backend (API + Database + Storage)
   pocketbase:
@@ -117,7 +117,7 @@ services:
       - "traefik.http.routers.pocketbase.tls.certresolver=letsencrypt"
       - "traefik.http.services.pocketbase.loadbalancer.server.port=8090"
       - "traefik.http.routers.pocketbase.middlewares=security-headers"
-      - "com.centurylinklabs.watchtower.enable=true"
+      - "wud.watch=true"
 
   # PocketBase Backend - Dev Environment (Synced from Prod)
   pocketbase-dev:
@@ -143,25 +143,32 @@ services:
       - "traefik.http.routers.pocketbase-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.pocketbase-dev.loadbalancer.server.port=8090"
       - "traefik.http.routers.pocketbase-dev.middlewares=security-headers"
-      - "com.centurylinklabs.watchtower.enable=true"
+      - "wud.watch=true"
 
-  # Watchtower - Automatic container updates
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: rettstat-watchtower
+  # WUD (What's Up Docker) - Automatic container updates
+  wud:
+    image: fmartinou/whatsupd ocker:latest
+    container_name: rettstat-wud
     restart: unless-stopped
     environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: 300
-      WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_INCLUDE_RESTARTING: "true"
-      WATCHTOWER_ROLLING_RESTART: "true"
-      REPO_USER: ${GITHUB_USERNAME}
-      REPO_PASS: ${GITHUB_TOKEN}
+      WUD_TRIGGER_DOCKER_LOCAL_SOCKET: /var/run/docker.sock
+      WUD_WATCHER_DOCKER_LOCAL_SOCKET: /var/run/docker.sock
+      WUD_REGISTRY_GHCR_LOGIN: ${GITHUB_USERNAME}
+      WUD_REGISTRY_GHCR_TOKEN: ${GITHUB_TOKEN}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - wud-data:/store
+    ports:
+      - "3000:3000"
     networks:
       - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wud.rule=Host(`updates.${DOMAIN}`)"
+      - "traefik.http.routers.wud.entrypoints=websecure"
+      - "traefik.http.routers.wud.tls.certresolver=letsencrypt"
+      - "traefik.http.services.wud.loadbalancer.server.port=3000"
+      - "traefik.http.routers.wud.middlewares=traefik-auth"
 
 networks:
   web:
@@ -175,3 +182,4 @@ volumes:
   pb-public:
   pb-data-dev:
   pb-public-dev:
+  wud-data:
