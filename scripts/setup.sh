@@ -9,6 +9,9 @@
 
 set -e
 
+# Script version
+SCRIPT_VERSION="1.1.10"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,6 +26,7 @@ REPO_URL="https://github.com/PhilRoli/rettstat.git"
 print_header() {
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}                    RettStat Setup Script${NC}"
+    echo -e "${GREEN}                         v${SCRIPT_VERSION}${NC}"
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
     echo ""
 }
@@ -333,6 +337,11 @@ print_success "Cron jobs configured"
 
 # Start services
 print_step "Step 10: Starting services"
+
+# Login to GitHub Container Registry
+echo "$GITHUB_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME_LOWER" --password-stdin
+print_success "Logged in to GitHub Container Registry"
+
 sudo docker compose up -d
 print_success "Services started"
 
