@@ -7,6 +7,10 @@ import { AppShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/toaster";
 import { NotificationPermissionBanner } from "@/components/notifications";
 import { OfflineIndicator } from "@/components/offline";
+import { Providers } from "@/components/providers";
+
+// Import messages directly for the app
+import enMessages from "@/i18n/messages/en.json";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,11 +38,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AppShell>
-      <OfflineIndicator />
-      {children}
-      <Toaster />
-      <NotificationPermissionBanner />
-    </AppShell>
+    <Providers locale="en" messages={enMessages}>
+      <AppShell>
+        <OfflineIndicator />
+        {children}
+        <Toaster />
+        <NotificationPermissionBanner />
+      </AppShell>
+    </Providers>
   );
 }
