@@ -40,26 +40,30 @@ print_error() {
 }
 
 prompt() {
-    local var_name=$1
-    local prompt_text=$2
-    local default_value=$3
+    local var_name="$1"
+    local prompt_text="$2"
+    local default_value="$3"
+    local input
     
     if [ -n "$default_value" ]; then
-        read -p "$prompt_text [$default_value]: " input
-        eval "$var_name=\"${input:-$default_value}\""
+        read -r -p "$prompt_text [$default_value]: " input
+        if [ -z "$input" ]; then
+            input="$default_value"
+        fi
     else
-        read -p "$prompt_text: " input
-        eval "$var_name=\"$input\""
+        read -r -p "$prompt_text: " input
     fi
+    eval "$var_name=\"\$input\""
 }
 
 prompt_password() {
-    local var_name=$1
-    local prompt_text=$2
+    local var_name="$1"
+    local prompt_text="$2"
+    local input
     
-    read -s -p "$prompt_text: " input
+    read -r -s -p "$prompt_text: " input
     echo ""
-    eval "$var_name=\"$input\""
+    eval "$var_name=\"\$input\""
 }
 
 # Main script
