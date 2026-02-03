@@ -274,11 +274,11 @@ print_success "Environment file created"
 print_step "Step 7: Setting up Docker Compose"
 cp repo/docker/docker-compose.prod.yml ./docker-compose.yml
 
-# Copy scripts
-mkdir -p scripts
+# Copy scripts (use sudo to handle permission issues from previous runs)
+sudo mkdir -p scripts backups logs
+sudo chown $USER:$USER scripts backups logs
 cp repo/scripts/*.sh scripts/
 chmod +x scripts/*.sh
-mkdir -p backups logs
 print_success "Docker Compose configured"
 
 # Create systemd service
