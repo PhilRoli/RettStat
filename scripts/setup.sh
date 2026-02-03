@@ -46,12 +46,14 @@ prompt() {
     local input
     
     if [ -n "$default_value" ]; then
-        read -r -p "$prompt_text [$default_value]: " input
+        printf "%s [%s]: " "$prompt_text" "$default_value"
+        read -r input </dev/tty
         if [ -z "$input" ]; then
             input="$default_value"
         fi
     else
-        read -r -p "$prompt_text: " input
+        printf "%s: " "$prompt_text"
+        read -r input </dev/tty
     fi
     eval "$var_name=\"\$input\""
 }
@@ -61,7 +63,8 @@ prompt_password() {
     local prompt_text="$2"
     local input
     
-    read -r -s -p "$prompt_text: " input
+    printf "%s: " "$prompt_text"
+    read -r -s input </dev/tty
     echo ""
     eval "$var_name=\"\$input\""
 }
