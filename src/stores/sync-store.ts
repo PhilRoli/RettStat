@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { db, addToSyncQueue, getSyncQueueItems, removeSyncQueueItem } from "@/lib/db";
 import { getPb } from "@/lib/pocketbase";
 
 interface SyncState {
@@ -30,6 +29,12 @@ const getStorage = () => {
   return localStorage;
 };
 
+// Lazy import db functions to avoid SSR issues with IndexedDB
+async function getDbFunctions() {
+  const { db, getSyncQueueItems, removeSyncQueueItem } = await import("@/lib/db");
+  return { db, getSyncQueueItems, removeSyncQueueItem };
+}
+
 export const useSyncStore = create<SyncState>()(
   persist(
     (set, get) => ({
@@ -44,17 +49,21 @@ export const useSyncStore = create<SyncState>()(
       setLastSynced: (date) => set({ lastSyncedAt: date }),
 
       checkPendingChanges: async () => {
+        if (typeof window === "undefined") return;
+        const { getSyncQueueItems } = await getDbFunctions();
         const items = await getSyncQueueItems();
         set({ pendingChanges: items.length });
       },
 
       syncNow: async () => {
+        if (typeof window === "undefined") return;
         const { isOnline, isSyncing } = get();
         if (!isOnline || isSyncing) return;
 
         set({ isSyncing: true });
 
         try {
+          const { getSyncQueueItems, removeSyncQueueItem } = await getDbFunctions();
           const items = await getSyncQueueItems();
 
           for (const item of items) {
@@ -109,6 +118,8 @@ export function useOfflineData<T extends Record<string, unknown>>(
   tableName: "users" | "shifts" | "events" | "news"
 ) {
   const save = async (data: T & { id: string }) => {
+    if (typeof window === "undefined") return;
+    const { db, addToSyncQueue } = await import("@/lib/db");
     const table = db[tableName];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await table.put(data as any);
@@ -122,6 +133,8 @@ export function useOfflineData<T extends Record<string, unknown>>(
   };
 
   const remove = async (id: string) => {
+    if (typeof window === "undefined") return;
+    const { db, addToSyncQueue } = await import("@/lib/db");
     const table = db[tableName];
     await table.delete(id);
     await addToSyncQueue(tableName, "delete", id, {});
