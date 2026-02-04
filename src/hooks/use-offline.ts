@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLiveQuery } from "dexie-react-hooks";
 import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import {
-  offlineDb,
-  clearOldCache,
-  type CachedEvent,
-  type CachedEventPosition,
-} from "@/lib/offline";
+import type { CachedEvent, CachedEventPosition } from "@/lib/offline";
 import type {
   EventRecord,
   EventPositionRecord,
@@ -30,20 +24,51 @@ interface PositionWithExpand extends EventPositionRecord {
   };
 }
 
+// Lazy load offline database functions to avoid SSR issues with IndexedDB
+async function getOfflineDb() {
+  const { offlineDb } = await import("@/lib/offline");
+  return offlineDb;
+}
+
+async function getClearOldCache() {
+  const { clearOldCache } = await import("@/lib/offline");
+  return clearOldCache;
+}
+
 export function useOfflineEvents() {
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
   const queryClient = useQueryClient();
+  const [cachedEvents, setCachedEvents] = useState<CachedEvent[]>([]);
 
-  // Get cached events from IndexedDB
-  const cachedEvents = useLiveQuery(async () => {
-    const now = new Date().toISOString();
-    return offlineDb.events.where("end_date").aboveOrEqual(now).sortBy("start_date");
+  // Load cached events from IndexedDB on mount (client-side only)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let isMounted = true;
+    const loadCached = async () => {
+      try {
+        const db = await getOfflineDb();
+        const now = new Date().toISOString();
+        const events = await db.events.where("end_date").aboveOrEqual(now).sortBy("start_date");
+        if (isMounted) {
+          setCachedEvents(events);
+        }
+      } catch (error) {
+        console.error("Failed to load cached events:", error);
+      }
+    };
+    loadCached();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Get cached positions for a specific event
   const getCachedPositions = useCallback(async (eventId: string) => {
-    return offlineDb.positions.where("event_id").equals(eventId).toArray();
+    const db = await getOfflineDb();
+    return db.positions.where("event_id").equals(eventId).toArray();
   }, []);
 
   // Sync events from server when online
@@ -84,7 +109,8 @@ export function useOfflineEvents() {
       }
 
       // Clear old cache
-      await clearOldCache();
+      const clearCache = await getClearOldCache();
+      await clearCache();
 
       return userEvents;
     },
@@ -105,6 +131,7 @@ export function useOfflineEvents() {
 }
 
 async function cacheEvents(events: EventWithExpand[]) {
+  const db = await getOfflineDb();
   const cachedEvents: CachedEvent[] = events.map((e) => ({
     id: e.id,
     name: e.name,
@@ -118,11 +145,12 @@ async function cacheEvents(events: EventWithExpand[]) {
     synced_at: new Date().toISOString(),
   }));
 
-  await offlineDb.events.bulkPut(cachedEvents);
+  await db.events.bulkPut(cachedEvents);
 }
 
 async function cacheEventPositions(eventId: string, userId: string) {
   try {
+    const db = await getOfflineDb();
     const positions = await getPb()
       .collection("event_positions")
       .getFullList<PositionWithExpand>({
@@ -145,7 +173,7 @@ async function cacheEventPositions(eventId: string, userId: string) {
       };
     });
 
-    await offlineDb.positions.bulkPut(cachedPositions);
+    await db.positions.bulkPut(cachedPositions);
   } catch (error) {
     console.error("Failed to cache positions for event:", eventId, error);
   }
@@ -176,7 +204,8 @@ export function useOfflineMutation() {
         }
       } else {
         // Queue for later when offline
-        await offlineDb.mutations.add({
+        const db = await getOfflineDb();
+        await db.mutations.add({
           type,
           collection,
           record_id: recordId,
@@ -197,7 +226,8 @@ export function useSyncPendingMutations() {
   const isOnline = useOnlineStatus();
 
   const syncPending = useCallback(async () => {
-    const pending = await offlineDb.mutations.toArray();
+    const db = await getOfflineDb();
+    const pending = await db.mutations.toArray();
 
     for (const mutation of pending) {
       try {
@@ -220,7 +250,7 @@ export function useSyncPendingMutations() {
         }
         // Remove from queue after successful sync
         if (mutation.id) {
-          await offlineDb.mutations.delete(mutation.id);
+          await db.mutations.delete(mutation.id);
         }
       } catch (error) {
         console.error("Failed to sync mutation:", mutation, error);
