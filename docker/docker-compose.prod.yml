@@ -159,9 +159,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - wud-data:/store
-    ports:
-      - "3000:3000"
     networks:
+      - web
       - backend
     labels:
       - "traefik.enable=true"
