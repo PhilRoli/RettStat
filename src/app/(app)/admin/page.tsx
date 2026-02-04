@@ -1,17 +1,68 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UsersManagement } from "@/components/admin/users-management";
-import { VehiclesManagement } from "@/components/admin/vehicles-management";
-import { UnitsManagement } from "@/components/admin/units-management";
-import { QualificationsManagement } from "@/components/admin/qualifications-management";
-import { AssignmentsManagement } from "@/components/admin/assignments-management";
-import { AbsencesManagement } from "@/components/admin/absences-management";
-import { NewsManagement } from "@/components/admin/news-management";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+function TabSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-96 w-full" />
+    </div>
+  );
+}
+
+const UsersManagement = dynamic(
+  () => import("@/components/admin/users-management").then((m) => ({ default: m.UsersManagement })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const VehiclesManagement = dynamic(
+  () =>
+    import("@/components/admin/vehicles-management").then((m) => ({
+      default: m.VehiclesManagement,
+    })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const UnitsManagement = dynamic(
+  () => import("@/components/admin/units-management").then((m) => ({ default: m.UnitsManagement })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const QualificationsManagement = dynamic(
+  () =>
+    import("@/components/admin/qualifications-management").then((m) => ({
+      default: m.QualificationsManagement,
+    })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const AssignmentsManagement = dynamic(
+  () =>
+    import("@/components/admin/assignments-management").then((m) => ({
+      default: m.AssignmentsManagement,
+    })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const AbsencesManagement = dynamic(
+  () =>
+    import("@/components/admin/absences-management").then((m) => ({
+      default: m.AbsencesManagement,
+    })),
+  { loading: () => <TabSkeleton /> }
+);
+
+const NewsManagement = dynamic(
+  () => import("@/components/admin/news-management").then((m) => ({ default: m.NewsManagement })),
+  { loading: () => <TabSkeleton /> }
+);
 
 export default function AdminPage() {
   const t = useTranslations("admin");

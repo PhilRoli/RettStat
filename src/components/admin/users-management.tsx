@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
@@ -53,9 +53,21 @@ export function UsersManagement() {
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithUnits[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserWithUnits[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const query = searchQuery.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.first_name?.toLowerCase().includes(query) ||
+        user.last_name?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query) ||
+        user.service_id?.toLowerCase().includes(query) ||
+        user.phone?.toLowerCase().includes(query)
+    );
+  }, [searchQuery, users]);
   const [selectedUser, setSelectedUser] = useState<UserWithUnits | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
@@ -74,24 +86,6 @@ export function UsersManagement() {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredUsers(users);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredUsers(
-        users.filter(
-          (user) =>
-            user.first_name?.toLowerCase().includes(query) ||
-            user.last_name?.toLowerCase().includes(query) ||
-            user.email?.toLowerCase().includes(query) ||
-            user.service_id?.toLowerCase().includes(query) ||
-            user.phone?.toLowerCase().includes(query)
-        )
-      );
-    }
-  }, [searchQuery, users]);
 
   const fetchUsers = async () => {
     try {
@@ -131,7 +125,6 @@ export function UsersManagement() {
       }));
 
       setUsers(usersWithUnits);
-      setFilteredUsers(usersWithUnits);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
