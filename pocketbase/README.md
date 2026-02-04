@@ -1,6 +1,51 @@
 # PocketBase Setup Guide
 
-## Quick Start
+## Quick Start (Docker - Recommended)
+
+### 1. Configure Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set your preferred admin credentials (these will be created automatically):
+
+```env
+PB_ADMIN_EMAIL=admin@rettstat.local
+PB_ADMIN_PASSWORD=your-secure-password
+```
+
+### 2. Start PocketBase with Docker
+
+```bash
+cd docker
+docker compose up -d
+```
+
+The init container will automatically:
+
+- Create all 23 collections from the schema
+- Set up the database structure
+
+### 3. Create Admin Account
+
+Navigate to **http://127.0.0.1:8090/_/** and create your admin account on first access.
+
+> **Note:** Due to PocketBase security restrictions, the first admin account must be created via the UI. Subsequent automation can use the Admin API.
+
+### 4. Access Admin UI
+
+After creating your account, you can manage:
+
+- Collections and records
+- API rules and permissions
+- Settings and integrations
+
+---
+
+## Manual Setup (Without Docker)
 
 ### 1. Start PocketBase Server
 
@@ -15,11 +60,11 @@ The admin UI will be available at: **http://127.0.0.1:8090/_/**
 
 On first run, navigate to http://127.0.0.1:8090/_/ and create your admin account.
 
-### 3. Create Collections
+### 3. Create Collections Manually
 
 Use the schema defined in `src/lib/pocketbase/schema.ts` to create collections through the Admin UI.
 
-**Required Collections (24 total):**
+**Required Collections (23 total):**
 
 - **Core**: users (built-in), profiles, units
 - **Categories**: vehicle_types, assignment_categories, qualification_categories, absence_categories, tour_types
@@ -30,7 +75,9 @@ Use the schema defined in `src/lib/pocketbase/schema.ts` to create collections t
 - **News**: news, news_attachments, news_read_status
 - **Utilities**: quick_links
 
-### 4. Configure Collection Rules
+---
+
+## Collection Access Rules
 
 Each collection needs access rules. Example for `profiles`:
 

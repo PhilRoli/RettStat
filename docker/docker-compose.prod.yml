@@ -102,6 +102,10 @@ services:
       - pb-data:/pb/pb_data
       - pb-public:/pb/pb_public
       - ./backups:/pb/pb_backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
     networks:
       - web
       - backend
@@ -120,6 +124,27 @@ services:
       - "traefik.http.routers.pocketbase.middlewares=security-headers@docker"
       - "wud.watch=true"
 
+  # PocketBase Initialization (runs once on first startup)
+  pocketbase-init:
+    build:
+      context: ./pocketbase-init
+      dockerfile: Dockerfile
+    container_name: rettstat-pocketbase-init
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    volumes:
+      - pb-data:/pb_data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PB_HOST=pocketbase
+      - PB_PORT=8090
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+    networks:
+      - backend
+    restart: "no"
+
   # PocketBase Backend - Dev Environment (Synced from Prod)
   pocketbase-dev:
     image: ghcr.io/muchobien/pocketbase:latest
@@ -128,6 +153,10 @@ services:
     volumes:
       - pb-data-dev:/pb/pb_data
       - pb-public-dev:/pb/pb_public
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL_DEV:-${PB_ADMIN_EMAIL}}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD_DEV:-${PB_ADMIN_PASSWORD}}
     networks:
       - web
       - backend
@@ -145,6 +174,27 @@ services:
       - "traefik.http.services.pocketbase-dev.loadbalancer.server.port=8090"
       - "traefik.http.routers.pocketbase-dev.middlewares=security-headers@docker"
       - "wud.watch=true"
+
+  # PocketBase Initialization - Dev Environment
+  pocketbase-init-dev:
+    build:
+      context: ./pocketbase-init
+      dockerfile: Dockerfile
+    container_name: rettstat-pocketbase-init-dev
+    depends_on:
+      pocketbase-dev:
+        condition: service_healthy
+    volumes:
+      - pb-data-dev:/pb_data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PB_HOST=pocketbase-dev
+      - PB_PORT=8090
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL_DEV:-${PB_ADMIN_EMAIL}}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD_DEV:-${PB_ADMIN_PASSWORD}}
+    networks:
+      - backend
+    restart: "no"
 
   # WUD (What's Up Docker) - Automatic container updates
   wud:
