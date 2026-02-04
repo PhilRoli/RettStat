@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { NewsRecord, NewsAttachmentRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -94,11 +94,11 @@ export function NewsManagement() {
       setLoading(true);
 
       const [newsRes, unitsRes] = await Promise.all([
-        pb.collection("news").getFullList<NewsWithAttachments>({
+        getPb().collection("news").getFullList<NewsWithAttachments>({
           sort: "-created",
           expand: "news_attachments(news)",
         }),
-        pb.collection("units").getFullList<UnitRecord>({
+        getPb().collection("units").getFullList<UnitRecord>({
           sort: "name",
         }),
       ]);
@@ -156,18 +156,18 @@ export function NewsManagement() {
         unit: formData.unit || null,
         published_at: formData.is_published ? new Date().toISOString() : null,
         is_pinned: formData.is_pinned,
-        author: pb.authStore.record?.id,
+        author: getPb().authStore.record?.id,
       };
 
       if (selectedNews) {
-        await pb.collection("news").update(selectedNews.id, newsData);
+        await getPb().collection("news").update(selectedNews.id, newsData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        await pb.collection("news").create(newsData);
+        await getPb().collection("news").create(newsData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -203,10 +203,10 @@ export function NewsManagement() {
       const newsItem = news.find((n) => n.id === deleteNewsId);
       const newsAttachments = newsItem?.expand?.["news_attachments(news)"] || [];
       for (const attachment of newsAttachments) {
-        await pb.collection("news_attachments").delete(attachment.id);
+        await getPb().collection("news_attachments").delete(attachment.id);
       }
 
-      await pb.collection("news").delete(deleteNewsId);
+      await getPb().collection("news").delete(deleteNewsId);
 
       toast({
         title: t("deleteSuccessTitle"),
@@ -274,7 +274,7 @@ export function NewsManagement() {
       formData.append("filename", uploadFile.name);
       formData.append("file_size", uploadFile.size.toString());
 
-      await pb.collection("news_attachments").create(formData);
+      await getPb().collection("news_attachments").create(formData);
 
       toast({
         title: t("uploadSuccessTitle"),
@@ -305,7 +305,7 @@ export function NewsManagement() {
 
     setSaving(true);
     try {
-      await pb.collection("news_attachments").delete(deleteAttachmentId);
+      await getPb().collection("news_attachments").delete(deleteAttachmentId);
 
       toast({
         title: t("deleteAttachmentSuccessTitle"),

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { pb, login, logout, onAuthChange } from "@/lib/pocketbase";
+import { getPb, login, logout, onAuthChange } from "@/lib/pocketbase";
 import { useAuthStore } from "@/stores/auth-store";
 import type { UserRecord, ProfileRecord } from "@/lib/pocketbase/types";
 
@@ -20,14 +20,14 @@ export function useAuth() {
 
   useEffect(() => {
     // Get initial auth state
-    const currentUser = pb.authStore.model as UserRecord | null;
+    const currentUser = getPb().authStore.model as UserRecord | null;
     setUser(currentUser);
 
     // Fetch user profile if authenticated
     const loadProfile = async () => {
       if (currentUser?.id) {
         try {
-          const profileData = await pb
+          const profileData = await getPb()
             .collection("profiles")
             .getFirstListItem<ProfileRecord>(`user="${currentUser.id}"`);
 
@@ -50,7 +50,7 @@ export function useAuth() {
       // Fetch user profile if authenticated
       if (authUser?.id) {
         try {
-          const profileData = await pb
+          const profileData = await getPb()
             .collection("profiles")
             .getFirstListItem<ProfileRecord>(`user="${authUser.id}"`);
 
@@ -76,7 +76,7 @@ export function useAuth() {
       setUser(authData.record);
 
       // Fetch profile
-      const profileData = await pb
+      const profileData = await getPb()
         .collection("profiles")
         .getFirstListItem<ProfileRecord>(`user="${authData.record.id}"`);
 
@@ -117,14 +117,14 @@ export function useAuth() {
 
   const updatePassword = async (newPassword: string) => {
     if (!user?.id) throw new Error("Not authenticated");
-    await pb.collection("users").update(user.id, { password: newPassword });
+    await getPb().collection("users").update(user.id, { password: newPassword });
   };
 
   const refreshProfile = async () => {
     if (!user?.id) return;
 
     try {
-      const profileData = await pb
+      const profileData = await getPb()
         .collection("profiles")
         .getFirstListItem<ProfileRecord>(`user="${user.id}"`);
 
@@ -138,7 +138,7 @@ export function useAuth() {
     user,
     profile,
     isLoading,
-    isAuthenticated: !!user && pb.authStore.isValid,
+    isAuthenticated: !!user && getPb().authStore.isValid,
     signIn,
     signUp,
     signOut,

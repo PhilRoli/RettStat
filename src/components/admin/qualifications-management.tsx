@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { QualificationRecord, QualificationCategoryRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -82,11 +82,11 @@ export function QualificationsManagement() {
       setLoading(true);
 
       const [qualsRes, catsRes] = await Promise.all([
-        pb.collection("qualifications").getFullList<QualificationWithCategory>({
+        getPb().collection("qualifications").getFullList<QualificationWithCategory>({
           sort: "name",
           expand: "category",
         }),
-        pb.collection("qualification_categories").getFullList<QualificationCategoryRecord>({
+        getPb().collection("qualification_categories").getFullList<QualificationCategoryRecord>({
           sort: "sort_order,name",
         }),
       ]);
@@ -140,14 +140,14 @@ export function QualificationsManagement() {
       };
 
       if (selectedQual) {
-        await pb.collection("qualifications").update(selectedQual.id, qualData);
+        await getPb().collection("qualifications").update(selectedQual.id, qualData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        await pb.collection("qualifications").create(qualData);
+        await getPb().collection("qualifications").create(qualData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -201,14 +201,14 @@ export function QualificationsManagement() {
       };
 
       if (selectedCat) {
-        await pb.collection("qualification_categories").update(selectedCat.id, catData);
+        await getPb().collection("qualification_categories").update(selectedCat.id, catData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        await pb.collection("qualification_categories").create(catData);
+        await getPb().collection("qualification_categories").create(catData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -242,9 +242,9 @@ export function QualificationsManagement() {
 
     try {
       if (deleteItem.type === "qual") {
-        await pb.collection("qualifications").delete(deleteItem.id);
+        await getPb().collection("qualifications").delete(deleteItem.id);
       } else {
-        await pb.collection("qualification_categories").delete(deleteItem.id);
+        await getPb().collection("qualification_categories").delete(deleteItem.id);
       }
 
       toast({

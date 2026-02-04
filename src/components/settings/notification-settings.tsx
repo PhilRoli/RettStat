@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationToggle } from "@/components/notifications";
 
@@ -56,7 +56,7 @@ export function NotificationSettings() {
     try {
       if (!profile?.id) throw new Error("Profile not found");
 
-      await pb.collection("profiles").update(profile.id, {
+      await getPb().collection("profiles").update(profile.id, {
         notification_preferences: preferences,
       });
 

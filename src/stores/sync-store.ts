@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { db, addToSyncQueue, getSyncQueueItems, removeSyncQueueItem } from "@/lib/db";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 
 interface SyncState {
   isOnline: boolean;
@@ -47,7 +47,7 @@ export const useSyncStore = create<SyncState>()(
 
           for (const item of items) {
             try {
-              const collection = pb.collection(item.table);
+              const collection = getPb().collection(item.table);
 
               switch (item.operation) {
                 case "insert":

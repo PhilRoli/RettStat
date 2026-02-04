@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { TourRecord, VehicleRecord, TourTypeRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +39,13 @@ export function NextShifts() {
     try {
       const now = new Date().toISOString();
 
-      const result = await pb.collection("tours").getList<TourWithRelations>(1, 3, {
-        filter: `end_time>="${now}" && (driver="${user?.id}" || lead="${user?.id}" || student="${user?.id}")`,
-        sort: "start_time",
-        expand: "shiftplan.unit,vehicle,tour_type",
-      });
+      const result = await getPb()
+        .collection("tours")
+        .getList<TourWithRelations>(1, 3, {
+          filter: `end_time>="${now}" && (driver="${user?.id}" || lead="${user?.id}" || student="${user?.id}")`,
+          sort: "start_time",
+          expand: "shiftplan.unit,vehicle,tour_type",
+        });
 
       setTours(result.items);
     } catch (error) {

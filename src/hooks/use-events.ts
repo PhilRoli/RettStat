@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type {
   EventRecord,
   EventCategoryRecord,
@@ -59,7 +59,7 @@ export function useEvents(options?: { status?: string; upcoming?: boolean; unitI
         filter = filters.join(" && ");
       }
 
-      const events = await pb.collection("events").getFullList<EventWithExpand>({
+      const events = await getPb().collection("events").getFullList<EventWithExpand>({
         filter,
         expand: "category,unit",
         sort: "start_date",
@@ -77,7 +77,7 @@ export function useEvent(eventId: string | undefined) {
     queryFn: async () => {
       if (!eventId) return null;
 
-      const event = await pb.collection("events").getOne<EventWithExpand>(eventId, {
+      const event = await getPb().collection("events").getOne<EventWithExpand>(eventId, {
         expand: "category,unit,created_by",
       });
 
@@ -95,7 +95,7 @@ export function useEventPositions(eventId: string | undefined) {
       if (!eventId) return [];
 
       // Fetch positions
-      const positions = await pb
+      const positions = await getPb()
         .collection("event_positions")
         .getFullList<EventPositionWithExpand>({
           filter: `event = "${eventId}"`,
@@ -104,7 +104,7 @@ export function useEventPositions(eventId: string | undefined) {
         });
 
       // Fetch registrations for these positions
-      const registrations = await pb
+      const registrations = await getPb()
         .collection("event_registrations")
         .getFullList<EventRegistrationWithExpand>({
           filter: `event = "${eventId}"`,
@@ -126,7 +126,7 @@ export function useEventCategories() {
   return useQuery({
     queryKey: ["event-categories"],
     queryFn: async () => {
-      return pb.collection("event_categories").getFullList<EventCategoryRecord>({
+      return getPb().collection("event_categories").getFullList<EventCategoryRecord>({
         sort: "name",
       });
     },
@@ -139,7 +139,7 @@ export function useCreateEvent() {
 
   return useMutation({
     mutationFn: async (data: Partial<EventRecord>) => {
-      return pb.collection("events").create<EventRecord>(data);
+      return getPb().collection("events").create<EventRecord>(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -152,7 +152,7 @@ export function useUpdateEvent() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EventRecord> }) => {
-      return pb.collection("events").update<EventRecord>(id, data);
+      return getPb().collection("events").update<EventRecord>(id, data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -166,7 +166,7 @@ export function useDeleteEvent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return pb.collection("events").delete(id);
+      return getPb().collection("events").delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -180,7 +180,7 @@ export function useCreatePosition() {
 
   return useMutation({
     mutationFn: async (data: Partial<EventPositionRecord>) => {
-      return pb.collection("event_positions").create<EventPositionRecord>(data);
+      return getPb().collection("event_positions").create<EventPositionRecord>(data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["event-positions", variables.event] });
@@ -193,7 +193,7 @@ export function useUpdatePosition() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EventPositionRecord> }) => {
-      return pb.collection("event_positions").update<EventPositionRecord>(id, data);
+      return getPb().collection("event_positions").update<EventPositionRecord>(id, data);
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-positions", result.event] });
@@ -206,7 +206,7 @@ export function useDeletePosition() {
 
   return useMutation({
     mutationFn: async ({ id, eventId }: { id: string; eventId: string }) => {
-      await pb.collection("event_positions").delete(id);
+      await getPb().collection("event_positions").delete(id);
       return eventId;
     },
     onSuccess: (eventId) => {
@@ -221,11 +221,13 @@ export function useCreateRegistration() {
 
   return useMutation({
     mutationFn: async (data: Partial<EventRegistrationRecord>) => {
-      return pb.collection("event_registrations").create<EventRegistrationRecord>({
-        ...data,
-        registered_at: new Date().toISOString(),
-        status: "confirmed", // Admin assigns directly as confirmed
-      });
+      return getPb()
+        .collection("event_registrations")
+        .create<EventRegistrationRecord>({
+          ...data,
+          registered_at: new Date().toISOString(),
+          status: "confirmed", // Admin assigns directly as confirmed
+        });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["event-positions", variables.event] });
@@ -238,7 +240,7 @@ export function useDeleteRegistration() {
 
   return useMutation({
     mutationFn: async ({ id, eventId }: { id: string; eventId: string }) => {
-      await pb.collection("event_registrations").delete(id);
+      await getPb().collection("event_registrations").delete(id);
       return eventId;
     },
     onSuccess: (eventId) => {

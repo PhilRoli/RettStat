@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type {
   ShiftplanRecord,
   TourRecord,
@@ -47,19 +47,23 @@ export function useShiftplans({ unitId, month, year }: UseShiftplansParams) {
     queryFn: async () => {
       if (!unitId) return [];
 
-      const shiftplans = await pb.collection("shiftplans").getFullList<ShiftplanRecord>({
-        filter: `unit="${unitId}" && date>="${startDate.toISOString().split("T")[0]}" && date<="${endDate.toISOString().split("T")[0]}"`,
-        expand: "unit,shift_lead",
-        sort: "date",
-      });
+      const shiftplans = await getPb()
+        .collection("shiftplans")
+        .getFullList<ShiftplanRecord>({
+          filter: `unit="${unitId}" && date>="${startDate.toISOString().split("T")[0]}" && date<="${endDate.toISOString().split("T")[0]}"`,
+          expand: "unit,shift_lead",
+          sort: "date",
+        });
 
       const shiftplansWithTours = await Promise.all(
         shiftplans.map(async (shiftplan) => {
-          const tours = await pb.collection("tours").getFullList<TourRecord>({
-            filter: `shiftplan="${shiftplan.id}"`,
-            expand: "vehicle,driver,lead,student,tour_type",
-            sort: "start_time",
-          });
+          const tours = await getPb()
+            .collection("tours")
+            .getFullList<TourRecord>({
+              filter: `shiftplan="${shiftplan.id}"`,
+              expand: "vehicle,driver,lead,student,tour_type",
+              sort: "start_time",
+            });
 
           // Extract expanded data for each tour
           const toursWithRelations: TourWithRelations[] = tours.map((tour) => {
@@ -97,17 +101,21 @@ export function useShiftplans({ unitId, month, year }: UseShiftplansParams) {
   useEffect(() => {
     if (!unitId) return;
 
-    pb.collection("shiftplans").subscribe("*", () => {
-      queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
-    });
+    getPb()
+      .collection("shiftplans")
+      .subscribe("*", () => {
+        queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
+      });
 
-    pb.collection("tours").subscribe("*", () => {
-      queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
-    });
+    getPb()
+      .collection("tours")
+      .subscribe("*", () => {
+        queryClient.invalidateQueries({ queryKey: ["shiftplans", unitId, month, year] });
+      });
 
     return () => {
-      pb.collection("shiftplans").unsubscribe("*");
-      pb.collection("tours").unsubscribe("*");
+      getPb().collection("shiftplans").unsubscribe("*");
+      getPb().collection("tours").unsubscribe("*");
     };
   }, [unitId, month, year, queryClient]);
 

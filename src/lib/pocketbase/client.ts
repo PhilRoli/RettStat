@@ -37,9 +37,6 @@ export function getPb(): PocketBase {
   return pbInstance;
 }
 
-// Legacy export for backwards compatibility (deprecated - use getPb() instead)
-export const pb = getPb();
-
 // Type-safe collections helper
 export const collections = {
   users: "users",

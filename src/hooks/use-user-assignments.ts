@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "./use-auth";
 import type { UserAssignmentRecord, UnitRecord } from "@/lib/pocketbase/types";
 
@@ -11,11 +11,13 @@ export function useUserAssignments() {
     queryKey: ["user-assignments", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      return pb.collection("user_assignments").getFullList<UserAssignmentRecord>({
-        filter: `user="${user.id}"`,
-        expand: "assignment,assignment.unit",
-        sort: "-created",
-      });
+      return getPb()
+        .collection("user_assignments")
+        .getFullList<UserAssignmentRecord>({
+          filter: `user="${user.id}"`,
+          expand: "assignment,assignment.unit",
+          sort: "-created",
+        });
     },
     enabled: !!user?.id,
   });
@@ -30,7 +32,7 @@ export function useUserUnits() {
       if (!user?.id) return [];
 
       // Get all assignments for the user with expanded unit data
-      const assignments = await pb
+      const assignments = await getPb()
         .collection("user_assignments")
         .getFullList<
           UserAssignmentRecord & {
@@ -54,13 +56,13 @@ export function useUserUnits() {
       // If no units from assignments, try getting units directly where user has profile
       if (unitMap.size === 0) {
         // Fallback: get all units the user's profile is associated with
-        const profile = await pb
+        const profile = await getPb()
           .collection("profiles")
           .getFirstListItem<{ unit?: string }>(`user="${user.id}"`, { expand: "unit" })
           .catch(() => null);
 
         if (profile?.unit) {
-          const unit = await pb
+          const unit = await getPb()
             .collection("units")
             .getOne<UnitRecord>(profile.unit)
             .catch(() => null);
@@ -72,7 +74,7 @@ export function useUserUnits() {
 
       // If still no units, get all units as fallback (for development)
       if (unitMap.size === 0) {
-        const allUnits = await pb.collection("units").getFullList<UnitRecord>({
+        const allUnits = await getPb().collection("units").getFullList<UnitRecord>({
           sort: "name",
         });
         return allUnits;

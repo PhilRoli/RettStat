@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import type { TourRecord, VehicleRecord, VehicleTypeRecord } from "@/lib/pocketbase/types";
 
@@ -60,14 +60,18 @@ export function useStatistics(year: number) {
       const endDate = `${year}-12-31`;
 
       // Fetch vehicle types for colors and names
-      const vehicleTypes = await pb.collection("vehicle_types").getFullList<VehicleTypeRecord>();
+      const vehicleTypes = await getPb()
+        .collection("vehicle_types")
+        .getFullList<VehicleTypeRecord>();
 
       // Fetch tours where user is driver, lead, or student
-      const tours = await pb.collection("tours").getFullList<TourWithExpand>({
-        filter: `(driver = "${profile.id}" || lead = "${profile.id}" || student = "${profile.id}") && shiftplan.date >= "${startDate}" && shiftplan.date <= "${endDate}"`,
-        expand: "vehicle.vehicle_type,shiftplan",
-        sort: "shiftplan.date",
-      });
+      const tours = await getPb()
+        .collection("tours")
+        .getFullList<TourWithExpand>({
+          filter: `(driver = "${profile.id}" || lead = "${profile.id}" || student = "${profile.id}") && shiftplan.date >= "${startDate}" && shiftplan.date <= "${endDate}"`,
+          expand: "vehicle.vehicle_type,shiftplan",
+          sort: "shiftplan.date",
+        });
 
       // Group by date for heatmap
       const dateMap = new Map<string, number>();
