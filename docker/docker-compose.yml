@@ -15,12 +15,35 @@ services:
       - pb-data:/pb/pb_data
       - pb-public:/pb/pb_public
       - ./pocketbase/pb_migrations:/pb/pb_migrations
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@rettstat.local}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-changeme}
     healthcheck:
       test:
         ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # PocketBase Initialization (runs once on first startup)
+  pocketbase-init:
+    build:
+      context: ./pocketbase-init
+      dockerfile: Dockerfile
+    container_name: rettstat-pocketbase-init
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    volumes:
+      - pb-data:/pb_data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PB_HOST=pocketbase
+      - PB_PORT=8090
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@rettstat.local}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-changeme}
+    restart: "no"
 
   # Mail testing (Mailpit)
   mailpit:

@@ -1,4 +1,6 @@
-import Dexie, { type EntityTable } from "dexie";
+// NOTE: Dexie is imported dynamically to avoid SSR issues
+// The import happens only when getDb() is called in the browser
+import type { EntityTable } from "dexie";
 
 // Define interfaces for offline storage
 export interface CachedUser {
@@ -58,46 +60,62 @@ export interface AppSettings {
   value: string;
 }
 
-// Define the database
-class RettStatDatabase extends Dexie {
-  users!: EntityTable<CachedUser, "id">;
-  shifts!: EntityTable<CachedShift, "id">;
-  events!: EntityTable<CachedEvent, "id">;
-  news!: EntityTable<CachedNews, "id">;
-  syncQueue!: EntityTable<SyncQueueItem, "id">;
-  settings!: EntityTable<AppSettings, "key">;
-
-  constructor() {
-    super("RettStatDB");
-
-    this.version(1).stores({
-      users: "id, email, role, updatedAt",
-      shifts: "id, userId, date, status, updatedAt",
-      events: "id, date, status, updatedAt",
-      news: "id, publishedAt, updatedAt",
-      syncQueue: "++id, table, operation, recordId, createdAt",
-      settings: "key",
-    });
-  }
+// Type for the database instance
+interface RettStatDatabaseType {
+  users: EntityTable<CachedUser, "id">;
+  shifts: EntityTable<CachedShift, "id">;
+  events: EntityTable<CachedEvent, "id">;
+  news: EntityTable<CachedNews, "id">;
+  syncQueue: EntityTable<SyncQueueItem, "id">;
+  settings: EntityTable<AppSettings, "key">;
 }
 
 // Lazy-initialized singleton instance (SSR-safe)
-let dbInstance: RettStatDatabase | null = null;
+let dbInstance: RettStatDatabaseType | null = null;
 
-function getDb(): RettStatDatabase {
+async function createRettStatDatabase(): Promise<RettStatDatabaseType> {
+  const Dexie = (await import("dexie")).default;
+
+  class RettStatDatabase extends Dexie {
+    users!: EntityTable<CachedUser, "id">;
+    shifts!: EntityTable<CachedShift, "id">;
+    events!: EntityTable<CachedEvent, "id">;
+    news!: EntityTable<CachedNews, "id">;
+    syncQueue!: EntityTable<SyncQueueItem, "id">;
+    settings!: EntityTable<AppSettings, "key">;
+
+    constructor() {
+      super("RettStatDB");
+
+      this.version(1).stores({
+        users: "id, email, role, updatedAt",
+        shifts: "id, userId, date, status, updatedAt",
+        events: "id, date, status, updatedAt",
+        news: "id, publishedAt, updatedAt",
+        syncQueue: "++id, table, operation, recordId, createdAt",
+        settings: "key",
+      });
+    }
+  }
+
+  return new RettStatDatabase() as unknown as RettStatDatabaseType;
+}
+
+async function getDb(): Promise<RettStatDatabaseType> {
   if (typeof window === "undefined") {
     throw new Error("Database can only be accessed in the browser");
   }
   if (!dbInstance) {
-    dbInstance = new RettStatDatabase();
+    dbInstance = await createRettStatDatabase();
   }
   return dbInstance;
 }
 
 // Export a proxy that lazily initializes the database
-export const db = new Proxy({} as RettStatDatabase, {
-  get(_, prop) {
-    return getDb()[prop as keyof RettStatDatabase];
+// For backwards compatibility - exports a proxy that throws helpful error
+export const db = new Proxy({} as RettStatDatabaseType, {
+  get() {
+    throw new Error("db cannot be accessed synchronously. Use async imports or getDb() instead.");
   },
 });
 
@@ -108,7 +126,8 @@ export async function addToSyncQueue(
   recordId: string,
   data: Record<string, unknown>
 ) {
-  await db.syncQueue.add({
+  const database = await getDb();
+  await database.syncQueue.add({
     table,
     operation,
     recordId,
@@ -119,25 +138,30 @@ export async function addToSyncQueue(
 }
 
 export async function getSyncQueueItems() {
-  return db.syncQueue.toArray();
+  const database = await getDb();
+  return database.syncQueue.toArray();
 }
 
 export async function removeSyncQueueItem(id: number) {
-  await db.syncQueue.delete(id);
+  const database = await getDb();
+  await database.syncQueue.delete(id);
 }
 
 export async function incrementRetryCount(id: number) {
-  await db.syncQueue.update(id, {
-    retryCount: (await db.syncQueue.get(id))!.retryCount + 1,
+  const database = await getDb();
+  await database.syncQueue.update(id, {
+    retryCount: (await database.syncQueue.get(id))!.retryCount + 1,
   });
 }
 
 // Helper for settings
 export async function getSetting(key: string): Promise<string | undefined> {
-  const setting = await db.settings.get(key);
+  const database = await getDb();
+  const setting = await database.settings.get(key);
   return setting?.value;
 }
 
 export async function setSetting(key: string, value: string) {
-  await db.settings.put({ key, value });
+  const database = await getDb();
+  await database.settings.put({ key, value });
 }

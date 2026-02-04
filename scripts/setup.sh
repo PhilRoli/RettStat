@@ -10,7 +10,7 @@
 set -e
 
 # Script version
-SCRIPT_VERSION="1.2.0"
+SCRIPT_VERSION="1.4.0"
 
 # Colors for output
 RED='\033[0;31m'
@@ -120,6 +120,15 @@ echo "  Create a Personal Access Token at: https://github.com/settings/tokens"
 echo "  Required scopes: read:packages, repo (for private repos)"
 prompt GITHUB_USERNAME "GitHub username" ""
 prompt_password GITHUB_TOKEN "GitHub Personal Access Token (ghp_...)"
+
+echo ""
+echo "POCKETBASE ADMIN ACCOUNT"
+echo "  Create your admin account on first access to:"
+echo "  https://api.${DOMAIN}/_/ (production)"
+if [ "$DEV_ENABLED" = "true" ]; then
+  echo "  https://api-dev.${DOMAIN}/_/ (development)"
+fi
+prompt PB_ADMIN_EMAIL "PocketBase admin email (for reference)" "admin@${DOMAIN}"
 
 echo ""
 echo "DEV ENVIRONMENT"
@@ -287,6 +296,12 @@ print_success "Environment file created"
 print_step "Step 7: Setting up Docker Compose"
 cp repo/docker/docker-compose.prod.yml ./docker-compose.yml
 
+# Copy PocketBase init scripts
+sudo mkdir -p pocketbase-init
+sudo chown -R $USER:$USER pocketbase-init
+cp repo/docker/pocketbase-init/* pocketbase-init/
+chmod +x pocketbase-init/init.sh
+
 # Copy scripts (use sudo to handle permission issues from previous runs)
 sudo mkdir -p scripts backups logs
 sudo chown -R $USER:$USER scripts backups logs
@@ -374,7 +389,9 @@ fi
 echo "NEXT STEPS:"
 echo "  1. Configure DNS records (see below)"
 echo "  2. Wait for SSL certificates (may take a few minutes)"
-echo "  3. Access PocketBase admin and create your account"
+echo "  3. Access PocketBase admin UI and create your account:"
+echo "     https://api.${DOMAIN}/_/"
+echo "     (Collections will be auto-created on first startup)"
 if [ "$DEV_ENABLED" = "true" ]; then
     echo "  4. Grant dev access to users via profiles.dev_access"
 fi
