@@ -14,6 +14,18 @@ interface AuthState {
   signOut: () => void;
 }
 
+// SSR-safe storage that returns a no-op storage during server-side rendering
+const getStorage = () => {
+  if (typeof window === "undefined") {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+  return localStorage;
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -33,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "rettstat-auth",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => getStorage()),
       partialize: (state) => ({
         user: state.user,
         profile: state.profile,
