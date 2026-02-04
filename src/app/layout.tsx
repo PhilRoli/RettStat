@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { OfflineIndicator } from "@/components/offline-indicator";
+import { ClientOfflineIndicator } from "@/components/client-offline-indicator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,7 +49,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}>
         {children}
-        <OfflineIndicator />
+        <ClientOfflineIndicator />
       </body>
     </html>
   );
