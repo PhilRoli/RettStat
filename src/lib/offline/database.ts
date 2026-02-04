@@ -1,5 +1,6 @@
 // NOTE: Dexie is imported dynamically to avoid SSR issues
 // The import happens only when getOfflineDb() is called in the browser
+import type { Table } from "dexie";
 
 // Offline-cached event data
 export interface CachedEvent {
@@ -69,9 +70,9 @@ async function createOfflineDatabase(): Promise<OfflineDatabaseType> {
   const Dexie = (await import("dexie")).default;
 
   class OfflineDatabase extends Dexie {
-    events!: Dexie.Table<CachedEvent, string>;
-    positions!: Dexie.Table<CachedEventPosition, string>;
-    mutations!: Dexie.Table<PendingMutation, number>;
+    events!: Table<CachedEvent, string>;
+    positions!: Table<CachedEventPosition, string>;
+    mutations!: Table<PendingMutation, number>;
 
     constructor() {
       super("rettstat-offline");
