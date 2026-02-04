@@ -81,8 +81,25 @@ class RettStatDatabase extends Dexie {
   }
 }
 
-// Create singleton instance
-export const db = new RettStatDatabase();
+// Lazy-initialized singleton instance (SSR-safe)
+let dbInstance: RettStatDatabase | null = null;
+
+function getDb(): RettStatDatabase {
+  if (typeof window === "undefined") {
+    throw new Error("Database can only be accessed in the browser");
+  }
+  if (!dbInstance) {
+    dbInstance = new RettStatDatabase();
+  }
+  return dbInstance;
+}
+
+// Export a proxy that lazily initializes the database
+export const db = new Proxy({} as RettStatDatabase, {
+  get(_, prop) {
+    return getDb()[prop as keyof RettStatDatabase];
+  },
+});
 
 // Helper functions for sync queue
 export async function addToSyncQueue(
