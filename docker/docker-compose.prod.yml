@@ -39,6 +39,13 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=traefik-auth"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH}"
+      # Define security-headers middleware on Traefik for availability to all services
+      - "traefik.http.middlewares.security-headers.headers.framedeny=true"
+      - "traefik.http.middlewares.security-headers.headers.sslredirect=true"
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
 
   # Next.js Application
   app:
@@ -60,13 +67,7 @@ services:
       - "traefik.http.routers.app.entrypoints=websecure"
       - "traefik.http.routers.app.tls.certresolver=letsencrypt"
       - "traefik.http.services.app.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.security-headers.headers.framedeny=true"
-      - "traefik.http.middlewares.security-headers.headers.sslredirect=true"
-      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
-      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
-      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
-      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
-      - "traefik.http.routers.app.middlewares=security-headers"
+      - "traefik.http.routers.app.middlewares=security-headers@docker"
       - "wud.watch=true"
 
   # Next.js Application - Dev Environment
@@ -89,7 +90,7 @@ services:
       - "traefik.http.routers.app-dev.entrypoints=websecure"
       - "traefik.http.routers.app-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.app-dev.loadbalancer.server.port=3000"
-      - "traefik.http.routers.app-dev.middlewares=security-headers"
+      - "traefik.http.routers.app-dev.middlewares=security-headers@docker"
       - "wud.watch=true"
 
   # PocketBase Backend (API + Database + Storage)
@@ -116,7 +117,7 @@ services:
       - "traefik.http.routers.pocketbase.entrypoints=websecure"
       - "traefik.http.routers.pocketbase.tls.certresolver=letsencrypt"
       - "traefik.http.services.pocketbase.loadbalancer.server.port=8090"
-      - "traefik.http.routers.pocketbase.middlewares=security-headers"
+      - "traefik.http.routers.pocketbase.middlewares=security-headers@docker"
       - "wud.watch=true"
 
   # PocketBase Backend - Dev Environment (Synced from Prod)
@@ -142,7 +143,7 @@ services:
       - "traefik.http.routers.pocketbase-dev.entrypoints=websecure"
       - "traefik.http.routers.pocketbase-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.pocketbase-dev.loadbalancer.server.port=8090"
-      - "traefik.http.routers.pocketbase-dev.middlewares=security-headers"
+      - "traefik.http.routers.pocketbase-dev.middlewares=security-headers@docker"
       - "wud.watch=true"
 
   # WUD (What's Up Docker) - Automatic container updates
