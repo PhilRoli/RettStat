@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { QuickLinkRecord } from "@/lib/pocketbase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export function QuickLinks() {
 
   const loadQuickLinks = async () => {
     try {
-      const result = await pb.collection("quick_links").getFullList<QuickLinkRecord>({
+      const result = await getPb().collection("quick_links").getFullList<QuickLinkRecord>({
         filter: `is_active=true`,
         sort: "sort_order",
       });

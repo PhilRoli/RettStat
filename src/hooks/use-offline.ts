@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import {
@@ -55,7 +55,7 @@ export function useOfflineEvents() {
       const now = new Date().toISOString();
 
       // Get events where user is registered
-      const registrations = await pb
+      const registrations = await getPb()
         .collection("event_registrations")
         .getFullList<EventRegistrationRecord>({
           filter: `user = "${user.id}"`,
@@ -64,11 +64,13 @@ export function useOfflineEvents() {
       const registeredEventIds = new Set(registrations.map((r) => r.event));
 
       // Get active/upcoming events
-      const events = await pb.collection("events").getFullList<EventWithExpand>({
-        filter: `end_date >= "${now}"`,
-        expand: "category",
-        sort: "start_date",
-      });
+      const events = await getPb()
+        .collection("events")
+        .getFullList<EventWithExpand>({
+          filter: `end_date >= "${now}"`,
+          expand: "category",
+          sort: "start_date",
+        });
 
       // Filter to events user is part of
       const userEvents = events.filter((e) => registeredEventIds.has(e.id));
@@ -121,10 +123,12 @@ async function cacheEvents(events: EventWithExpand[]) {
 
 async function cacheEventPositions(eventId: string, userId: string) {
   try {
-    const positions = await pb.collection("event_positions").getFullList<PositionWithExpand>({
-      filter: `event = "${eventId}"`,
-      expand: "registrations_via_position",
-    });
+    const positions = await getPb()
+      .collection("event_positions")
+      .getFullList<PositionWithExpand>({
+        filter: `event = "${eventId}"`,
+        expand: "registrations_via_position",
+      });
 
     const cachedPositions: CachedEventPosition[] = positions.map((p) => {
       const registrations = p.expand?.registrations_via_position || [];
@@ -162,13 +166,13 @@ export function useOfflineMutation() {
         // Execute directly when online
         switch (type) {
           case "create":
-            return pb.collection(collection).create(data);
+            return getPb().collection(collection).create(data);
           case "update":
             if (!recordId) throw new Error("Record ID required for update");
-            return pb.collection(collection).update(recordId, data);
+            return getPb().collection(collection).update(recordId, data);
           case "delete":
             if (!recordId) throw new Error("Record ID required for delete");
-            return pb.collection(collection).delete(recordId);
+            return getPb().collection(collection).delete(recordId);
         }
       } else {
         // Queue for later when offline
@@ -199,16 +203,18 @@ export function useSyncPendingMutations() {
       try {
         switch (mutation.type) {
           case "create":
-            await pb.collection(mutation.collection).create(mutation.data);
+            await getPb().collection(mutation.collection).create(mutation.data);
             break;
           case "update":
             if (mutation.record_id) {
-              await pb.collection(mutation.collection).update(mutation.record_id, mutation.data);
+              await getPb()
+                .collection(mutation.collection)
+                .update(mutation.record_id, mutation.data);
             }
             break;
           case "delete":
             if (mutation.record_id) {
-              await pb.collection(mutation.collection).delete(mutation.record_id);
+              await getPb().collection(mutation.collection).delete(mutation.record_id);
             }
             break;
         }

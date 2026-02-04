@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { ProfileRecord } from "@/lib/pocketbase/types";
 
 const publicPaths = [
@@ -31,13 +31,13 @@ export async function proxy(request: NextRequest) {
     try {
       const authData = JSON.parse(authCookie.value);
       if (authData.token && authData.record) {
-        pb.authStore.save(authData.token, authData.record);
-        isAuthenticated = pb.authStore.isValid;
+        getPb().authStore.save(authData.token, authData.record);
+        isAuthenticated = getPb().authStore.isValid;
 
         // Get user profile to check dev_access
         if (isAuthenticated && authData.record.id) {
           try {
-            userProfile = await pb
+            userProfile = await getPb()
               .collection("profiles")
               .getFirstListItem<ProfileRecord>(`user="${authData.record.id}"`);
           } catch {

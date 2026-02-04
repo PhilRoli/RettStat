@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,7 +98,7 @@ export function UsersManagement() {
       setLoading(true);
 
       // Fetch profiles with expanded user data
-      const profiles = await pb.collection("profiles").getFullList<ProfileWithExpand>({
+      const profiles = await getPb().collection("profiles").getFullList<ProfileWithExpand>({
         sort: "-created",
         expand: "user",
       });
@@ -108,7 +108,7 @@ export function UsersManagement() {
       const userAssignmentsMap: Map<string, UserAssignmentWithExpand[]> = new Map();
 
       if (userIds.length > 0) {
-        const userAssignments = await pb
+        const userAssignments = await getPb()
           .collection("user_assignments")
           .getFullList<UserAssignmentWithExpand>({
             filter: userIds.map((id) => `user="${id}"`).join(" || "),
@@ -163,7 +163,7 @@ export function UsersManagement() {
     setSaving(true);
 
     try {
-      await pb.collection("profiles").update(selectedUser.id, {
+      await getPb().collection("profiles").update(selectedUser.id, {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
@@ -280,7 +280,7 @@ export function UsersManagement() {
                     <TableCell>
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={user.avatar ? pb.files.getURL(user, user.avatar) : undefined}
+                          src={user.avatar ? getPb().files.getURL(user, user.avatar) : undefined}
                         />
                         <AvatarFallback>
                           <User className="h-4 w-4" />

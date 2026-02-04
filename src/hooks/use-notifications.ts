@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import type { PushSubscriptionRecord } from "@/lib/pocketbase/types";
 
@@ -79,7 +79,7 @@ export function usePushSubscription() {
     queryFn: async () => {
       if (!user) return null;
       try {
-        const records = await pb
+        const records = await getPb()
           .collection("push_subscriptions")
           .getList<PushSubscriptionRecord>(1, 1, {
             filter: `user = "${user.id}" && is_active = true`,
@@ -118,7 +118,7 @@ export function usePushSubscription() {
       const subscriptionJson = subscription.toJSON();
 
       // Save to PocketBase
-      await pb.collection("push_subscriptions").create({
+      await getPb().collection("push_subscriptions").create({
         user: user.id,
         endpoint: subscriptionJson.endpoint,
         p256dh: subscriptionJson.keys?.p256dh,
@@ -148,7 +148,7 @@ export function usePushSubscription() {
       }
 
       // Mark as inactive in PocketBase
-      await pb.collection("push_subscriptions").update(serverSubscription.id, {
+      await getPb().collection("push_subscriptions").update(serverSubscription.id, {
         is_active: false,
       });
     },

@@ -152,6 +152,7 @@ export function usePocketbaseAuth() {
   return useQuery({
     queryKey: pbKeys.auth(),
     queryFn: () => {
+      const pb = getPb();
       return {
         isValid: pb.authStore.isValid,
         token: pb.authStore.token,

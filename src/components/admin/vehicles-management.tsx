@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { VehicleRecord, VehicleTypeRecord, UnitRecord } from "@/lib/pocketbase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -100,18 +100,18 @@ export function VehiclesManagement() {
       setLoading(true);
 
       // Fetch vehicles with relations
-      const vehiclesData = await pb.collection("vehicles").getFullList<VehicleWithRelations>({
+      const vehiclesData = await getPb().collection("vehicles").getFullList<VehicleWithRelations>({
         sort: "call_sign",
         expand: "vehicle_type,unit",
       });
 
       // Fetch vehicle types
-      const typesData = await pb.collection("vehicle_types").getFullList<VehicleTypeRecord>({
+      const typesData = await getPb().collection("vehicle_types").getFullList<VehicleTypeRecord>({
         sort: "name",
       });
 
       // Fetch units
-      const unitsData = await pb.collection("units").getFullList<UnitRecord>({
+      const unitsData = await getPb().collection("units").getFullList<UnitRecord>({
         sort: "name",
       });
 
@@ -170,14 +170,14 @@ export function VehiclesManagement() {
       };
 
       if (selectedVehicle) {
-        await pb.collection("vehicles").update(selectedVehicle.id, vehicleData);
+        await getPb().collection("vehicles").update(selectedVehicle.id, vehicleData);
 
         toast({
           title: t("vehicleUpdateSuccessTitle"),
           description: t("vehicleUpdateSuccessDescription"),
         });
       } else {
-        await pb.collection("vehicles").create(vehicleData);
+        await getPb().collection("vehicles").create(vehicleData);
 
         toast({
           title: t("vehicleCreateSuccessTitle"),
@@ -203,7 +203,7 @@ export function VehiclesManagement() {
     if (!confirm(t("deleteVehicleConfirm"))) return;
 
     try {
-      await pb.collection("vehicles").delete(vehicle.id);
+      await getPb().collection("vehicles").delete(vehicle.id);
 
       toast({
         title: t("vehicleDeleteSuccessTitle"),
@@ -252,14 +252,14 @@ export function VehiclesManagement() {
       };
 
       if (selectedType) {
-        await pb.collection("vehicle_types").update(selectedType.id, typeData);
+        await getPb().collection("vehicle_types").update(selectedType.id, typeData);
 
         toast({
           title: t("typeUpdateSuccessTitle"),
           description: t("typeUpdateSuccessDescription"),
         });
       } else {
-        await pb.collection("vehicle_types").create(typeData);
+        await getPb().collection("vehicle_types").create(typeData);
 
         toast({
           title: t("typeCreateSuccessTitle"),
@@ -285,7 +285,7 @@ export function VehiclesManagement() {
     if (!confirm(t("deleteTypeConfirm"))) return;
 
     try {
-      await pb.collection("vehicle_types").delete(type.id);
+      await getPb().collection("vehicle_types").delete(type.id);
 
       toast({
         title: t("typeDeleteSuccessTitle"),

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,17 +102,17 @@ export function AssignmentsManagement() {
       setLoading(true);
 
       const [assignRes, catsRes, permsRes, catPermsRes] = await Promise.all([
-        pb.collection("assignments").getFullList<AssignmentWithExpand>({
+        getPb().collection("assignments").getFullList<AssignmentWithExpand>({
           sort: "title",
           expand: "category",
         }),
-        pb.collection("assignment_categories").getFullList<AssignmentCategoryRecord>({
+        getPb().collection("assignment_categories").getFullList<AssignmentCategoryRecord>({
           sort: "sort_order,name",
         }),
-        pb.collection("permissions").getFullList<PermissionRecord>({
+        getPb().collection("permissions").getFullList<PermissionRecord>({
           sort: "name",
         }),
-        pb
+        getPb()
           .collection("assignment_default_permissions")
           .getFullList<AssignmentDefaultPermissionRecord>(),
       ]);
@@ -121,7 +121,7 @@ export function AssignmentsManagement() {
       setCategories(catsRes);
       setPermissions(permsRes);
       setCategoryPermissions(
-        catPermsRes.map((cp) => ({
+        catPermsRes.map((cp: AssignmentDefaultPermissionRecord) => ({
           category_id: cp.assignment_category,
           permission_id: cp.permission,
         }))
@@ -184,14 +184,14 @@ export function AssignmentsManagement() {
       };
 
       if (selectedAssignment) {
-        await pb.collection("assignments").update(selectedAssignment.id, assignData);
+        await getPb().collection("assignments").update(selectedAssignment.id, assignData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        await pb.collection("assignments").create(assignData);
+        await getPb().collection("assignments").create(assignData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -248,14 +248,14 @@ export function AssignmentsManagement() {
       };
 
       if (selectedCat) {
-        await pb.collection("assignment_categories").update(selectedCat.id, catData);
+        await getPb().collection("assignment_categories").update(selectedCat.id, catData);
 
         toast({
           title: t("updateSuccessTitle"),
           description: t("updateSuccessDescription"),
         });
       } else {
-        await pb.collection("assignment_categories").create(catData);
+        await getPb().collection("assignment_categories").create(catData);
 
         toast({
           title: t("createSuccessTitle"),
@@ -293,7 +293,7 @@ export function AssignmentsManagement() {
 
     try {
       // Fetch existing permissions for this category
-      const existingPerms = await pb
+      const existingPerms = await getPb()
         .collection("assignment_default_permissions")
         .getFullList<AssignmentDefaultPermissionRecord>({
           filter: `assignment_category = "${selectedCat.id}"`,
@@ -308,12 +308,12 @@ export function AssignmentsManagement() {
 
       // Delete removed permissions
       for (const perm of toDelete) {
-        await pb.collection("assignment_default_permissions").delete(perm.id);
+        await getPb().collection("assignment_default_permissions").delete(perm.id);
       }
 
       // Insert new permissions
       for (const permId of toAdd) {
-        await pb.collection("assignment_default_permissions").create({
+        await getPb().collection("assignment_default_permissions").create({
           assignment_category: selectedCat.id,
           permission: permId,
         });
@@ -350,9 +350,9 @@ export function AssignmentsManagement() {
 
     try {
       if (deleteItem.type === "assign") {
-        await pb.collection("assignments").delete(deleteItem.id);
+        await getPb().collection("assignments").delete(deleteItem.id);
       } else {
-        await pb.collection("assignment_categories").delete(deleteItem.id);
+        await getPb().collection("assignment_categories").delete(deleteItem.id);
       }
 
       toast({

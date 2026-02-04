@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Upload, User } from "lucide-react";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
 
 export function ProfileSettings() {
@@ -31,7 +31,7 @@ export function ProfileSettings() {
       if (!profile?.id) throw new Error("Profile not found");
 
       // Update profile
-      await pb.collection("profiles").update(profile.id, {
+      await getPb().collection("profiles").update(profile.id, {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
@@ -39,7 +39,7 @@ export function ProfileSettings() {
 
       // Update email if changed (requires user to be authenticated)
       if (formData.email !== user?.email && user?.id) {
-        await pb.collection("users").update(user.id, {
+        await getPb().collection("users").update(user.id, {
           email: formData.email,
         });
 
@@ -79,7 +79,7 @@ export function ProfileSettings() {
       formData.append("avatar", file);
 
       // Upload avatar directly to profile record
-      await pb.collection("profiles").update(profile.id, formData);
+      await getPb().collection("profiles").update(profile.id, formData);
 
       await refreshProfile();
 
@@ -102,7 +102,7 @@ export function ProfileSettings() {
   // Get avatar URL from PocketBase
   const getAvatarUrl = () => {
     if (!profile?.id || !profile?.avatar) return undefined;
-    return pb.files.getUrl(profile, profile.avatar);
+    return getPb().files.getUrl(profile, profile.avatar);
   };
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import { useAuth } from "@/hooks/use-auth";
 import type {
   TourRecord,
@@ -39,11 +39,13 @@ export function useMyShifts(startDate: string, endDate: string) {
     queryFn: async () => {
       if (!profile?.id) return [];
 
-      const tours = await pb.collection("tours").getFullList<MyTourWithExpand>({
-        filter: `(driver = "${profile.id}" || lead = "${profile.id}" || student = "${profile.id}") && shiftplan.date >= "${startDate}" && shiftplan.date <= "${endDate}"`,
-        expand: "shiftplan,vehicle.vehicle_type",
-        sort: "shiftplan.date,start_time",
-      });
+      const tours = await getPb()
+        .collection("tours")
+        .getFullList<MyTourWithExpand>({
+          filter: `(driver = "${profile.id}" || lead = "${profile.id}" || student = "${profile.id}") && shiftplan.date >= "${startDate}" && shiftplan.date <= "${endDate}"`,
+          expand: "shiftplan,vehicle.vehicle_type",
+          sort: "shiftplan.date,start_time",
+        });
 
       return tours;
     },
@@ -64,11 +66,13 @@ export function useMyAbsences(year?: number) {
       const startDate = `${currentYear}-01-01`;
       const endDate = `${currentYear}-12-31`;
 
-      const absences = await pb.collection("absences").getFullList<MyAbsenceWithExpand>({
-        filter: `user = "${user.id}" && start_date >= "${startDate}" && end_date <= "${endDate}"`,
-        expand: "category",
-        sort: "-start_date",
-      });
+      const absences = await getPb()
+        .collection("absences")
+        .getFullList<MyAbsenceWithExpand>({
+          filter: `user = "${user.id}" && start_date >= "${startDate}" && end_date <= "${endDate}"`,
+          expand: "category",
+          sort: "-start_date",
+        });
 
       return absences;
     },
@@ -81,7 +85,7 @@ export function useAbsenceCategories() {
   return useQuery({
     queryKey: ["absence-categories"],
     queryFn: async () => {
-      return pb.collection("absence_categories").getFullList<AbsenceCategoryRecord>({
+      return getPb().collection("absence_categories").getFullList<AbsenceCategoryRecord>({
         sort: "name",
       });
     },
@@ -102,11 +106,13 @@ export function useCreateAbsenceRequest() {
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
-      return pb.collection("absences").create<AbsenceRecord>({
-        ...data,
-        user: user.id,
-        status: "pending",
-      });
+      return getPb()
+        .collection("absences")
+        .create<AbsenceRecord>({
+          ...data,
+          user: user.id,
+          status: "pending",
+        });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-absences"] });

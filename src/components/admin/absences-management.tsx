@@ -69,7 +69,7 @@ export function AbsencesManagement() {
     try {
       setLoading(true);
 
-      const catsData = await pb
+      const catsData = await getPb()
         .collection("absence_categories")
         .getFullList<AbsenceCategoryRecord>({ sort: "name" });
 

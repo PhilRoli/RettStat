@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
-import { pb } from "@/lib/pocketbase";
+import { getPb } from "@/lib/pocketbase";
 import type { UserPermissionRecord, PermissionRecord } from "@/lib/pocketbase/types";
 
 export type Permission =
@@ -55,7 +55,7 @@ export function usePermissions(unitId?: string): UsePermissionsReturn {
       }
 
       // Fetch user permissions with expanded permission names
-      const userPermissions = await pb
+      const userPermissions = await getPb()
         .collection("user_permissions")
         .getFullList<UserPermissionRecord & { expand?: { permission?: PermissionRecord } }>({
           filter,
