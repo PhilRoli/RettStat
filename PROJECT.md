@@ -32,7 +32,7 @@ bun run build
 | Category        | Technology              | Version |
 | --------------- | ----------------------- | ------- |
 | Runtime         | Bun                     | 1.3+    |
-| Framework       | Next.js                 | 14+     |
+| Framework       | Next.js                 | 16.1+   |
 | UI Library      | React                   | 19+     |
 | Styling         | Tailwind CSS            | 4+      |
 | Components      | Radix UI                | Latest  |
@@ -59,14 +59,24 @@ rettstat/
 ├── public/                        # Static assets, PWA manifest
 ├── src/
 │   ├── app/                       # Next.js App Router
-│   │   ├── [locale]/             # i18n routing
-│   │   │   ├── (auth)/           # Auth pages (login, register)
-│   │   │   ├── (dashboard)/      # Main app pages
-│   │   │   └── layout.tsx
-│   │   └── api/                  # API routes
+│   │   ├── (app)/                # Authenticated routes
+│   │   │   ├── page.tsx          # Home
+│   │   │   ├── statistics/       # Statistics (COMPLETE)
+│   │   │   ├── events/           # Events (COMPLETE)
+│   │   │   ├── schedule/         # Personal schedule (COMPLETE)
+│   │   │   ├── reports/          # Export reports (COMPLETE)
+│   │   │   ├── shiftplan/        # Shift planning
+│   │   │   ├── settings/         # User settings
+│   │   │   └── admin/            # Admin panel
+│   │   ├── auth/                 # Auth pages (login, register, verify)
+│   │   ├── api/                  # API routes
+│   │   └── [locale]/             # i18n routing
 │   ├── components/
-│   │   ├── ui/                   # Base UI components
-│   │   └── features/             # Feature components
+│   │   ├── ui/                   # Base UI (shadcn style)
+│   │   ├── features/             # Feature components
+│   │   ├── admin/                # Admin management
+│   │   ├── layout/               # AppShell, Header, Sidebar
+│   │   └── ...
 │   ├── hooks/                    # Custom React hooks
 │   ├── lib/
 │   │   ├── pocketbase/          # PocketBase client & types
@@ -106,8 +116,14 @@ rettstat/
 
 ### In Progress 🔄
 
-- [ ] Statistics Page
-- [ ] Events Page
+(None - all planned features implemented)
+
+### Recently Completed ✅
+
+- [x] Statistics Page (charts, heatmap, summaries)
+- [x] Events Page (list view, detail view, positions, registrations)
+- [x] Schedule Page (calendar, upcoming shifts, absences, iCal export)
+- [x] Reports Page (CSV export for shifts and statistics)
 
 ### Planned 📋
 
@@ -146,7 +162,7 @@ rettstat/
 
 ## PocketBase Collections
 
-**Total Collections:** 24
+**Total Collections:** 30
 
 ### Core
 
@@ -196,7 +212,11 @@ rettstat/
 ### Other
 
 25. **news** - Announcements
-26. **quick_links** - Home page quick links
+26. **news_attachments** - File attachments for news
+27. **news_read_status** - Read tracking per user
+28. **quick_links** - Home page quick links
+29. **push_subscriptions** - PWA push notifications
+30. **user_absences** - User absence records
 
 ## Environment Variables
 
@@ -223,7 +243,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - **Traefik**: Reverse proxy with Let's Encrypt SSL
 - **Next.js App**: Container from GitHub Container Registry
 - **PocketBase**: Backend (API + SQLite + Storage)
-- **Watchtower**: Automatic container updates
+- **WUD (What's Up Docker)**: Automatic container updates
 
 ```bash
 # Deploy with docker-compose
@@ -260,4 +280,4 @@ TRAEFIK_AUTH=user:password-hash
 
 ---
 
-_Last updated: 2026-06-15_
+_Last updated: 2026-02-04_

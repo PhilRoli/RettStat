@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { getPb } from "@/lib/pocketbase";
 import type { VehicleRecord, VehicleTypeRecord, UnitRecord } from "@/lib/pocketbase/types";
@@ -49,11 +49,20 @@ export function VehiclesManagement() {
 
   // Vehicles state
   const [vehicles, setVehicles] = useState<VehicleWithRelations[]>([]);
-  const [filteredVehicles, setFilteredVehicles] = useState<VehicleWithRelations[]>([]);
   const [vehicleTypes, setVehicleTypes] = useState<VehicleTypeRecord[]>([]);
   const [units, setUnits] = useState<UnitRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredVehicles = useMemo(() => {
+    if (!searchQuery.trim()) return vehicles;
+    const query = searchQuery.toLowerCase();
+    return vehicles.filter(
+      (vehicle) =>
+        vehicle.call_sign.toLowerCase().includes(query) ||
+        vehicle.expand?.vehicle_type?.name.toLowerCase().includes(query)
+    );
+  }, [searchQuery, vehicles]);
 
   // Vehicle dialog state
   const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
@@ -80,21 +89,6 @@ export function VehiclesManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredVehicles(vehicles);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredVehicles(
-        vehicles.filter(
-          (vehicle) =>
-            vehicle.call_sign.toLowerCase().includes(query) ||
-            vehicle.expand?.vehicle_type?.name.toLowerCase().includes(query)
-        )
-      );
-    }
-  }, [searchQuery, vehicles]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -116,7 +110,6 @@ export function VehiclesManagement() {
       });
 
       setVehicles(vehiclesData);
-      setFilteredVehicles(vehiclesData);
       setVehicleTypes(typesData);
       setUnits(unitsData);
     } catch (error) {

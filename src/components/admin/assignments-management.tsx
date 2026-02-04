@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { getPb } from "@/lib/pocketbase";
 import { useToast } from "@/hooks/use-toast";
@@ -91,6 +91,17 @@ export function AssignmentsManagement() {
   });
 
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+
+  // Memoized map of category ID to permission IDs for efficient lookup
+  const permissionsByCategory = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const cp of categoryPermissions) {
+      const existing = map.get(cp.category_id) || [];
+      existing.push(cp.permission_id);
+      map.set(cp.category_id, existing);
+    }
+    return map;
+  }, [categoryPermissions]);
 
   useEffect(() => {
     fetchData();
@@ -547,9 +558,7 @@ export function AssignmentsManagement() {
 
             <div className="space-y-4">
               {categories.map((cat) => {
-                const catPerms = categoryPermissions
-                  .filter((cp) => cp.category_id === cat.id)
-                  .map((cp) => cp.permission_id);
+                const catPerms = permissionsByCategory.get(cat.id) || [];
 
                 return (
                   <div key={cat.id} className="rounded-md border p-4">
