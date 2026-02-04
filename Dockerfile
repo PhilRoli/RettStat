@@ -28,7 +28,9 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build Next.js application with Bun
-RUN bun run build
+# Workaround for Bun segfault: capture build output and check exit code explicitly
+RUN bun run build || [ $? -eq 139 ] || [ $? -eq 132 ] && \
+    test -d .next/standalone || exit 1
 
 # Stage 3: Runner
 FROM oven/bun:1-slim AS runner
