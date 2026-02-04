@@ -54,10 +54,29 @@ class OfflineDatabase extends Dexie {
   }
 }
 
-export const offlineDb = new OfflineDatabase();
+// Lazy-initialized singleton instance (SSR-safe)
+let dbInstance: OfflineDatabase | null = null;
+
+function getOfflineDb(): OfflineDatabase {
+  if (typeof window === "undefined") {
+    throw new Error("Offline database can only be accessed in the browser");
+  }
+  if (!dbInstance) {
+    dbInstance = new OfflineDatabase();
+  }
+  return dbInstance;
+}
+
+// Export a proxy that lazily initializes the database
+export const offlineDb = new Proxy({} as OfflineDatabase, {
+  get(_, prop) {
+    return getOfflineDb()[prop as keyof OfflineDatabase];
+  },
+});
 
 // Helper to clear old cached data
 export async function clearOldCache(daysOld = 7) {
+  if (typeof window === "undefined") return;
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - daysOld);
   const cutoffStr = cutoff.toISOString();
@@ -67,6 +86,7 @@ export async function clearOldCache(daysOld = 7) {
 
 // Helper to check if we have cached data
 export async function hasCachedEvents(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
   const count = await offlineDb.events.count();
   return count > 0;
 }
