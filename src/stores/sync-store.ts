@@ -18,6 +18,18 @@ interface SyncState {
   checkPendingChanges: () => Promise<void>;
 }
 
+// SSR-safe storage that returns a no-op storage during server-side rendering
+const getStorage = () => {
+  if (typeof window === "undefined") {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+  return localStorage;
+};
+
 export const useSyncStore = create<SyncState>()(
   persist(
     (set, get) => ({
@@ -84,7 +96,7 @@ export const useSyncStore = create<SyncState>()(
     }),
     {
       name: "rettstat-sync",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => getStorage()),
       partialize: (state) => ({
         lastSyncedAt: state.lastSyncedAt,
       }),
