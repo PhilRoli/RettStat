@@ -541,6 +541,18 @@ const COLLECTIONS = [
   }
 ];
 
+// Rules referencing schema fields (e.g. "user = @request.auth.id") fail
+// validation at creation time because PocketBase hasn't fully registered
+// the schema yet. These are stripped from the POST payload and applied
+// via a PATCH in a second pass after the collection exists.
+const DEFERRED_RULES = {};
+for (const col of COLLECTIONS) {
+  if (col.updateRule && col.updateRule.includes('@request.auth.id') && col.updateRule !== "@request.auth.id != ''") {
+    DEFERRED_RULES[col.name] = { updateRule: col.updateRule };
+    col.updateRule = null;
+  }
+}
+
 async function createCollection(collection) {
   const response = await fetch(`${PB_URL}/api/collections`, {
     method: 'POST',
@@ -560,21 +572,40 @@ async function createCollection(collection) {
     throw new Error(`Failed to create ${collection.name}: ${error}`);
   }
 
-  return { status: 'created', name: collection.name };
+  const created = await response.json();
+  return { status: 'created', name: collection.name, id: created.id };
+}
+
+async function patchCollectionRules(collectionId, name, rules) {
+  const response = await fetch(`${PB_URL}/api/collections/${collectionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': ADMIN_TOKEN
+    },
+    body: JSON.stringify(rules)
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to patch rules for ${name}: ${error}`);
+  }
 }
 
 async function main() {
   console.log(`Creating ${COLLECTIONS.length} collections...`);
-  
+
   let created = 0;
   let exists = 0;
   let failed = 0;
+  const createdIds = {};
 
   for (const collection of COLLECTIONS) {
     try {
       const result = await createCollection(collection);
       if (result.status === 'created') {
         console.log(`  ✓ Created: ${collection.name}`);
+        createdIds[collection.name] = result.id;
         created++;
       } else {
         console.log(`  - Exists: ${collection.name}`);
@@ -586,9 +617,29 @@ async function main() {
     }
   }
 
+  // Second pass: apply deferred owner-based rules now that schemas are registered
+  const deferredNames = Object.keys(DEFERRED_RULES);
+  if (deferredNames.length > 0) {
+    console.log(`\nApplying owner-based rules to ${deferredNames.length} collections...`);
+    for (const name of deferredNames) {
+      const id = createdIds[name];
+      if (!id) {
+        console.log(`  - Skipped: ${name} (not created this run)`);
+        continue;
+      }
+      try {
+        await patchCollectionRules(id, name, DEFERRED_RULES[name]);
+        console.log(`  ✓ Patched: ${name}`);
+      } catch (error) {
+        console.error(`  ✗ Failed: ${name} - ${error.message}`);
+        failed++;
+      }
+    }
+  }
+
   console.log('');
   console.log(`Summary: ${created} created, ${exists} already existed, ${failed} failed`);
-  
+
   if (failed > 0) {
     process.exit(1);
   }
