@@ -180,10 +180,10 @@ docker run --rm \
         AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$PB_URL/api/collections/_superusers/auth-with-password" \
             -H "Content-Type: application/json" \
             -d "$(jq -n --arg id "$PB_ADMIN_EMAIL" --arg pw "$PB_ADMIN_PASSWORD" \
-                  '{identity: $id, password: $pw}')")
+                  "{\"identity\": \$id, \"password\": \$pw}")")
 
         HTTP_CODE=$(echo "$AUTH_RESPONSE" | tail -1)
-        AUTH_BODY=$(echo "$AUTH_RESPONSE" | sed '$d')
+        AUTH_BODY=$(echo "$AUTH_RESPONSE" | sed "\$d")
 
         if [ "$HTTP_CODE" != "200" ]; then
             echo "Failed to authenticate (HTTP $HTTP_CODE): $AUTH_BODY"
