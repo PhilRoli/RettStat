@@ -7,6 +7,7 @@ echo "=== PocketBase Auto-Initialization Script ==="
 PB_HOST="${PB_HOST:-pocketbase}"
 PB_PORT="${PB_PORT:-8090}"
 PB_URL="http://${PB_HOST}:${PB_PORT}"
+PB_CONTAINER_NAME="rettstat-${PB_HOST}"
 INIT_MARKER="/pb_data/.initialized"
 MAX_WAIT=60
 
@@ -43,7 +44,8 @@ echo "✓ PocketBase is ready"
 
 # Create superuser account
 echo "→ Creating superuser account..."
-CREATE_OUTPUT=$(docker exec rettstat-pocketbase pocketbase superuser upsert "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" 2>&1)
+echo "  Using container: $PB_CONTAINER_NAME"
+CREATE_OUTPUT=$(docker exec "$PB_CONTAINER_NAME" pocketbase superuser upsert "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" 2>&1)
 CREATE_EXIT=$?
 
 if [ $CREATE_EXIT -eq 0 ]; then
