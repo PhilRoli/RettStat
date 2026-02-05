@@ -57,17 +57,20 @@ fi
 
 # Authenticate as admin to get token
 echo "→ Authenticating as admin..."
-AUTH_RESPONSE=$(curl -sf -X POST "$PB_URL/api/admins/auth-with-password" \
+AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$PB_URL/api/collections/_superusers/auth-with-password" \
   -H "Content-Type: application/json" \
-  -d "{\"identity\":\"$PB_ADMIN_EMAIL\",\"password\":\"$PB_ADMIN_PASSWORD\"}" 2>&1)
+  -d "$(jq -n --arg id "$PB_ADMIN_EMAIL" --arg pw "$PB_ADMIN_PASSWORD" \
+        '{identity: $id, password: $pw}')")
 
-if [ $? -ne 0 ]; then
-  echo "✗ Failed to authenticate as admin (curl error)"
-  echo "Response: $AUTH_RESPONSE"
+HTTP_CODE=$(echo "$AUTH_RESPONSE" | tail -1)
+AUTH_BODY=$(echo "$AUTH_RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "✗ Failed to authenticate as admin (HTTP $HTTP_CODE): $AUTH_BODY"
   exit 1
 fi
 
-ADMIN_TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.token // empty')
+ADMIN_TOKEN=$(echo "$AUTH_BODY" | jq -r '.token // empty')
 
 if [ -z "$ADMIN_TOKEN" ]; then
   echo "✗ Failed to extract admin token"
