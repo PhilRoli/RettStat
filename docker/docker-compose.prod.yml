@@ -72,6 +72,7 @@ services:
 
   # Next.js Application - Dev Environment
   app-dev:
+    profiles: ["dev"]
     image: ghcr.io/${GITHUB_USERNAME}/rettstat:develop
     container_name: rettstat-app-dev
     restart: unless-stopped
@@ -147,6 +148,7 @@ services:
 
   # PocketBase Backend - Dev Environment (Synced from Prod)
   pocketbase-dev:
+    profiles: ["dev"]
     image: ghcr.io/muchobien/pocketbase:latest
     container_name: rettstat-pocketbase-dev
     restart: unless-stopped
@@ -177,6 +179,7 @@ services:
 
   # PocketBase Initialization - Dev Environment
   pocketbase-init-dev:
+    profiles: ["dev"]
     build:
       context: ./pocketbase-init
       dockerfile: Dockerfile

@@ -123,12 +123,13 @@ prompt_password GITHUB_TOKEN "GitHub Personal Access Token (ghp_...)"
 
 echo ""
 echo "POCKETBASE ADMIN ACCOUNT"
-echo "  Create your admin account on first access to:"
-echo "  https://api.${DOMAIN}/_/ (production)"
-if [ "$DEV_ENABLED" = "true" ]; then
-  echo "  https://api-dev.${DOMAIN}/_/ (development)"
+echo "  These credentials will be used to initialize PocketBase."
+prompt PB_ADMIN_EMAIL "PocketBase admin email" "admin@${DOMAIN}"
+prompt_password PB_ADMIN_PASSWORD "PocketBase admin password"
+if [ -z "$PB_ADMIN_PASSWORD" ]; then
+    print_error "PocketBase admin password is required"
+    exit 1
 fi
-prompt PB_ADMIN_EMAIL "PocketBase admin email (for reference)" "admin@${DOMAIN}"
 
 echo ""
 echo "DEV ENVIRONMENT"
@@ -275,6 +276,13 @@ GITHUB_TOKEN=${GITHUB_TOKEN}
 
 # Traefik Dashboard Authentication
 TRAEFIK_AUTH=${TRAEFIK_AUTH}
+
+# PocketBase Admin Credentials
+PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+
+# Environment Settings
+DEV_ENABLED=${DEV_ENABLED}
 EOF
 
 if [ -n "$SMTP_HOST" ]; then
@@ -322,7 +330,7 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=${INSTALL_DIR}
 EnvironmentFile=${INSTALL_DIR}/.env
-ExecStart=/usr/bin/docker compose up -d
+ExecStart=/bin/bash -c 'if [ "\${DEV_ENABLED}" = "true" ]; then /usr/bin/docker compose --profile dev up -d; else /usr/bin/docker compose up -d; fi'
 ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
 
@@ -357,7 +365,11 @@ print_step "Step 10: Starting services"
 echo "$GITHUB_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME_LOWER" --password-stdin
 print_success "Logged in to GitHub Container Registry"
 
-sudo docker compose up -d
+if [ "$DEV_ENABLED" = "true" ]; then
+    sudo docker compose --profile dev up -d
+else
+    sudo docker compose up -d
+fi
 print_success "Services started"
 
 # Wait a moment for containers to start
