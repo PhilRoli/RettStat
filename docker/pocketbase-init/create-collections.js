@@ -10,11 +10,23 @@ if (!PB_URL || !ADMIN_TOKEN) {
 
 // Collection definitions from src/lib/pocketbase/schema.ts
 // Ordered by dependency (no relations -> simple relations -> complex relations)
+//
+// API Rules:
+// - "" (empty string) = public access
+// - "@request.auth.id != ''" = any authenticated user
+// - "user = @request.auth.id" = only record owner
+// - null = superuser only (default)
+
 const COLLECTIONS = [
-  // Independent collections (no dependencies)
+  // Independent collections (no dependencies) - Reference data (read-only for users)
   {
     name: 'units',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'parent_unit', type: 'relation', options: { collectionId: 'units', maxSelect: 1 } }
@@ -23,6 +35,11 @@ const COLLECTIONS = [
   {
     name: 'vehicle_types',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
@@ -33,6 +50,11 @@ const COLLECTIONS = [
   {
     name: 'assignment_categories',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
@@ -42,6 +64,11 @@ const COLLECTIONS = [
   {
     name: 'qualification_categories',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
@@ -51,6 +78,11 @@ const COLLECTIONS = [
   {
     name: 'absence_categories',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
@@ -60,6 +92,11 @@ const COLLECTIONS = [
   {
     name: 'tour_types',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
@@ -69,6 +106,11 @@ const COLLECTIONS = [
   {
     name: 'permissions',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' }
@@ -77,6 +119,11 @@ const COLLECTIONS = [
   {
     name: 'quick_links',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'title', type: 'text', required: true },
       { name: 'url', type: 'url', required: true },
@@ -87,9 +134,15 @@ const COLLECTIONS = [
   },
 
   // First-level relations (depend on users and categories)
+  // User-owned data - profiles
   {
     name: 'profiles',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'user',
@@ -102,9 +155,15 @@ const COLLECTIONS = [
       { name: 'avatar', type: 'file', options: { maxSelect: 1, maxSize: 5242880 } }
     ]
   },
+  // Reference data - assignments
   {
     name: 'assignments',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       {
@@ -117,9 +176,15 @@ const COLLECTIONS = [
       { name: 'icon', type: 'text' }
     ]
   },
+  // Reference data - qualifications
   {
     name: 'qualifications',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       {
@@ -133,9 +198,15 @@ const COLLECTIONS = [
       { name: 'level', type: 'number' }
     ]
   },
+  // Reference data - absences
   {
     name: 'absences',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'name', type: 'text', required: true },
       {
@@ -148,9 +219,15 @@ const COLLECTIONS = [
       { name: 'icon', type: 'text' }
     ]
   },
+  // Reference data - vehicles
   {
     name: 'vehicles',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: 'call_sign', type: 'text', required: true },
       {
@@ -173,9 +250,15 @@ const COLLECTIONS = [
       { name: 'is_active', type: 'bool', required: true }
     ]
   },
+  // Team/shared data - news
   {
     name: 'news',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
     schema: [
       { name: 'title', type: 'text', required: true },
       { name: 'content', type: 'text', required: true },
@@ -195,9 +278,15 @@ const COLLECTIONS = [
   },
 
   // Second-level relations
+  // User-owned data - user_assignments
   {
     name: 'user_assignments',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'user',
@@ -220,9 +309,15 @@ const COLLECTIONS = [
       { name: 'start_date', type: 'date', required: true }
     ]
   },
+  // User-owned data - user_qualifications
   {
     name: 'user_qualifications',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'user',
@@ -239,9 +334,15 @@ const COLLECTIONS = [
       { name: 'obtained_date', type: 'date', required: true }
     ]
   },
+  // Team/shared data - shiftplans
   {
     name: 'shiftplans',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
     schema: [
       {
         name: 'unit',
@@ -266,9 +367,15 @@ const COLLECTIONS = [
       }
     ]
   },
+  // User-owned data - user_permissions
   {
     name: 'user_permissions',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'user',
@@ -285,9 +392,15 @@ const COLLECTIONS = [
       { name: 'unit', type: 'relation', options: { collectionId: 'units', maxSelect: 1 } }
     ]
   },
+  // Reference/config data - assignment_default_permissions
   {
     name: 'assignment_default_permissions',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       {
         name: 'assignment',
@@ -303,9 +416,15 @@ const COLLECTIONS = [
       }
     ]
   },
+  // Team/shared data - news_attachments
   {
     name: 'news_attachments',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
     schema: [
       {
         name: 'news',
@@ -317,9 +436,15 @@ const COLLECTIONS = [
       { name: 'filename', type: 'text', required: true }
     ]
   },
+  // User-owned data - news_read_status
   {
     name: 'news_read_status',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'news',
@@ -338,9 +463,15 @@ const COLLECTIONS = [
   },
 
   // Third-level relations
+  // User-owned data - user_absences
   {
     name: 'user_absences',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: null,
     schema: [
       {
         name: 'user',
@@ -365,9 +496,15 @@ const COLLECTIONS = [
       { name: 'notes', type: 'text' }
     ]
   },
+  // Team/shared data - tours
   {
     name: 'tours',
     type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
     schema: [
       {
         name: 'shiftplan',
