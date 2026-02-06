@@ -18,25 +18,6 @@ if (!PB_URL || !ADMIN_TOKEN) {
 // - null = superuser only (default)
 
 const COLLECTIONS = [
-  // Auth collection for regular users (must be first - all others depend on it)
-  {
-    name: 'users',
-    type: 'auth',
-    listRule: "id = @request.auth.id",
-    viewRule: "id = @request.auth.id",
-    createRule: "",
-    updateRule: "id = @request.auth.id",
-    deleteRule: "id = @request.auth.id",
-    fields: [
-      { name: 'name', type: 'text' },
-      { name: 'avatar', type: 'file', maxSelect: 1, maxSize: 5242880 }
-    ],
-    passwordAuth: {
-      enabled: true,
-      identityFields: ['email']
-    }
-  },
-
   // Independent collections (no dependencies) - Reference data (read-only for users)
   {
     name: 'units',
@@ -163,7 +144,7 @@ const COLLECTIONS = [
     updateRule: "user = @request.auth.id",
     deleteRule: null,
     fields: [
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1, cascadeDelete: true },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1, cascadeDelete: true },
       { name: 'first_name', type: 'text' },
       { name: 'last_name', type: 'text' },
       { name: 'avatar', type: 'file', maxSelect: 1, maxSize: 5242880 }
@@ -247,7 +228,7 @@ const COLLECTIONS = [
     fields: [
       { name: 'title', type: 'text', required: true },
       { name: 'content', type: 'text', required: true },
-      { name: 'author', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'author', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'published_at', type: 'date', required: true },
       { name: 'target_units', type: 'relation', collectionId: 'units', maxSelect: 999 }
     ]
@@ -264,7 +245,7 @@ const COLLECTIONS = [
     updateRule: "user = @request.auth.id",
     deleteRule: null,
     fields: [
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'assignment', type: 'relation', required: true, collectionId: 'assignments', maxSelect: 1 },
       { name: 'unit', type: 'relation', required: true, collectionId: 'units', maxSelect: 1 },
       { name: 'start_date', type: 'date', required: true }
@@ -280,7 +261,7 @@ const COLLECTIONS = [
     updateRule: "user = @request.auth.id",
     deleteRule: null,
     fields: [
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'qualification', type: 'relation', required: true, collectionId: 'qualifications', maxSelect: 1 },
       { name: 'obtained_date', type: 'date', required: true }
     ]
@@ -297,11 +278,11 @@ const COLLECTIONS = [
     fields: [
       { name: 'unit', type: 'relation', required: true, collectionId: 'units', maxSelect: 1 },
       { name: 'date', type: 'date', required: true },
-      { name: 'shift_lead', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'shift_lead', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'start_time', type: 'date', required: true },
       { name: 'end_time', type: 'date', required: true },
       { name: 'notes', type: 'text' },
-      { name: 'created_by', type: 'relation', collectionId: 'users', maxSelect: 1 }
+      { name: 'created_by', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 }
     ]
   },
   // User-owned data - user_permissions
@@ -314,7 +295,7 @@ const COLLECTIONS = [
     updateRule: "user = @request.auth.id",
     deleteRule: null,
     fields: [
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'permission', type: 'relation', required: true, collectionId: 'permissions', maxSelect: 1 },
       { name: 'unit', type: 'relation', collectionId: 'units', maxSelect: 1 }
     ]
@@ -359,7 +340,7 @@ const COLLECTIONS = [
     deleteRule: null,
     fields: [
       { name: 'news', type: 'relation', required: true, collectionId: 'news', maxSelect: 1, cascadeDelete: true },
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'read_at', type: 'date', required: true }
     ]
   },
@@ -375,7 +356,7 @@ const COLLECTIONS = [
     updateRule: "user = @request.auth.id",
     deleteRule: null,
     fields: [
-      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'absence', type: 'relation', required: true, collectionId: 'absences', maxSelect: 1 },
       { name: 'assignment', type: 'relation', required: true, collectionId: 'user_assignments', maxSelect: 1 },
       { name: 'start_date', type: 'date', required: true },
@@ -399,9 +380,9 @@ const COLLECTIONS = [
       { name: 'name', type: 'text' },
       { name: 'start_time', type: 'date', required: true },
       { name: 'end_time', type: 'date', required: true },
-      { name: 'driver', type: 'relation', collectionId: 'users', maxSelect: 1 },
-      { name: 'lead', type: 'relation', collectionId: 'users', maxSelect: 1 },
-      { name: 'student', type: 'relation', collectionId: 'users', maxSelect: 1 },
+      { name: 'driver', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
+      { name: 'lead', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
+      { name: 'student', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'notes', type: 'text' }
     ]
   }
