@@ -133,6 +133,57 @@ const COLLECTIONS = [
     ]
   },
 
+  // Push notification subscriptions
+  {
+    name: 'push_subscriptions',
+    type: 'base',
+    listRule: "user = @request.auth.id",
+    viewRule: "user = @request.auth.id",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: "user = @request.auth.id",
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
+      { name: 'endpoint', type: 'text', required: true },
+      { name: 'p256dh', type: 'text', required: true },
+      { name: 'auth', type: 'text', required: true },
+      { name: 'user_agent', type: 'text' },
+      { name: 'is_active', type: 'bool', required: true }
+    ]
+  },
+
+  // Event categories
+  {
+    name: 'event_categories',
+    type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+    fields: [
+      { name: 'name', type: 'text', required: true },
+      { name: 'description', type: 'text' },
+      { name: 'color', type: 'text' },
+      { name: 'icon', type: 'text' }
+    ]
+  },
+
+  // Event groups
+  {
+    name: 'event_groups',
+    type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
+    fields: [
+      { name: 'name', type: 'text', required: true },
+      { name: 'description', type: 'text' }
+    ]
+  },
+
   // First-level relations (depend on users and categories)
   // User-owned data - profiles
   {
@@ -383,6 +434,69 @@ const COLLECTIONS = [
       { name: 'driver', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'lead', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
       { name: 'student', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 },
+      { name: 'notes', type: 'text' }
+    ]
+  },
+
+  // Events (depend on event_categories, units, users)
+  {
+    name: 'events',
+    type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
+    fields: [
+      { name: 'name', type: 'text', required: true },
+      { name: 'description', type: 'text' },
+      { name: 'category', type: 'relation', collectionId: 'event_categories', maxSelect: 1 },
+      { name: 'unit', type: 'relation', collectionId: 'units', maxSelect: 1 },
+      { name: 'group', type: 'relation', collectionId: 'event_groups', maxSelect: 1 },
+      { name: 'start_date', type: 'date', required: true },
+      { name: 'end_date', type: 'date', required: true },
+      { name: 'start_time', type: 'text' },
+      { name: 'end_time', type: 'text' },
+      { name: 'location', type: 'text' },
+      { name: 'max_participants', type: 'number' },
+      { name: 'status', type: 'text', required: true },
+      { name: 'notes', type: 'text' },
+      { name: 'created_by', type: 'relation', collectionId: '_pb_users_auth_', maxSelect: 1 }
+    ]
+  },
+
+  // Event positions (depend on events, qualifications)
+  {
+    name: 'event_positions',
+    type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.id != ''",
+    deleteRule: null,
+    fields: [
+      { name: 'event', type: 'relation', required: true, collectionId: 'events', maxSelect: 1, cascadeDelete: true },
+      { name: 'name', type: 'text', required: true },
+      { name: 'required_qualification', type: 'relation', collectionId: 'qualifications', maxSelect: 1 },
+      { name: 'min_count', type: 'number' },
+      { name: 'max_count', type: 'number' }
+    ]
+  },
+
+  // Event registrations (depend on events, event_positions, users)
+  {
+    name: 'event_registrations',
+    type: 'base',
+    listRule: "@request.auth.id != ''",
+    viewRule: "@request.auth.id != ''",
+    createRule: "@request.auth.id != ''",
+    updateRule: "user = @request.auth.id",
+    deleteRule: "user = @request.auth.id",
+    fields: [
+      { name: 'event', type: 'relation', required: true, collectionId: 'events', maxSelect: 1, cascadeDelete: true },
+      { name: 'position', type: 'relation', collectionId: 'event_positions', maxSelect: 1 },
+      { name: 'user', type: 'relation', required: true, collectionId: '_pb_users_auth_', maxSelect: 1 },
+      { name: 'status', type: 'text', required: true },
       { name: 'notes', type: 'text' }
     ]
   }

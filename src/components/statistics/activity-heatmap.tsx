@@ -76,6 +76,7 @@ const intensityColors = [
 
 export function ActivityHeatmap({ data, year }: ActivityHeatmapProps) {
   const t = useTranslations("statistics");
+  const tCommon = useTranslations("common");
 
   const dataMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -107,7 +108,15 @@ export function ActivityHeatmap({ data, year }: ActivityHeatmapProps) {
     return monthLabels;
   }, [grid]);
 
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayLabels = [
+    tCommon("weekDays.sun"),
+    tCommon("weekDays.mon"),
+    tCommon("weekDays.tue"),
+    tCommon("weekDays.wed"),
+    tCommon("weekDays.thu"),
+    tCommon("weekDays.fri"),
+    tCommon("weekDays.sat"),
+  ];
 
   return (
     <div className="space-y-2">

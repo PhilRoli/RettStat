@@ -8,7 +8,7 @@ import type { TourRecord, VehicleRecord, TourTypeRecord, UnitRecord } from "@/li
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Car, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 type TourWithRelations = TourRecord & {
   expand?: {

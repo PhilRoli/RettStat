@@ -20,7 +20,16 @@
     "yes": "Ja",
     "no": "Nein",
     "confirm": "Bestätigen",
-    "close": "Schließen"
+    "close": "Schließen",
+    "weekDays": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    }
   },
   "nav": {
     "home": "Startseite",
@@ -88,8 +97,7 @@
     "quickActions": "Schnellaktionen",
     "viewShiftPlan": "Dienstplan ansehen",
     "browseEvents": "Veranstaltungen durchsuchen",
-    "statistics": "Statistiken",
-    "news": "Neuigkeiten & Ankündigungen"
+    "statistics": "Statistiken"
   },
   "shifts": {
     "title": "Dienstplan",

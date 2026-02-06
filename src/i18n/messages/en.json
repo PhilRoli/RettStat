@@ -20,7 +20,16 @@
     "yes": "Yes",
     "no": "No",
     "confirm": "Confirm",
-    "close": "Close"
+    "close": "Close",
+    "weekDays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
   },
   "nav": {
     "home": "Home",
@@ -88,8 +97,7 @@
     "quickActions": "Quick Actions",
     "viewShiftPlan": "View Shift Plan",
     "browseEvents": "Browse Events",
-    "statistics": "Statistics",
-    "news": "News & Announcements"
+    "statistics": "Statistics"
   },
   "shifts": {
     "title": "Shift Plan",

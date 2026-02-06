@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { getPb } from "@/lib/pocketbase";
 import type {
@@ -30,6 +30,8 @@ export function NewsFeed() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | "all">("all");
   const t = useTranslations("home.news");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-AT" : "en-US";
 
   const categories: (NewsCategory | "all")[] = [
     "all",
@@ -211,7 +213,7 @@ export function NewsFeed() {
                   </div>
                   {item.published_at && (
                     <time className="text-muted-foreground text-xs">
-                      {new Date(item.published_at).toLocaleDateString("de-DE", {
+                      {new Date(item.published_at).toLocaleDateString(dateLocale, {
                         day: "2-digit",
                         month: "2-digit",
                         year: "numeric",

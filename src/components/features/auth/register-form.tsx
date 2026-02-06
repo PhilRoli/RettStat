@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,9 +126,9 @@ export function RegisterForm() {
 
           <div className="text-muted-foreground text-center text-sm">
             {t("alreadyHaveAccount")}{" "}
-            <a href="/auth/login" className="text-primary hover:underline">
+            <Link href="/auth/login" className="text-primary hover:underline">
               {t("signIn")}
-            </a>
+            </Link>
           </div>
         </form>
       </CardContent>

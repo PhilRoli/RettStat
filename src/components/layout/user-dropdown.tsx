@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings, Shield, LogOut } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 export function UserDropdown() {
   const { profile, signOut } = useAuth();

@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, MapPin, Users, Clock, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ const statusColors: Record<string, string> = {
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useTranslations("events");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-AT" : "en-US";
   const router = useRouter();
 
   const { data: event, isLoading: eventLoading } = useEvent(id);
@@ -29,7 +31,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const { hasPermission: canEdit } = useHasPermission("manage_events");
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       weekday: "long",
       year: "numeric",
       month: "long",
