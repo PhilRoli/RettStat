@@ -22,58 +22,49 @@ function isPublicPath(pathname: string): boolean {
   return publicPaths.some((path) => strippedPath.startsWith(path));
 }
 
-export default function middleware(request: NextRequest) {
-  const { pathname, hostname } = request.nextUrl;
-
-  // Let intl middleware handle locale detection/routing
-  const response = intlMiddleware(request);
-
-  // Check auth from cookie (Edge runtime can't use PocketBase SDK)
+function checkAuthenticated(request: NextRequest): boolean {
   const authCookie = request.cookies.get("pb_auth");
-  let isAuthenticated = false;
+  if (!authCookie?.value) return false;
 
-  if (authCookie?.value) {
-    try {
-      const authData = JSON.parse(decodeURIComponent(authCookie.value));
-      if (authData.token) {
-        // Basic JWT expiration check in Edge runtime
-        const parts = authData.token.split(".");
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          isAuthenticated = payload.exp * 1000 > Date.now();
-        }
+  try {
+    const authData = JSON.parse(decodeURIComponent(authCookie.value));
+    if (authData.token) {
+      const parts = authData.token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        return payload.exp * 1000 > Date.now();
       }
-    } catch {
-      // Invalid cookie
     }
+  } catch {
+    // Invalid cookie
   }
+  return false;
+}
 
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const authenticated = checkAuthenticated(request);
   const isPublic = isPublicPath(pathname);
 
-  // Redirect unauthenticated users to login (except public paths)
-  if (!isAuthenticated && !isPublic && pathname !== "/") {
+  // Redirect unauthenticated users to login (except public paths and root)
+  if (!authenticated && !isPublic && pathname !== "/") {
     const redirectUrl = new URL("/auth/login", request.url);
     redirectUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect authenticated users away from auth pages
-  if (isAuthenticated && isPublic) {
+  if (authenticated && isPublic) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Check dev environment access
-  const isDevEnvironment = hostname.startsWith("dev.");
-  if (isDevEnvironment && isAuthenticated && !isPublic && pathname !== "/no-dev-access") {
-    // For dev access check we'd need the profile, which requires a DB call.
-    // This is handled client-side in the app layout instead.
-  }
-
-  return response;
+  // Let intl middleware handle locale detection/routing
+  return intlMiddleware(request);
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|sw\\.js|manifest\\.json|icons/|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|sw\\.js|manifest\\.json|icons/|api/|pb/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

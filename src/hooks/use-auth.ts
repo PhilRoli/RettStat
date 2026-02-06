@@ -46,7 +46,7 @@ export function useAuth() {
 
         setUser(pb.authStore.model as unknown as UserRecord);
 
-        // Load profile
+        // Load profile (may not exist yet for new users)
         try {
           const profileData = await pb
             .collection("profiles")
@@ -54,8 +54,7 @@ export function useAuth() {
               `user="${(pb.authStore.model as unknown as UserRecord).id}"`
             );
           setProfile(profileData);
-        } catch (error) {
-          console.error("Failed to load profile:", error);
+        } catch {
           setProfile(null);
         }
       } else {
@@ -91,8 +90,7 @@ export function useAuth() {
             .collection("profiles")
             .getFirstListItem<ProfileRecord>(`user="${authUser.id}"`);
           setProfile(profileData);
-        } catch (error) {
-          console.error("Failed to load profile:", error);
+        } catch {
           setProfile(null);
         }
       } else {
@@ -117,12 +115,15 @@ export function useAuth() {
       setUser(authData.record);
       syncAuthCookie();
 
-      // Fetch profile
-      const profileData = await getPb()
-        .collection("profiles")
-        .getFirstListItem<ProfileRecord>(`user="${authData.record.id}"`);
-
-      setProfile(profileData);
+      // Fetch profile (may not exist yet)
+      try {
+        const profileData = await getPb()
+          .collection("profiles")
+          .getFirstListItem<ProfileRecord>(`user="${authData.record.id}"`);
+        setProfile(profileData);
+      } catch {
+        setProfile(null);
+      }
       return authData;
     } finally {
       setLoading(false);
@@ -171,8 +172,8 @@ export function useAuth() {
         .getFirstListItem<ProfileRecord>(`user="${user.id}"`);
 
       setProfile(profileData);
-    } catch (error) {
-      console.error("Failed to refresh profile:", error);
+    } catch {
+      // Profile may not exist
     }
   };
 

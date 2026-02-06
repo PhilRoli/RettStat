@@ -563,7 +563,13 @@
     "signInFailed": "Failed to sign in",
     "signUpFailed": "Failed to sign up",
     "emailPlaceholder": "you@example.com",
-    "fullNamePlaceholder": "John Doe"
+    "fullNamePlaceholder": "John Doe",
+    "resetPasswordDescription": "Enter your email address and we'll send you a link to reset your password.",
+    "sendResetLink": "Send Reset Link",
+    "sendingResetLink": "Sending...",
+    "resetLinkSent": "Reset link sent! Check your email.",
+    "resetLinkFailed": "Failed to send reset link. Please try again.",
+    "backToLogin": "Back to login"
   },
   "theme": {
     "light": "Light",

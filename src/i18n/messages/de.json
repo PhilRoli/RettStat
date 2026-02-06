@@ -563,7 +563,13 @@
     "signInFailed": "Anmeldung fehlgeschlagen",
     "signUpFailed": "Registrierung fehlgeschlagen",
     "emailPlaceholder": "sie@beispiel.de",
-    "fullNamePlaceholder": "Max Mustermann"
+    "fullNamePlaceholder": "Max Mustermann",
+    "resetPasswordDescription": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+    "sendResetLink": "Link senden",
+    "sendingResetLink": "Wird gesendet...",
+    "resetLinkSent": "Link gesendet! Überprüfen Sie Ihre E-Mail.",
+    "resetLinkFailed": "Link konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "backToLogin": "Zurück zur Anmeldung"
   },
   "theme": {
     "light": "Hell",
