@@ -15,16 +15,6 @@ const nextConfig: NextConfig = {
     // Disable worker threads to avoid Bun compatibility issues
     webpackBuildWorker: false,
   },
-
-  // Proxy PocketBase API requests to hide the backend URL from the browser
-  // POCKETBASE_URL is a server-only runtime var (not inlined at build like NEXT_PUBLIC_*)
-  async rewrites() {
-    const pbUrl =
-      process.env.POCKETBASE_URL ||
-      process.env.NEXT_PUBLIC_POCKETBASE_URL ||
-      "http://127.0.0.1:8090";
-    return [{ source: "/pb/:path*", destination: `${pbUrl}/:path*` }];
-  },
 };
 
 export default withNextIntl(nextConfig);
