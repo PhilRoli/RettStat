@@ -18,6 +18,25 @@ if (!PB_URL || !ADMIN_TOKEN) {
 // - null = superuser only (default)
 
 const COLLECTIONS = [
+  // Auth collection for regular users (must be first - all others depend on it)
+  {
+    name: 'users',
+    type: 'auth',
+    listRule: "id = @request.auth.id",
+    viewRule: "id = @request.auth.id",
+    createRule: "",
+    updateRule: "id = @request.auth.id",
+    deleteRule: "id = @request.auth.id",
+    fields: [
+      { name: 'name', type: 'text' },
+      { name: 'avatar', type: 'file', maxSelect: 1, maxSize: 5242880 }
+    ],
+    passwordAuth: {
+      enabled: true,
+      identityFields: ['email']
+    }
+  },
+
   // Independent collections (no dependencies) - Reference data (read-only for users)
   {
     name: 'units',
