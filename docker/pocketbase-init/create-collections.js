@@ -27,9 +27,9 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
-      { name: 'parent_unit', type: 'relation', options: { collectionId: 'units', maxSelect: 1 } }
+      { name: 'parent_unit', type: 'relation', collectionId: 'units', maxSelect: 1 }
     ]
   },
   {
@@ -40,7 +40,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' },
@@ -55,7 +55,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
@@ -69,7 +69,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
@@ -83,7 +83,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
@@ -97,7 +97,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
@@ -111,7 +111,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
       { name: 'description', type: 'text' }
     ]
@@ -124,7 +124,7 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'title', type: 'text', required: true },
       { name: 'url', type: 'url', required: true },
       { name: 'icon', type: 'text' },
@@ -143,16 +143,11 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1, cascadeDelete: true }
-      },
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1, cascadeDelete: true },
       { name: 'first_name', type: 'text' },
       { name: 'last_name', type: 'text' },
-      { name: 'avatar', type: 'file', options: { maxSelect: 1, maxSize: 5242880 } }
+      { name: 'avatar', type: 'file', maxSelect: 1, maxSize: 5242880 }
     ]
   },
   // Reference data - assignments
@@ -164,14 +159,9 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
-      {
-        name: 'category',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'assignment_categories', maxSelect: 1 }
-      },
+      { name: 'category', type: 'relation', required: true, collectionId: 'assignment_categories', maxSelect: 1 },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
     ]
@@ -185,14 +175,9 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
-      {
-        name: 'category',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'qualification_categories', maxSelect: 1 }
-      },
+      { name: 'category', type: 'relation', required: true, collectionId: 'qualification_categories', maxSelect: 1 },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' },
       { name: 'level', type: 'number' }
@@ -207,14 +192,9 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'name', type: 'text', required: true },
-      {
-        name: 'category',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'absence_categories', maxSelect: 1 }
-      },
+      { name: 'category', type: 'relation', required: true, collectionId: 'absence_categories', maxSelect: 1 },
       { name: 'description', type: 'text' },
       { name: 'icon', type: 'text' }
     ]
@@ -228,25 +208,11 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'call_sign', type: 'text', required: true },
-      {
-        name: 'vehicle_type',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'vehicle_types', maxSelect: 1 }
-      },
-      {
-        name: 'primary_unit',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'units', maxSelect: 1 }
-      },
-      {
-        name: 'secondary_unit',
-        type: 'relation',
-        options: { collectionId: 'units', maxSelect: 1 }
-      },
+      { name: 'vehicle_type', type: 'relation', required: true, collectionId: 'vehicle_types', maxSelect: 1 },
+      { name: 'primary_unit', type: 'relation', required: true, collectionId: 'units', maxSelect: 1 },
+      { name: 'secondary_unit', type: 'relation', collectionId: 'units', maxSelect: 1 },
       { name: 'is_active', type: 'bool', required: true }
     ]
   },
@@ -259,21 +225,12 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "@request.auth.id != ''",
     deleteRule: null,
-    schema: [
+    fields: [
       { name: 'title', type: 'text', required: true },
       { name: 'content', type: 'text', required: true },
-      {
-        name: 'author',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
+      { name: 'author', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
       { name: 'published_at', type: 'date', required: true },
-      {
-        name: 'target_units',
-        type: 'relation',
-        options: { collectionId: 'units', maxSelect: 999 }
-      }
+      { name: 'target_units', type: 'relation', collectionId: 'units', maxSelect: 999 }
     ]
   },
 
@@ -287,25 +244,10 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'assignment',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'assignments', maxSelect: 1 }
-      },
-      {
-        name: 'unit',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'units', maxSelect: 1 }
-      },
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'assignment', type: 'relation', required: true, collectionId: 'assignments', maxSelect: 1 },
+      { name: 'unit', type: 'relation', required: true, collectionId: 'units', maxSelect: 1 },
       { name: 'start_date', type: 'date', required: true }
     ]
   },
@@ -318,19 +260,9 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'qualification',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'qualifications', maxSelect: 1 }
-      },
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'qualification', type: 'relation', required: true, collectionId: 'qualifications', maxSelect: 1 },
       { name: 'obtained_date', type: 'date', required: true }
     ]
   },
@@ -343,28 +275,14 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "@request.auth.id != ''",
     deleteRule: null,
-    schema: [
-      {
-        name: 'unit',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'units', maxSelect: 1 }
-      },
+    fields: [
+      { name: 'unit', type: 'relation', required: true, collectionId: 'units', maxSelect: 1 },
       { name: 'date', type: 'date', required: true },
-      {
-        name: 'shift_lead',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
+      { name: 'shift_lead', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
       { name: 'start_time', type: 'date', required: true },
       { name: 'end_time', type: 'date', required: true },
       { name: 'notes', type: 'text' },
-      {
-        name: 'created_by',
-        type: 'relation',
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      }
+      { name: 'created_by', type: 'relation', collectionId: 'users', maxSelect: 1 }
     ]
   },
   // User-owned data - user_permissions
@@ -376,20 +294,10 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'permission',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'permissions', maxSelect: 1 }
-      },
-      { name: 'unit', type: 'relation', options: { collectionId: 'units', maxSelect: 1 } }
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'permission', type: 'relation', required: true, collectionId: 'permissions', maxSelect: 1 },
+      { name: 'unit', type: 'relation', collectionId: 'units', maxSelect: 1 }
     ]
   },
   // Reference/config data - assignment_default_permissions
@@ -401,19 +309,9 @@ const COLLECTIONS = [
     createRule: null,
     updateRule: null,
     deleteRule: null,
-    schema: [
-      {
-        name: 'assignment',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'assignments', maxSelect: 1 }
-      },
-      {
-        name: 'permission',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'permissions', maxSelect: 1 }
-      }
+    fields: [
+      { name: 'assignment', type: 'relation', required: true, collectionId: 'assignments', maxSelect: 1 },
+      { name: 'permission', type: 'relation', required: true, collectionId: 'permissions', maxSelect: 1 }
     ]
   },
   // Team/shared data - news_attachments
@@ -425,14 +323,9 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "@request.auth.id != ''",
     deleteRule: null,
-    schema: [
-      {
-        name: 'news',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'news', maxSelect: 1, cascadeDelete: true }
-      },
-      { name: 'file', type: 'file', required: true, options: { maxSelect: 1, maxSize: 10485760 } },
+    fields: [
+      { name: 'news', type: 'relation', required: true, collectionId: 'news', maxSelect: 1, cascadeDelete: true },
+      { name: 'file', type: 'file', required: true, maxSelect: 1, maxSize: 10485760 },
       { name: 'filename', type: 'text', required: true }
     ]
   },
@@ -445,19 +338,9 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'news',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'news', maxSelect: 1, cascadeDelete: true }
-      },
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
+    fields: [
+      { name: 'news', type: 'relation', required: true, collectionId: 'news', maxSelect: 1, cascadeDelete: true },
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
       { name: 'read_at', type: 'date', required: true }
     ]
   },
@@ -472,25 +355,10 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "user = @request.auth.id",
     deleteRule: null,
-    schema: [
-      {
-        name: 'user',
-        type: 'relation',
-        required: true,
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'absence',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'absences', maxSelect: 1 }
-      },
-      {
-        name: 'assignment',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'user_assignments', maxSelect: 1 }
-      },
+    fields: [
+      { name: 'user', type: 'relation', required: true, collectionId: 'users', maxSelect: 1 },
+      { name: 'absence', type: 'relation', required: true, collectionId: 'absences', maxSelect: 1 },
+      { name: 'assignment', type: 'relation', required: true, collectionId: 'user_assignments', maxSelect: 1 },
       { name: 'start_date', type: 'date', required: true },
       { name: 'end_date', type: 'date', required: true },
       { name: 'notes', type: 'text' }
@@ -505,37 +373,16 @@ const COLLECTIONS = [
     createRule: "@request.auth.id != ''",
     updateRule: "@request.auth.id != ''",
     deleteRule: null,
-    schema: [
-      {
-        name: 'shiftplan',
-        type: 'relation',
-        required: true,
-        options: { collectionId: 'shiftplans', maxSelect: 1, cascadeDelete: true }
-      },
-      {
-        name: 'tour_type',
-        type: 'relation',
-        options: { collectionId: 'tour_types', maxSelect: 1 }
-      },
-      { name: 'vehicle', type: 'relation', options: { collectionId: 'vehicles', maxSelect: 1 } },
+    fields: [
+      { name: 'shiftplan', type: 'relation', required: true, collectionId: 'shiftplans', maxSelect: 1, cascadeDelete: true },
+      { name: 'tour_type', type: 'relation', collectionId: 'tour_types', maxSelect: 1 },
+      { name: 'vehicle', type: 'relation', collectionId: 'vehicles', maxSelect: 1 },
       { name: 'name', type: 'text' },
       { name: 'start_time', type: 'date', required: true },
       { name: 'end_time', type: 'date', required: true },
-      {
-        name: 'driver',
-        type: 'relation',
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'lead',
-        type: 'relation',
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
-      {
-        name: 'student',
-        type: 'relation',
-        options: { collectionId: '_pb_users_auth_', maxSelect: 1 }
-      },
+      { name: 'driver', type: 'relation', collectionId: 'users', maxSelect: 1 },
+      { name: 'lead', type: 'relation', collectionId: 'users', maxSelect: 1 },
+      { name: 'student', type: 'relation', collectionId: 'users', maxSelect: 1 },
       { name: 'notes', type: 'text' }
     ]
   }
