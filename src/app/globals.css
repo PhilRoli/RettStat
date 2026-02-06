@@ -174,10 +174,19 @@ body {
 /* Autofill styling — force text to remain readable */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--foreground);
-  -webkit-box-shadow: 0 0 0px 1000px var(--background) inset;
-  transition: background-color 5000s ease-in-out 0s;
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0a0a0a !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fafafa !important;
+  -webkit-box-shadow: 0 0 0 1000px #1a1a1a inset !important;
 }
 
 @layer base {
