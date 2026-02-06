@@ -14,8 +14,8 @@ function getPocketBaseUrl(): string {
     return "http://127.0.0.1:8090";
   }
 
-  // All deployed environments go through the proxy
-  return `${window.location.origin}/pb`;
+  // All deployed environments go through the API route proxy
+  return `${window.location.origin}/api/pb`;
 }
 
 // Lazy-initialized PocketBase client
