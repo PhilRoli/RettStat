@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +28,9 @@ export function LoginForm() {
     try {
       await signIn(email, password);
 
-      // Redirect to saved URL or home
-      const redirectTo = sessionStorage.getItem("redirectAfterLogin") || "/";
+      // Redirect to saved URL, query param, or home
+      const redirectTo =
+        searchParams.get("redirect") || sessionStorage.getItem("redirectAfterLogin") || "/";
       sessionStorage.removeItem("redirectAfterLogin");
       router.push(redirectTo);
       router.refresh();
@@ -80,16 +83,16 @@ export function LoginForm() {
           </Button>
 
           <div className="text-center text-sm">
-            <a href="/auth/forgot-password" className="text-primary hover:underline">
+            <Link href="/auth/forgot-password" className="text-primary hover:underline">
               {t("forgotPassword")}
-            </a>
+            </Link>
           </div>
 
           <div className="text-muted-foreground text-center text-sm">
             {t("dontHaveAccount")}{" "}
-            <a href="/auth/register" className="text-primary hover:underline">
+            <Link href="/auth/register" className="text-primary hover:underline">
               {t("signUp")}
-            </a>
+            </Link>
           </div>
         </form>
       </CardContent>

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EventList } from "@/components/events";
 import { useEvents } from "@/hooks/use-events";
 import { useHasPermission } from "@/hooks/use-permissions";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 export default function EventsPage() {
   const t = useTranslations("events");

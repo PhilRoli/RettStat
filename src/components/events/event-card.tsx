@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +20,11 @@ const statusColors: Record<string, string> = {
 
 export function EventCard({ event }: EventCardProps) {
   const t = useTranslations("events");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-AT" : "en-US";
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       weekday: "short",
       month: "short",
       day: "numeric",

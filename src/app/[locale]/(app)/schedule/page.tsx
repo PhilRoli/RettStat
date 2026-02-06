@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +11,8 @@ import { useMyShifts, useMyAbsences, downloadICal } from "@/hooks/use-my-schedul
 
 export default function SchedulePage() {
   const t = useTranslations("schedule");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-AT" : "en-US";
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -93,7 +95,7 @@ export default function SchedulePage() {
             <div className="bg-card rounded-lg border p-4">
               <h3 className="mb-4 font-semibold">
                 {selectedDate
-                  ? selectedDate.toLocaleDateString(undefined, {
+                  ? selectedDate.toLocaleDateString(dateLocale, {
                       weekday: "long",
                       year: "numeric",
                       month: "long",

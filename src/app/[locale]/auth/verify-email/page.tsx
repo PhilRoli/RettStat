@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,9 +25,9 @@ export default async function VerifyEmailPage() {
         <CardContent className="text-center">
           <p className="text-muted-foreground text-sm">
             {t("didntReceiveEmail")}{" "}
-            <a href="/auth/register" className="text-primary hover:underline">
+            <Link href="/auth/register" className="text-primary hover:underline">
               {t("tryAgain")}
-            </a>
+            </Link>
             .
           </p>
         </CardContent>
