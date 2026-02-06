@@ -234,9 +234,8 @@ export interface QuickLinkRecord extends BaseRecord {
   title: string;
   url: string;
   icon?: string;
-  sort_order: number;
-  unit?: string; // relation to units
-  is_active: boolean;
+  order: number;
+  is_enabled: boolean;
 }
 
 // Event Category

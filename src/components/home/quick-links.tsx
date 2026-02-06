@@ -20,13 +20,16 @@ export function QuickLinks() {
   const loadQuickLinks = async () => {
     try {
       const result = await getPb().collection("quick_links").getFullList<QuickLinkRecord>({
-        filter: `is_active=true`,
-        sort: "sort_order",
+        filter: `is_enabled=true`,
+        sort: "order",
       });
 
       setLinks(result);
     } catch (error) {
-      console.error("Error loading quick links:", error);
+      // Gracefully handle missing collection (404) vs actual errors
+      if (error instanceof Error && !error.message.includes("404")) {
+        console.error("Error loading quick links:", error);
+      }
     } finally {
       setIsLoading(false);
     }
