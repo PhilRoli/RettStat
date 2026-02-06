@@ -439,17 +439,49 @@ async function patchCollectionRules(collectionId, name, rules) {
   }
 }
 
+async function patchCollectionFields(collectionId, name, fields) {
+  const response = await fetch(`${PB_URL}/api/collections/${collectionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': ADMIN_TOKEN
+    },
+    body: JSON.stringify({ fields })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to patch fields for ${name}: ${error}`);
+  }
+}
+
 async function main() {
-  console.log(`Creating ${COLLECTIONS.length} collections...`);
+  console.log(`Pass 1: Creating ${COLLECTIONS.length} collections (without relations)...`);
 
   let created = 0;
   let exists = 0;
   let failed = 0;
   const createdIds = {};
+  const relationFields = {};
 
+  // Pass 1: Create collections without relation fields
   for (const collection of COLLECTIONS) {
+    // Extract relation fields for later
+    const nonRelationFields = collection.fields.filter(f => f.type !== 'relation');
+    const relFields = collection.fields.filter(f => f.type === 'relation');
+
+    if (relFields.length > 0) {
+      relationFields[collection.name] = relFields;
+    }
+
+    // Create collection with only non-relation fields
+    const collectionToCreate = {
+      ...collection,
+      fields: nonRelationFields
+    };
+
     try {
-      const result = await createCollection(collection);
+      const result = await createCollection(collectionToCreate);
       if (result.status === 'created') {
         console.log(`  ✓ Created: ${collection.name}`);
         createdIds[collection.name] = result.id;
@@ -464,10 +496,32 @@ async function main() {
     }
   }
 
-  // Second pass: apply deferred owner-based rules now that schemas are registered
+  // Pass 2: Add relation fields now that all collections exist
+  const collectionsWithRelations = Object.keys(relationFields);
+  if (collectionsWithRelations.length > 0) {
+    console.log(`\nPass 2: Adding relation fields to ${collectionsWithRelations.length} collections...`);
+    for (const name of collectionsWithRelations) {
+      const id = createdIds[name];
+      if (!id) {
+        console.log(`  - Skipped: ${name} (not created this run)`);
+        continue;
+      }
+      try {
+        // Get original collection def to merge non-relation + relation fields
+        const originalCollection = COLLECTIONS.find(c => c.name === name);
+        await patchCollectionFields(id, name, originalCollection.fields);
+        console.log(`  ✓ Patched: ${name}`);
+      } catch (error) {
+        console.error(`  ✗ Failed: ${name} - ${error.message}`);
+        failed++;
+      }
+    }
+  }
+
+  // Pass 3: Apply deferred owner-based rules
   const deferredNames = Object.keys(DEFERRED_RULES);
   if (deferredNames.length > 0) {
-    console.log(`\nApplying owner-based rules to ${deferredNames.length} collections...`);
+    console.log(`\nPass 3: Applying owner-based rules to ${deferredNames.length} collections...`);
     for (const name of deferredNames) {
       const id = createdIds[name];
       if (!id) {
