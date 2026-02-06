@@ -412,8 +412,15 @@ async function createCollection(collection) {
 
   if (!response.ok) {
     const error = await response.text();
-    // Ignore "already exists" errors
+    // Ignore "already exists" errors and fetch the existing collection's ID
     if (error.includes('already exists') || error.includes('name must be unique')) {
+      const getResponse = await fetch(`${PB_URL}/api/collections/${collection.name}`, {
+        headers: { 'Authorization': ADMIN_TOKEN }
+      });
+      if (getResponse.ok) {
+        const existing = await getResponse.json();
+        return { status: 'exists', name: collection.name, id: existing.id };
+      }
       return { status: 'exists', name: collection.name };
     }
     throw new Error(`Failed to create ${collection.name}: ${error}`);
@@ -488,6 +495,9 @@ async function main() {
         created++;
       } else {
         console.log(`  - Exists: ${collection.name}`);
+        if (result.id) {
+          createdIds[collection.name] = result.id;
+        }
         exists++;
       }
     } catch (error) {
@@ -507,9 +517,20 @@ async function main() {
         continue;
       }
       try {
-        // Get original collection def to merge non-relation + relation fields
+        // Get original collection def and resolve collectionId names to IDs
         const originalCollection = COLLECTIONS.find(c => c.name === name);
-        await patchCollectionFields(id, name, originalCollection.fields);
+        const fieldsWithResolvedIds = originalCollection.fields.map(field => {
+          if (field.type === 'relation' && field.collectionId) {
+            // If collectionId is a name (not an ID like _pb_users_auth_), resolve it
+            const targetId = createdIds[field.collectionId];
+            if (targetId) {
+              return { ...field, collectionId: targetId };
+            }
+          }
+          return field;
+        });
+
+        await patchCollectionFields(id, name, fieldsWithResolvedIds);
         console.log(`  ✓ Patched: ${name}`);
       } catch (error) {
         console.error(`  ✗ Failed: ${name} - ${error.message}`);
