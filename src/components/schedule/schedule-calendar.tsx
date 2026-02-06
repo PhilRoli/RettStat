@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,9 @@ export function ScheduleCalendar({
   onDayClick,
 }: ScheduleCalendarProps) {
   const t = useTranslations("schedule");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const dateLocale = locale === "de" ? "de-AT" : "en-US";
 
   // Group tours by date
   const toursByDate = useMemo(() => {
@@ -70,7 +73,15 @@ export function ScheduleCalendar({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = [
+    tCommon("weekDays.sun"),
+    tCommon("weekDays.mon"),
+    tCommon("weekDays.tue"),
+    tCommon("weekDays.wed"),
+    tCommon("weekDays.thu"),
+    tCommon("weekDays.fri"),
+    tCommon("weekDays.sat"),
+  ];
 
   return (
     <div className="bg-card rounded-lg border p-4">
@@ -80,7 +91,7 @@ export function ScheduleCalendar({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h3 className="text-lg font-semibold">
-          {currentDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+          {currentDate.toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
         </h3>
         <Button variant="outline" size="icon" onClick={nextMonth}>
           <ChevronRight className="h-4 w-4" />
