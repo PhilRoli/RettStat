@@ -35,4 +35,6 @@ export {
   isAuthenticated,
   getAuthToken,
   onAuthChange,
+  syncAuthCookie,
+  clearAuthCookie,
 } from "./auth";

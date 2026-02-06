@@ -62,6 +62,7 @@ export async function signup(
  */
 export function logout(): void {
   getPb().authStore.clear();
+  clearAuthCookie();
 }
 
 /**
@@ -129,10 +130,37 @@ export function getAuthToken(): string | null {
 }
 
 /**
+ * Sync auth state to a cookie so middleware can read it
+ */
+export function syncAuthCookie(): void {
+  if (typeof document === "undefined") return;
+
+  const pb = getPb();
+  if (pb.authStore.isValid && pb.authStore.token && pb.authStore.record) {
+    const cookieValue = JSON.stringify({
+      token: pb.authStore.token,
+      record: pb.authStore.record,
+    });
+    document.cookie = `pb_auth=${encodeURIComponent(cookieValue)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+  } else {
+    clearAuthCookie();
+  }
+}
+
+/**
+ * Clear the auth cookie
+ */
+export function clearAuthCookie(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = "pb_auth=; path=/; max-age=0; SameSite=Lax";
+}
+
+/**
  * Subscribe to auth state changes
  */
 export function onAuthChange(callback: (token: string, model: UserRecord | null) => void) {
   return getPb().authStore.onChange((token, model) => {
     callback(token, model as UserRecord | null);
+    syncAuthCookie();
   });
 }
