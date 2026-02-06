@@ -15,7 +15,7 @@ function getPocketBaseUrl(): string {
   }
 
   // All deployed environments go through the proxy
-  return "/pb";
+  return `${window.location.origin}/pb`;
 }
 
 // Lazy-initialized PocketBase client
