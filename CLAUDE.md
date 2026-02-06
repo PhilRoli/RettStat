@@ -12,7 +12,7 @@ RettStat is a Progressive Web App (PWA) for Emergency Medical Services (EMS) shi
 - **Framework:** Next.js 16.1.6 (App Router)
 - **Language:** TypeScript 5.x (strict mode)
 - **UI:** React 19.2.3
-- **Backend:** PocketBase 0.26.8
+- **Backend:** PocketBase 0.35.x (via ghcr.io/muchobien/pocketbase:latest)
 - **State Management:** Zustand 5.0.11 (client), TanStack Query 5.x (server)
 - **Styling:** Tailwind CSS 4.x + Radix UI primitives
 - **Forms:** React Hook Form + Zod validation
