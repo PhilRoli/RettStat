@@ -2,24 +2,20 @@ import PocketBase from "pocketbase";
 
 // Derive PocketBase URL from the current hostname
 function getPocketBaseUrl(): string {
-  // Server-side: use environment variable if set
+  // Server-side: use direct URL (environment variable or default)
   if (typeof window === "undefined") {
     return process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
   }
 
-  // Client-side: derive from hostname
+  // Client-side: use Next.js rewrite proxy so the real API URL is hidden
   const hostname = window.location.hostname;
-
   if (hostname === "localhost" || hostname === "127.0.0.1") {
+    // In local dev, use direct connection for faster DX
     return "http://127.0.0.1:8090";
   }
 
-  if (hostname === "dev.rettstat.at") {
-    return "https://api-dev.rettstat.at";
-  }
-
-  // Default production: rettstat.at -> api.rettstat.at
-  return `https://api.${hostname}`;
+  // All deployed environments go through the proxy
+  return "/pb";
 }
 
 // Lazy-initialized PocketBase client
@@ -63,6 +59,12 @@ export const collections = {
   newsAttachments: "news_attachments",
   newsReadStatus: "news_read_status",
   quickLinks: "quick_links",
+  pushSubscriptions: "push_subscriptions",
+  eventCategories: "event_categories",
+  events: "events",
+  eventPositions: "event_positions",
+  eventRegistrations: "event_registrations",
+  eventGroups: "event_groups",
 } as const;
 
 export type Collection = (typeof collections)[keyof typeof collections];
