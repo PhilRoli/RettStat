@@ -38,7 +38,7 @@ bun run build
 | Components      | Radix UI                | Latest  |
 | State (Global)  | Zustand                 | 5+      |
 | State (Server)  | TanStack Query          | 5+      |
-| Backend         | PocketBase              | 0.26+   |
+| Backend         | PocketBase              | 0.35+   |
 | Offline Storage | Dexie.js (IndexedDB)    | 4+      |
 | i18n            | next-intl               | 4+      |
 | Forms           | React Hook Form + Zod   | Latest  |
@@ -59,18 +59,18 @@ rettstat/
 ├── public/                        # Static assets, PWA manifest
 ├── src/
 │   ├── app/                       # Next.js App Router
-│   │   ├── (app)/                # Authenticated routes
-│   │   │   ├── page.tsx          # Home
-│   │   │   ├── statistics/       # Statistics (COMPLETE)
-│   │   │   ├── events/           # Events (COMPLETE)
-│   │   │   ├── schedule/         # Personal schedule (COMPLETE)
-│   │   │   ├── reports/          # Export reports (COMPLETE)
-│   │   │   ├── shiftplan/        # Shift planning
-│   │   │   ├── settings/         # User settings
-│   │   │   └── admin/            # Admin panel
-│   │   ├── auth/                 # Auth pages (login, register, verify)
+│   │   ├── [locale]/             # i18n routing (de/en)
+│   │   │   ├── (app)/            # Authenticated routes
+│   │   │   │   ├── page.tsx      # Home
+│   │   │   │   ├── statistics/   # Statistics
+│   │   │   │   ├── events/       # Events
+│   │   │   │   ├── schedule/     # Personal schedule
+│   │   │   │   ├── reports/      # Export reports
+│   │   │   │   ├── shiftplan/    # Shift planning
+│   │   │   │   ├── settings/     # User settings
+│   │   │   │   └── admin/        # Admin panel
+│   │   │   └── auth/             # Auth pages (login, register, verify)
 │   │   ├── api/                  # API routes
-│   │   └── [locale]/             # i18n routing
 │   ├── components/
 │   │   ├── ui/                   # Base UI (shadcn style)
 │   │   ├── features/             # Feature components
@@ -80,7 +80,8 @@ rettstat/
 │   ├── hooks/                    # Custom React hooks
 │   ├── lib/
 │   │   ├── pocketbase/          # PocketBase client & types
-│   │   └── db.ts                # Dexie offline storage
+│   │   ├── offline/             # Dexie offline storage
+│   │   └── export/              # CSV export utilities
 │   ├── stores/                   # Zustand stores
 │   └── i18n/                     # Translations
 ├── PROJECT.md                    # This file
@@ -101,7 +102,7 @@ rettstat/
   - [x] Protected routes with middleware
 
 - [x] Phase 4: Database Schema
-  - [x] 24 PocketBase collections
+  - [x] 29 PocketBase collections
   - [x] Core: profiles, units (hierarchical)
   - [x] Categories: assignments, qualifications, vehicles, absences, events
   - [x] Shiftplans with tours
@@ -162,7 +163,7 @@ rettstat/
 
 ## PocketBase Collections
 
-**Total Collections:** 30
+**Total Collections:** 29
 
 ### Core
 
@@ -216,7 +217,6 @@ rettstat/
 27. **news_read_status** - Read tracking per user
 28. **quick_links** - Home page quick links
 29. **push_subscriptions** - PWA push notifications
-30. **user_absences** - User absence records
 
 ## Environment Variables
 
@@ -263,11 +263,26 @@ TRAEFIK_AUTH=user:password-hash
 
 ## Changelog
 
+### [0.3.0] - Multi-Issue Fix
+
+- Fixed auth token refresh: users no longer get kicked to login on every navigation
+- Restructured routes under `[locale]` with next-intl middleware for proper i18n support
+- Default locale changed from English to German (Austrian EMS context)
+- Added locale-aware navigation (`Link`, `useRouter`, `usePathname` from next-intl)
+- Fixed duplicate JSON key bug causing translation keys to render literally
+- Added locale-aware date formatting (de-AT / en-US) across schedule, events, and news
+- Added Next.js rewrites proxy (`/pb/:path*`) to hide PocketBase API URLs from browser
+- Fixed PWA manifest/SW errors via middleware matcher exclusions and font `display: swap`
+- Fixed quick_links field mismatches (`is_active` -> `is_enabled`, `sort_order` -> `order`)
+- Added missing PocketBase collections: push_subscriptions, event_categories, event_groups, events, event_positions, event_registrations
+- Updated PocketBase version reference from 0.26+ to 0.35+
+- Total collections: 29
+
 ### [0.2.0] - PocketBase Migration
 
 - Migrated from Supabase to PocketBase
 - Simplified deployment (single container for backend)
-- All 24 collections defined with types
+- All collections defined with types
 - Native PocketBase authentication
 - Realtime subscriptions support
 - File storage via PocketBase
@@ -280,4 +295,4 @@ TRAEFIK_AUTH=user:password-hash
 
 ---
 
-_Last updated: 2026-02-04_
+_Last updated: 2026-02-06_
