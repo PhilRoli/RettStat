@@ -54,6 +54,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      POCKETBASE_URL: http://pocketbase:8090
       NEXT_PUBLIC_POCKETBASE_URL: https://api.${DOMAIN}
     networks:
       - web
@@ -78,6 +79,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      POCKETBASE_URL: http://pocketbase-dev:8090
       NEXT_PUBLIC_POCKETBASE_URL: https://api-dev.${DOMAIN}
     networks:
       - web
